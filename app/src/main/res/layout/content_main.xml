@@ -5,8 +5,8 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     app:layout_behavior="@string/appbar_scrolling_view_behavior"
-    tools:context="com.tcl.shenwk.a_note.MainActivity"
-    tools:showIn="@layout/app_bar_main">
+    tools:context="com.tcl.shenwk.aNote.view.activity.MainActivity"
+    tools:showIn="@layout/app_bar">
 
     <TextView
         android:layout_width="wrap_content"

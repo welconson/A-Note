@@ -12,9 +12,29 @@
         <item name="windowActionBar">false</item>
         <item name="windowNoTitle">true</item>
     </style>
+    <style name="AppTheme.ActionBar">
+        <item name="windowActionBar">false</item>
+        <item name="windowNoTitle">true</item>
+    </style>
 
     <style name="AppTheme.AppBarOverlay" parent="ThemeOverlay.AppCompat.Dark.ActionBar" />
 
     <style name="AppTheme.PopupOverlay" parent="ThemeOverlay.AppCompat.Light" />
 
+    <!--<style name="A_NoteTheme.EditText" parent="android:Widget.EditText">-->
+        <!--<item name="android:dropDownSelector">?attr/listChoiceBackgroundIndicator</item>-->
+        <!--<item name="android:popupBackground">@drawable/abc_popup_background_mtrl_mult</item>-->
+        <!--<item name="android:background">?attr/editTextBackground</item>-->
+        <!--<item name="android:textColor">?attr/editTextColor</item>-->
+        <!--<item name="android:textAppearance">?android:attr/textAppearanceMediumInverse</item>-->
+        <!--<item name="android:content">a</item>-->
+    <!--</style>-->
+
+    <style name="Text" parent="android:TextAppearance.Holo.Medium.Inverse">
+        <item name="android:textCursorDrawable">@null</item>
+    </style>
+
+    <style name="Text.Normal">
+        <item name="android:textSize">13sp</item>
+    </style>
 </resources>
