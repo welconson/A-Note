@@ -3,6 +3,8 @@ package com.tcl.shenwk.aNote.view.activity;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.LayoutInflater;
@@ -17,12 +19,21 @@ import android.support.v7.widget.Toolbar;
 import android.view.MenuItem;
 
 import com.tcl.shenwk.aNote.R;
+import com.tcl.shenwk.aNote.entry.NoteEntry;
+import com.tcl.shenwk.aNote.model.ANoteDBManager;
+import com.tcl.shenwk.aNote.model.EditNoteHandler;
+import com.tcl.shenwk.aNote.util.Constants;
+import com.tcl.shenwk.aNote.view.CustomAdapter;
 import com.tcl.shenwk.aNote.view.navigationItem.NavigationItemHandler;
 
-public class MainActivity extends AppCompatActivity
+import java.util.ArrayList;
+import java.util.List;
+
+public class HomePageActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener {
-    private static String TAG = "MainActivity";
+    private static String TAG = "HomePageActivity";
     private NavigationItemHandler navigationItemHandler;
+    private RecyclerView mRecyclerView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -70,13 +81,13 @@ public class MainActivity extends AppCompatActivity
     }
 
     public void initializeView(){
-        setContentView(R.layout.activity_main);
+        setContentView(R.layout.home_page);
         if (getSupportActionBar() == null) {
             Log.i(TAG, "initializeView: return null");
         }
 
-        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
-        LayoutInflater inflater = getLayoutInflater();
+        Toolbar toolbar = (Toolbar) findViewById(R.id.home_page_toolbar);
+        final LayoutInflater inflater = getLayoutInflater();
         View view =  inflater.inflate(R.layout.tool_bar_button, null);
         toolbar.addView(view, -1, new Toolbar.LayoutParams(Gravity.END));
         view = inflater.inflate(R.layout.tool_bar_button, null);
@@ -89,7 +100,8 @@ public class MainActivity extends AppCompatActivity
             public void onClick(View view) {
 //                Snackbar.make(view, "add note", Snackbar.LENGTH_SHORT)
 //                        .setAction("Action", null).show();
-                Intent intent = new Intent(MainActivity.this, EditNoteActivity.class);
+                Intent intent = new Intent(HomePageActivity.this, EditNoteActivity.class);
+                intent.putExtra(Constants.ACTION_EDIT_NOTE, EditNoteActivity.EDIT_TYPE_ADD);
                 startActivity(intent);
             }
         });
@@ -103,5 +115,12 @@ public class MainActivity extends AppCompatActivity
         NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
         navigationItemHandler = new NavigationItemHandler(navigationView, drawer);
+        mRecyclerView = findViewById(R.id.home_page_list);
+        mRecyclerView.setLayoutManager(new LinearLayoutManager(HomePageActivity.this));
+        List<NoteEntry> noteEntries = EditNoteHandler.getAllNotesList(HomePageActivity.this);
+        Log.i(TAG, "initializeView: size " + noteEntries.size());
+        CustomAdapter customAdapter = new CustomAdapter(getLayoutInflater(),
+               noteEntries );
+        mRecyclerView.setAdapter(customAdapter);
     }
 }

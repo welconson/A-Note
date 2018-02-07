@@ -7,7 +7,7 @@ import android.view.View;
  * Created by shenwk on 2018/2/1.
  */
 
-public interface SpanListener {
+public interface CustomSpanSharedUtility {
     public void actionOnclick(View v);
     public void actionOnLongClick(View v);
 }

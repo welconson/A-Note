@@ -17,41 +17,73 @@ import android.text.style.ImageSpan;
 import android.util.Log;
 import android.view.View;
 import android.view.WindowManager;
-import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
 import android.widget.ImageButton;
 
 import com.tcl.shenwk.aNote.R;
-import com.tcl.shenwk.aNote.Util.ImeController;
+import com.tcl.shenwk.aNote.entry.NoteEntry;
+import com.tcl.shenwk.aNote.model.ANoteDBManager;
+import com.tcl.shenwk.aNote.model.EditNoteHandler;
+import com.tcl.shenwk.aNote.util.ImeController;
 import com.tcl.shenwk.aNote.multiMediaInputSupport.CustomMovementMethod;
-import com.tcl.shenwk.aNote.view.Constants;
+import com.tcl.shenwk.aNote.util.Constants;
+import com.tcl.shenwk.aNote.util.StringUtil;
 import com.tcl.shenwk.aNote.view.customSpan.CustomImageSpan;
 
 import java.io.FileNotFoundException;
 import java.io.InputStream;
 
 /**
+ * Activity for edit view to display, get input events from user.
  * Created by shenwk on 2018/1/25.
  */
 
 public class EditNoteActivity extends AppCompatActivity{
     private static String TAG = "EditNoteActivity";
+    //Action from calling, indicate the activity is started as adding note or modifying note
+    public static String EDIT_TYPE_ADD = "add";
+    public static String EDIT_TYPE_MODIFY = "modify";
+    //mode value
+    public static int MODE_EDIT = 0;
+    public static int MODE_PREVIEW = 1;
+    private int mMode = MODE_PREVIEW;
     private EditText mNoteContentText;
     private EditText mNoteTitle;
     private ImeController mImeController;
+    private ImageButton mBackButton;
+    private ImageButton mSaveButton;
+    private ImageButton mAddImageButton;
+    private long mNoteId = Constants.NO_NOTE_ID;
+    private NoteEntry mNoteEntry;
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.edit_note);
         mImeController = new ImeController(this);
 
-        ImageButton imageButton = findViewById(R.id.back);
-        imageButton.setOnClickListener(new View.OnClickListener() {
+        mBackButton = findViewById(R.id.back);
+        mBackButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 EditNoteActivity.super.onBackPressed();
             }
         });
+
+        mSaveButton = findViewById(R.id.save);
+        mSaveButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                modeSetting(MODE_PREVIEW);
+                mNoteContentText.clearFocus();
+                mNoteTitle.clearFocus();
+                mNoteEntry.setNoteContent(mNoteContentText.getText().toString());
+                mNoteEntry.setNoteTitle(mNoteTitle.getText().toString());
+                if(!EditNoteHandler.saveNote(mNoteEntry, EditNoteActivity.this))
+                    Log.i(TAG, "onClick: save note failed");
+                Log.i(TAG, "onClick: save button onclick " + mNoteId);
+            }
+        });
+
         mNoteContentText = findViewById(R.id.note_content);
         mNoteContentText.addTextChangedListener(new TextWatcher() {
             @Override
@@ -61,7 +93,7 @@ public class EditNoteActivity extends AppCompatActivity{
 
             @Override
             public void onTextChanged(CharSequence s, int start, int before, int count) {
-
+                Log.i(TAG, "onTextChanged: " + mNoteContentText.getText());
             }
 
             @Override
@@ -74,25 +106,31 @@ public class EditNoteActivity extends AppCompatActivity{
         mNoteTitle = findViewById(R.id.note_title);
         mNoteTitle.requestFocus();
 
-        //set soft input mode
-        EditNoteActivity.this.getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_VISIBLE);
-        //set soft input mode
-
         //set keyboard listener
         View editArea = findViewById(R.id.edit_area);
         editArea.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                mNoteContentText.requestFocus();
-                mImeController.toggleSoftInput();
-
+                Log.i(TAG, "onClick: mNoteContentText.hasFocus() " + mNoteContentText.hasFocus());
+                if(mMode == MODE_PREVIEW){
+                    modeSetting(MODE_EDIT);
+                }
+                if(mNoteContentText.hasFocus()){
+                    //toggle soft keyboard as the content text has got focused
+                    mImeController.toggleSoftInput();
+                }
+                else {
+                    //request for focus and show soft keyboard
+                    mNoteContentText.requestFocus();
+                    mImeController.showSoftInput(mNoteContentText);
+                }
             }
         });
         //set keyboard listener end
 
         //set add image button listener
-        imageButton = findViewById(R.id.add_image_button);
-        imageButton.setOnClickListener(new View.OnClickListener() {
+        mAddImageButton = findViewById(R.id.add_image_button);
+        mAddImageButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 Intent intent = new Intent();
@@ -101,6 +139,27 @@ public class EditNoteActivity extends AppCompatActivity{
                 startActivityForResult(Intent.createChooser(intent, "Select Picture"), 1);
             }
         });
+
+        int mode;
+        Intent intent = getIntent();
+        String action_edit = intent.getStringExtra(Constants.ACTION_EDIT_NOTE);
+        if(StringUtil.equal(EDIT_TYPE_MODIFY, action_edit)) {
+            mode = MODE_PREVIEW;
+            mNoteEntry = ANoteDBManager.getInstance(EditNoteActivity.this).querySingleNoteRecordById(
+                    intent.getLongExtra(Constants.EDIT_NOTE_ID_NAME, Constants.NO_NOTE_ID));
+            mNoteTitle.setText(mNoteEntry.getNoteTitle());
+        }
+        else {
+            mode = MODE_EDIT;
+            mNoteEntry = new NoteEntry();
+        }
+        modeSetting(mode);
+        if(mMode == MODE_EDIT){
+            EditNoteActivity.this.getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_VISIBLE);
+            mNoteTitle.requestFocus();
+//            There is no use to show or hide soft input in onCreate method
+//            mImeController.showSoftInput(mNoteTitle);
+        }
     }
 
     @Override
@@ -147,5 +206,29 @@ public class EditNoteActivity extends AppCompatActivity{
             }
         }
         else super.onActivityResult(requestCode, resultCode, data);
+    }
+
+    /**
+     *
+     * @param mode set edit activity to pointed mode.
+     *             edit mode: show save button......
+     *             preview mode: show back button......
+     */
+    private void modeSetting(int mode){
+        if(mode == MODE_EDIT){
+            mMode = mode;
+            mSaveButton.setVisibility(View.VISIBLE);
+            mBackButton.setVisibility(View.INVISIBLE);
+            mNoteContentText.setEnabled(true);
+            mNoteTitle.setEnabled(true);
+        }
+        else if(mode == MODE_PREVIEW){
+            mMode = mode;
+            mBackButton.setVisibility(View.VISIBLE);
+            mSaveButton.setVisibility(View.INVISIBLE);
+            mNoteContentText.setEnabled(false);
+            mNoteTitle.setEnabled(false);
+        }
+        else Log.i(TAG, "modeSetting: invalid mode");
     }
 }

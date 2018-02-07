@@ -1,23 +1,19 @@
 package com.tcl.shenwk.aNote.view.customSpan;
 
-import android.content.Context;
 import android.graphics.drawable.Drawable;
 import android.text.style.DynamicDrawableSpan;
 import android.util.Log;
-import android.view.LayoutInflater;
 import android.view.View;
 import android.view.View.OnClickListener;
-import android.view.ViewGroup;
 
-import com.tcl.shenwk.aNote.R;
-import com.tcl.shenwk.aNote.SpanListener;
+import com.tcl.shenwk.aNote.CustomSpanSharedUtility;
 
 /**
  * Span class for show image in edittext, and custom some events for it.
  * Created by shenwk on 2018/1/26.
  */
 
-public class CustomImageSpan extends DynamicDrawableSpan implements OnClickListener, View.OnLongClickListener, SpanListener{
+public class CustomImageSpan extends DynamicDrawableSpan implements OnClickListener, View.OnLongClickListener, CustomSpanSharedUtility {
     private static String TAG = "CustomImageSpan";
     private Drawable mDrawable = null;
     private boolean isShow = false;

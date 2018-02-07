@@ -1,18 +1,12 @@
 package com.tcl.shenwk.aNote.multiMediaInputSupport;
 
 import android.text.Layout;
-import android.text.Selection;
 import android.text.Spannable;
 import android.text.method.ArrowKeyMovementMethod;
-import android.text.method.MetaKeyKeyListener;
-import android.text.method.Touch;
-import android.text.style.ClickableSpan;
-import android.text.style.ImageSpan;
 import android.view.MotionEvent;
 import android.widget.TextView;
 
-import com.tcl.shenwk.aNote.SpanListener;
-import com.tcl.shenwk.aNote.view.customSpan.CustomImageSpan;
+import com.tcl.shenwk.aNote.CustomSpanSharedUtility;
 
 /**
  * Created by shenwk on 2018/1/29.
@@ -37,7 +31,7 @@ public class CustomMovementMethod extends ArrowKeyMovementMethod {
             int line = layout.getLineForVertical(y);
             int off = layout.getOffsetForHorizontal(line, x);
 
-            SpanListener[] links = buffer.getSpans(off, off, SpanListener.class);
+            CustomSpanSharedUtility[] links = buffer.getSpans(off, off, CustomSpanSharedUtility.class);
 
             if (links.length != 0) {
                 if (action == MotionEvent.ACTION_UP) {

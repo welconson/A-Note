@@ -10,4 +10,6 @@
     <string name="setting">setting</string>
     <string name="search">search</string>
     <string name="title_hint">Note Title</string>
+    <string name="content_hint">No content</string>
+    <string name="item_no_title">Untitled note</string>
 </resources>

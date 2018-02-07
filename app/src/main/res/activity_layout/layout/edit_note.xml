@@ -10,8 +10,7 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:orientation="vertical"
-        android:id="@+id/edit_area">
+        android:orientation="vertical">
         <include
             layout="@layout/edit_note_bar"
             android:layout_width="match_parent"
@@ -21,8 +20,10 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:paddingStart="@dimen/text_padding"
+            android:paddingEnd="@dimen/text_padding"
             android:background="@null"
             android:hint="@string/title_hint"
+            android:inputType="text|textMultiLine"
             />
         <LinearLayout
             android:layout_width="match_parent"
@@ -30,16 +31,23 @@
             <include layout="@layout/image_button" />
             <include layout="@layout/location_button" />
         </LinearLayout>
-        <EditText xmlns:android="http://schemas.android.com/apk/res/android"
-            android:id="@+id/note_content"
+        <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:paddingStart="@dimen/text_padding"
-            android:background="@null"
-            android:inputType="text|textMultiLine"
-            android:focusable="true"
-            android:focusableInTouchMode="true"
-            android:imeOptions="actionDone" />
+            android:layout_height="match_parent"
+            android:orientation="vertical"
+            android:id="@+id/edit_area">
+            <EditText
+                android:id="@+id/note_content"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@null"
+                android:focusable="true"
+                android:focusableInTouchMode="true"
+                android:inputType="text|textMultiLine"
+                android:paddingStart="@dimen/text_padding"
+                android:paddingEnd="@dimen/text_padding"
+                android:hint="@string/content_hint" />
+        </LinearLayout>
     </LinearLayout>
 
 </android.support.design.widget.CoordinatorLayout>

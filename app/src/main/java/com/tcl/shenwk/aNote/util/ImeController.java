@@ -1,4 +1,4 @@
-package com.tcl.shenwk.aNote.Util;
+package com.tcl.shenwk.aNote.util;
 
 import android.content.Context;
 import android.view.View;
