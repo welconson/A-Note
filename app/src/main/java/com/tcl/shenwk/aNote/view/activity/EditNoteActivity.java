@@ -1,5 +1,6 @@
 package com.tcl.shenwk.aNote.view.activity;
 
+import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -22,7 +23,6 @@ import android.widget.ImageButton;
 
 import com.tcl.shenwk.aNote.R;
 import com.tcl.shenwk.aNote.entry.NoteEntry;
-import com.tcl.shenwk.aNote.model.ANoteDBManager;
 import com.tcl.shenwk.aNote.model.EditNoteHandler;
 import com.tcl.shenwk.aNote.util.ImeController;
 import com.tcl.shenwk.aNote.multiMediaInputSupport.CustomMovementMethod;
@@ -55,17 +55,31 @@ public class EditNoteActivity extends AppCompatActivity{
     private ImageButton mAddImageButton;
     private long mNoteId = Constants.NO_NOTE_ID;
     private NoteEntry mNoteEntry;
+    private boolean mIsModified;
+    @SuppressLint("ClickableViewAccessibility")
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.edit_note);
+        final Intent intent = getIntent();
         mImeController = new ImeController(this);
+        mIsModified = false;
 
         mBackButton = findViewById(R.id.back);
         mBackButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                EditNoteActivity.super.onBackPressed();
+                Intent nextIntent = new Intent(EditNoteActivity.this, HomePageActivity.class);
+                if(mIsModified) {
+                    nextIntent.putExtra(Constants.ITEM_ENTRY, mNoteEntry);
+                    nextIntent.putExtra(Constants.ACTION_EDIT_NOTE, intent.getStringExtra(Constants.ACTION_EDIT_NOTE));
+                    nextIntent.putExtra(Constants.ITEM_POSITION, intent.getIntExtra(
+                            Constants.ITEM_POSITION, Constants.DEFAULT_ITEM_POSITION));
+                    nextIntent.putExtra(Constants.ACTION_TO_HOME_PAGE, Constants.HOME_PAGE_UPDATE_RESUME);
+                } else {
+                    nextIntent.putExtra(Constants.ACTION_TO_HOME_PAGE, Constants.HOME_PAGE_NORMAL_RESUME);
+                }
+                EditNoteActivity.this.startActivity(nextIntent);
             }
         });
 
@@ -94,6 +108,7 @@ public class EditNoteActivity extends AppCompatActivity{
             @Override
             public void onTextChanged(CharSequence s, int start, int before, int count) {
                 Log.i(TAG, "onTextChanged: " + mNoteContentText.getText());
+                mIsModified = true;
             }
 
             @Override
@@ -111,15 +126,13 @@ public class EditNoteActivity extends AppCompatActivity{
         editArea.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Log.i(TAG, "onClick: mNoteContentText.hasFocus() " + mNoteContentText.hasFocus());
                 if(mMode == MODE_PREVIEW){
                     modeSetting(MODE_EDIT);
                 }
-                if(mNoteContentText.hasFocus()){
+                if (mNoteContentText.hasFocus()) {
                     //toggle soft keyboard as the content text has got focused
                     mImeController.toggleSoftInput();
-                }
-                else {
+                } else {
                     //request for focus and show soft keyboard
                     mNoteContentText.requestFocus();
                     mImeController.showSoftInput(mNoteContentText);
@@ -141,16 +154,16 @@ public class EditNoteActivity extends AppCompatActivity{
         });
 
         int mode;
-        Intent intent = getIntent();
         String action_edit = intent.getStringExtra(Constants.ACTION_EDIT_NOTE);
         if(StringUtil.equal(EDIT_TYPE_MODIFY, action_edit)) {
             mode = MODE_PREVIEW;
-            mNoteEntry = ANoteDBManager.getInstance(EditNoteActivity.this).querySingleNoteRecordById(
-                    intent.getLongExtra(Constants.EDIT_NOTE_ID_NAME, Constants.NO_NOTE_ID));
+            mNoteEntry = (NoteEntry) intent.getSerializableExtra(Constants.ITEM_ENTRY);
             mNoteTitle.setText(mNoteEntry.getNoteTitle());
+            mNoteContentText.setText(mNoteEntry.getNoteContent());
         }
         else {
             mode = MODE_EDIT;
+            mIsModified = true;
             mNoteEntry = new NoteEntry();
         }
         modeSetting(mode);

@@ -12,4 +12,5 @@ public class CustomViewHolder extends RecyclerView.ViewHolder {
     public CustomViewHolder(View itemView) {
         super(itemView);
     }
+
 }

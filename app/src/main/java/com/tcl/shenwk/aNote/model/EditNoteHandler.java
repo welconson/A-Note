@@ -6,8 +6,11 @@ import android.util.Log;
 import com.tcl.shenwk.aNote.entry.NoteEntry;
 import com.tcl.shenwk.aNote.util.Constants;
 import com.tcl.shenwk.aNote.util.FileUtil;
+import com.tcl.shenwk.aNote.util.RandomUtil;
+import com.tcl.shenwk.aNote.view.activity.EditNoteActivity;
 
 import java.util.Date;
+import java.util.Iterator;
 import java.util.List;
 
 /**
@@ -26,21 +29,50 @@ public class EditNoteHandler {
      */
     public static boolean saveNote(NoteEntry noteEntry, Context context){
         long noteId = noteEntry.getNoteId();
+        boolean ret = true;
         if(noteId == Constants.NO_NOTE_ID) {
-            noteId = ANoteDBManager.getInstance(context).insertNoteRecord(noteEntry);
-            if(noteId == -1)
-                return false;
-            noteEntry.setNoteId(noteId);
-            Log.i(TAG, "saveNote: create new content file, id = " + noteId);
+            // new note record
+            noteEntry.setNoteContentPath(RandomUtil.randomString(Constants.CONTENT_FILE_NAME_LENGTH));
+            if(FileUtil.writeFile(context, noteEntry.getNoteContent(), noteEntry.getNoteContentPath())) {
+                noteId = ANoteDBManager.getInstance(context).insertNoteRecord(noteEntry);
+                if (noteId == -1)
+                    ret = false;
+                else
+                    noteEntry.setNoteId(noteId);
+            }
+            else ret = false;
         }
         else {
-            ANoteDBManager.getInstance(context).updateNoteRecord(noteEntry);
-            Log.i(TAG, "saveNote: with exist content file");
+            // saved note
+            FileUtil.writeFile(context, noteEntry.getNoteContent(), noteEntry.getNoteContentPath());
+            ANoteDBManager.getInstance(context).updateNoteRecord(noteEntry, ANoteDBManager.UpdateFlagTable.UPDATE_ALL);
         }
-        return FileUtil.writeFile(context, Constants.CONTENT_FILE_NAME, noteId);
+        Log.i(TAG, "saveNote: save content file, id = " + noteId);
+        return ret;
     }
 
     public static List<NoteEntry> getAllNotesList(Context context){
-        return ANoteDBManager.getInstance(context).queryAllNotesRecord();
+        List<NoteEntry> noteEntries = ANoteDBManager.getInstance(context).queryAllNotesRecord();
+        for (NoteEntry noteEntry : noteEntries) {
+            noteEntry.setNoteContent(FileUtil.readNoteContent(context, noteEntry.getNoteContentPath()));
+        }
+        return noteEntries;
+    }
+
+    public static NoteEntry getSingleNote(Context context, long noteId){
+         NoteEntry noteEntry = ANoteDBManager.getInstance(context).querySingleNoteRecordById(noteId);
+         noteEntry.setNoteContent(FileUtil.readNoteContent(context, noteEntry.getNoteContentPath()));
+         return noteEntry;
+    }
+
+    public static void removeNote(Context context, NoteEntry noteEntry){
+        ANoteDBManager.getInstance(context).updateNoteRecord(noteEntry,
+                ANoteDBManager.UpdateFlagTable.UPDATE_IS_LABELED_DISCARDED);
+        deleteNote(context, noteEntry);
+    }
+
+    public static void deleteNote(Context context, NoteEntry noteEntry){
+        ANoteDBManager.getInstance(context).deleteNoteRecord(noteEntry.getNoteId());
+        FileUtil.deleteFile(noteEntry.getNoteContentPath());
     }
 }

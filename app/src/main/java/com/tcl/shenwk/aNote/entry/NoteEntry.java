@@ -2,6 +2,7 @@ package com.tcl.shenwk.aNote.entry;
 
 import com.tcl.shenwk.aNote.util.Constants;
 
+import java.io.Serializable;
 import java.util.Date;
 
 /**
@@ -9,7 +10,7 @@ import java.util.Date;
  * Created by shenwk on 2018/2/5.
  */
 
-public class NoteEntry {
+public class NoteEntry implements Serializable{
     private long noteId;
     private String noteTitle;
     private String noteContentPath;

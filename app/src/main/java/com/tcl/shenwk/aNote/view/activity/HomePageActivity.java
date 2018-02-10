@@ -20,13 +20,12 @@ import android.view.MenuItem;
 
 import com.tcl.shenwk.aNote.R;
 import com.tcl.shenwk.aNote.entry.NoteEntry;
-import com.tcl.shenwk.aNote.model.ANoteDBManager;
 import com.tcl.shenwk.aNote.model.EditNoteHandler;
 import com.tcl.shenwk.aNote.util.Constants;
+import com.tcl.shenwk.aNote.util.StringUtil;
 import com.tcl.shenwk.aNote.view.CustomAdapter;
 import com.tcl.shenwk.aNote.view.navigationItem.NavigationItemHandler;
 
-import java.util.ArrayList;
 import java.util.List;
 
 public class HomePageActivity extends AppCompatActivity
@@ -122,5 +121,33 @@ public class HomePageActivity extends AppCompatActivity
         CustomAdapter customAdapter = new CustomAdapter(getLayoutInflater(),
                noteEntries );
         mRecyclerView.setAdapter(customAdapter);
+    }
+
+    @Override
+    protected void onPostResume() {
+        Log.i(TAG, "onPostResume: running");
+        Intent intent = getIntent();
+        // Examine whether any note has been modified.
+        // If modified, update RecyclerView data set and display.
+        if(intent.getIntExtra(Constants.ACTION_TO_HOME_PAGE, Constants.HOME_PAGE_NORMAL_RESUME)
+                == Constants.HOME_PAGE_UPDATE_RESUME) {
+            CustomAdapter adapter = (CustomAdapter) mRecyclerView.getAdapter();
+            String action = intent.getStringExtra(Constants.ACTION_EDIT_NOTE);
+            NoteEntry noteEntry = (NoteEntry) intent.getSerializableExtra(Constants.ITEM_ENTRY);
+            if (StringUtil.equal(action, EditNoteActivity.EDIT_TYPE_MODIFY)) {
+                adapter.refreshSingleItemByPosition(intent.getIntExtra(Constants.ITEM_POSITION, Constants.DEFAULT_ITEM_POSITION),
+                        noteEntry);
+            } else {
+                adapter.addItem(noteEntry);
+            }
+            intent.putExtra(Constants.ACTION_TO_HOME_PAGE, Constants.HOME_PAGE_NORMAL_RESUME);
+        }
+        super.onPostResume();
+    }
+
+    @Override
+    protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+        setIntent(intent);
     }
 }

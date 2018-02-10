@@ -20,15 +20,27 @@ public interface Constants {
 
     //Extra name start
     String ACTION_EDIT_NOTE = "com.tcl.shenwk.aNote.edit_type";
-    String EDIT_NOTE_ID_NAME = "note_id";
+    String EDIT_NOTE_ID = "note_id";
+    String ITEM_POSITION = "item_position";
+    String ITEM_ENTRY = "item_entry";
+    int DEFAULT_ITEM_POSITION = -1;
+    int ITEM_BEGIN_POSITION = 0;
+    String ACTION_TO_HOME_PAGE = "action_to_home_page";
+    int HOME_PAGE_NORMAL_RESUME = 0;
+    int HOME_PAGE_UPDATE_RESUME = 1;
     //Extra name end
 
     //db constants start
     String A_NOTE_DATABASE_NAME = "a_note_local.db";
     int DB_VERSION = 1;
+    /*
+    multimedia resource type
+     */
+    int MULTIMEDIA_TYPE_IMAGE = 0;
     //db constants end
 
     //file constants start
     String CONTENT_FILE_NAME = "content";
+    int CONTENT_FILE_NAME_LENGTH = 12;
     //file constants end
 }
