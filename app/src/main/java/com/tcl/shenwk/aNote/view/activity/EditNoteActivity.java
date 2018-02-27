@@ -14,9 +14,10 @@ import android.text.Editable;
 import android.text.SpannableStringBuilder;
 import android.text.Spanned;
 import android.text.TextWatcher;
-import android.text.style.ImageSpan;
 import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.View;
+import android.view.ViewGroup;
 import android.view.WindowManager;
 import android.widget.EditText;
 import android.widget.ImageButton;
@@ -28,6 +29,7 @@ import com.tcl.shenwk.aNote.util.ImeController;
 import com.tcl.shenwk.aNote.multiMediaInputSupport.CustomMovementMethod;
 import com.tcl.shenwk.aNote.util.Constants;
 import com.tcl.shenwk.aNote.util.StringUtil;
+import com.tcl.shenwk.aNote.view.customSpan.ViewSpan;
 import com.tcl.shenwk.aNote.view.customSpan.CustomImageSpan;
 
 import java.io.FileNotFoundException;
@@ -196,7 +198,9 @@ public class EditNoteActivity extends AppCompatActivity{
                         drawable.setBounds(0, 0, width > 0 ? width : 0, height > 0 ? height : 0);
                         if (bitmap != null) {
                             SpannableStringBuilder spannableStringBuilder = new SpannableStringBuilder(mNoteContentText.getText());
-                            ImageSpan imageSpan = new ImageSpan(drawable);
+                            LayoutInflater layoutInflater = getLayoutInflater();
+                            View view = layoutInflater.inflate(R.layout.edit_note_bar, (ViewGroup) mNoteContentText.getParent(), false);
+                            ViewSpan viewSpan = new ViewSpan(view);
                             CustomImageSpan customImageSpan = new CustomImageSpan(drawable);
                             spannableStringBuilder.insert(mNoteContentText.getSelectionEnd(), Constants.IMAGE_SPAN_TAG);
                             int editPosition = mNoteContentText.getSelectionEnd() + Constants.IMAGE_SPAN_TAG.length();

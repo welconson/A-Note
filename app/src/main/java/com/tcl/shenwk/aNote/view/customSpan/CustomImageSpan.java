@@ -1,5 +1,6 @@
 package com.tcl.shenwk.aNote.view.customSpan;
 
+import android.graphics.Paint;
 import android.graphics.drawable.Drawable;
 import android.text.style.DynamicDrawableSpan;
 import android.util.Log;
