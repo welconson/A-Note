@@ -1,34 +1,44 @@
 package com.tcl.shenwk.aNote.view.activity;
 
 import android.annotation.SuppressLint;
+import android.content.Context;
 import android.content.Intent;
+import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
+import android.media.MediaMetadataRetriever;
 import android.net.Uri;
 import android.os.Bundle;
+import android.provider.MediaStore;
 import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
 import android.text.Editable;
 import android.text.SpannableStringBuilder;
 import android.text.Spanned;
+import android.text.TextUtils;
 import android.text.TextWatcher;
 import android.util.Log;
+import android.view.Gravity;
 import android.view.LayoutInflater;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.WindowManager;
 import android.widget.EditText;
 import android.widget.ImageButton;
+import android.widget.TextView;
 
 import com.tcl.shenwk.aNote.R;
 import com.tcl.shenwk.aNote.entry.NoteEntry;
 import com.tcl.shenwk.aNote.model.EditNoteHandler;
+import com.tcl.shenwk.aNote.util.FileUtil;
 import com.tcl.shenwk.aNote.util.ImeController;
 import com.tcl.shenwk.aNote.multiMediaInputSupport.CustomMovementMethod;
 import com.tcl.shenwk.aNote.util.Constants;
 import com.tcl.shenwk.aNote.util.StringUtil;
+import com.tcl.shenwk.aNote.view.customSpan.AudioViewSpan;
 import com.tcl.shenwk.aNote.view.customSpan.ViewSpan;
 import com.tcl.shenwk.aNote.view.customSpan.CustomImageSpan;
 
@@ -55,9 +65,13 @@ public class EditNoteActivity extends AppCompatActivity{
     private ImageButton mBackButton;
     private ImageButton mSaveButton;
     private ImageButton mAddImageButton;
+    private ImageButton mAddAudioButton;
     private long mNoteId = Constants.NO_NOTE_ID;
     private NoteEntry mNoteEntry;
     private boolean mIsModified;
+
+    private int contentInsideXOffset;
+    private int contentInsideYOffset;
     @SuppressLint("ClickableViewAccessibility")
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -101,6 +115,7 @@ public class EditNoteActivity extends AppCompatActivity{
         });
 
         mNoteContentText = findViewById(R.id.note_content);
+        contentInsideXOffset = 1;
         mNoteContentText.addTextChangedListener(new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence s, int start, int count, int after) {
@@ -119,7 +134,10 @@ public class EditNoteActivity extends AppCompatActivity{
             }
         });
         mNoteContentText.setMovementMethod(CustomMovementMethod.getInstance());
-
+        int []location = new int [2];
+        mNoteContentText.getLocationOnScreen(location);
+        contentInsideXOffset = location[0] + mNoteContentText.getPaddingLeft();
+        contentInsideYOffset = location[1] + mNoteContentText.getPaddingTop();
         mNoteTitle = findViewById(R.id.note_title);
         mNoteTitle.requestFocus();
 
@@ -144,6 +162,8 @@ public class EditNoteActivity extends AppCompatActivity{
         //set keyboard listener end
 
         //set add image button listener
+
+        //add buttons onClick listener settings
         mAddImageButton = findViewById(R.id.add_image_button);
         mAddImageButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -151,7 +171,17 @@ public class EditNoteActivity extends AppCompatActivity{
                 Intent intent = new Intent();
                 intent.setType("image/*");
                 intent.setAction(Intent.ACTION_GET_CONTENT);
-                startActivityForResult(Intent.createChooser(intent, "Select Picture"), 1);
+                startActivityForResult(Intent.createChooser(intent, null), Constants.SELECT_IMAGE);
+            }
+        });
+        mAddAudioButton = findViewById(R.id.add_audio_button);
+        mAddAudioButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent();
+                intent.setType("audio/*");
+                intent.setAction(Intent.ACTION_GET_CONTENT);
+                startActivityForResult(Intent.createChooser(intent, null), Constants.SELECT_AUDIO);
             }
         });
 
@@ -179,7 +209,8 @@ public class EditNoteActivity extends AppCompatActivity{
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        if(requestCode == 1){
+        //handle select image result
+        if(requestCode == Constants.SELECT_IMAGE){
             InputStream inputStream = null;
             Bitmap bitmap = null;
             if(data != null) {
@@ -198,9 +229,6 @@ public class EditNoteActivity extends AppCompatActivity{
                         drawable.setBounds(0, 0, width > 0 ? width : 0, height > 0 ? height : 0);
                         if (bitmap != null) {
                             SpannableStringBuilder spannableStringBuilder = new SpannableStringBuilder(mNoteContentText.getText());
-                            LayoutInflater layoutInflater = getLayoutInflater();
-                            View view = layoutInflater.inflate(R.layout.edit_note_bar, (ViewGroup) mNoteContentText.getParent(), false);
-                            ViewSpan viewSpan = new ViewSpan(view);
                             CustomImageSpan customImageSpan = new CustomImageSpan(drawable);
                             spannableStringBuilder.insert(mNoteContentText.getSelectionEnd(), Constants.IMAGE_SPAN_TAG);
                             int editPosition = mNoteContentText.getSelectionEnd() + Constants.IMAGE_SPAN_TAG.length();
@@ -222,7 +250,41 @@ public class EditNoteActivity extends AppCompatActivity{
                 }
             }
         }
-        else super.onActivityResult(requestCode, resultCode, data);
+        //handle select audio result
+        else if(requestCode == Constants.SELECT_AUDIO) {
+            if (data != null) {
+                Uri uri = data.getData();
+                if (uri != null) {
+                    String audioName = getFileNameFromURI(EditNoteActivity.this, uri);
+                    Log.i(TAG, "onActivityResult: " + audioName);
+//                    Log.i(TAG, "onActivityResult: isReadable = " + FileUtil.isExternalStorageReadable()
+//                    + " isWritable = " + FileUtil.isExternalStorageWritable());
+                    MediaMetadataRetriever mmr = new MediaMetadataRetriever();
+                    mmr.setDataSource(EditNoteActivity.this, uri);
+                    String durationStr = mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION);
+                    Log.i(TAG, "onActivityResult: durationStr = " + durationStr);
+
+
+                    LayoutInflater layoutInflater = getLayoutInflater();
+                    View view = layoutInflater.inflate(R.layout.audio_span_layout, (ViewGroup) mNoteContentText.getParent(), false);
+                    AudioViewSpan audioViewSpan = new AudioViewSpan(view,contentInsideXOffset, contentInsideYOffset);
+                    SpannableStringBuilder spannableStringBuilder = new SpannableStringBuilder(mNoteContentText.getText());
+                    spannableStringBuilder.insert(mNoteContentText.getSelectionEnd(), Constants.AUDIO_SPAN_TAG);
+                    int editPosition = mNoteContentText.getSelectionEnd() + Constants.AUDIO_SPAN_TAG.length();
+                    spannableStringBuilder.setSpan(audioViewSpan, mNoteContentText.getSelectionEnd(),
+                            editPosition, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+                    TextView textView = view.findViewById(R.id.audio_time);
+                    textView.setText(StringUtil.DurationFormat(durationStr));
+                    textView = view.findViewById(R.id.audio_title);
+                    textView.setText(audioName);
+                    mNoteContentText.setText(spannableStringBuilder);
+                    mNoteContentText.requestFocus();
+                    mNoteContentText.setSelection(editPosition);
+                }
+
+                Log.i(TAG, "onActivityResult: requestCode = SELECT_AUDIO");
+            }
+        } else super.onActivityResult(requestCode, resultCode, data);
     }
 
     /**
@@ -247,5 +309,27 @@ public class EditNoteActivity extends AppCompatActivity{
             mNoteTitle.setEnabled(false);
         }
         else Log.i(TAG, "modeSetting: invalid mode");
+    }
+
+    /**
+     *
+     * @param context activity context.
+     * @param contentUri uri with the content.
+     * @return real path of the uri.
+     */
+    public String getFileNameFromURI(Context context, Uri contentUri) {
+        Cursor cursor = null;
+        String ret = null;
+        String[] proj = { MediaStore.Audio.Media.DISPLAY_NAME };
+        cursor = context.getContentResolver().query(contentUri,  proj, null, null, null);
+        if(cursor != null) {
+            int column_index = cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.DISPLAY_NAME);
+            cursor.moveToFirst();
+            ret = cursor.getString(column_index);
+            cursor.close();
+            Log.i(TAG, "getFileNameFromURI: try " + ret);
+            return ret;
+        }
+        return null;
     }
 }

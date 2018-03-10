@@ -1,6 +1,7 @@
 package com.tcl.shenwk.aNote.util;
 
 import android.content.Context;
+import android.os.Environment;
 import android.util.Log;
 
 import com.tcl.shenwk.aNote.model.DBFieldsName;
@@ -117,5 +118,23 @@ public class FileUtil {
                 Log.i(TAG, "deleteFile: delete file " + file.getAbsolutePath() + " failed");
             }
         }
+    }
+
+    public static boolean isExternalStorageWritable() {
+        String state = Environment.getExternalStorageState();
+        if (Environment.MEDIA_MOUNTED.equals(state)) {
+            return true;
+        }
+        return false;
+    }
+
+    /* Checks if external storage is available to at least read */
+    public static boolean isExternalStorageReadable() {
+        String state = Environment.getExternalStorageState();
+        if (Environment.MEDIA_MOUNTED.equals(state) ||
+                Environment.MEDIA_MOUNTED_READ_ONLY.equals(state)) {
+            return true;
+        }
+        return false;
     }
 }

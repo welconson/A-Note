@@ -6,9 +6,10 @@ package com.tcl.shenwk.aNote.util;
  */
 
 public interface Constants {
-    //tag start
+    //span tag start
     String IMAGE_SPAN_TAG = "[image]";
-    //tag end
+    String AUDIO_SPAN_TAG = "[audio]";
+    //span tag end
 
     //
     int ARCHIVED = 1;
@@ -43,4 +44,13 @@ public interface Constants {
     String CONTENT_FILE_NAME = "content";
     int CONTENT_FILE_NAME_LENGTH = 12;
     //file constants end
+
+    //Intent request code
+    int SELECT_IMAGE = 0;
+    int SELECT_AUDIO = 1;
+    //Intent request code
+
+    //Span size constant
+    int VIEW_SPAN_HEIGHT = 72;
+    int VIEW_SPAN_WIDTH = 216;
 }

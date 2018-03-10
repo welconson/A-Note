@@ -7,6 +7,7 @@ import android.view.MotionEvent;
 import android.widget.TextView;
 
 import com.tcl.shenwk.aNote.CustomSpanSharedUtility;
+import com.tcl.shenwk.aNote.view.customSpan.ViewSpan;
 
 /**
  * Created by shenwk on 2018/1/29.
@@ -32,6 +33,7 @@ public class CustomMovementMethod extends ArrowKeyMovementMethod {
             int off = layout.getOffsetForHorizontal(line, x);
 
             CustomSpanSharedUtility[] links = buffer.getSpans(off, off, CustomSpanSharedUtility.class);
+            ViewSpan[] links2 = buffer.getSpans(off, off, ViewSpan.class);
 
             if (links.length != 0) {
                 if (action == MotionEvent.ACTION_UP) {
@@ -45,6 +47,9 @@ public class CustomMovementMethod extends ArrowKeyMovementMethod {
 //                return true;
 //            } else {
 //                Selection.removeSelection(buffer);
+            }
+            if(links2.length != 0){
+                links2[0].onTouch(widget, event);
             }
         }
         return super.onTouchEvent(widget, buffer, event);

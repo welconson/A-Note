@@ -30,6 +30,7 @@
             android:layout_height="wrap_content">
             <include layout="@layout/image_button" />
             <include layout="@layout/location_button" />
+            <include layout="@layout/audio_button"/>
         </LinearLayout>
         <LinearLayout
             android:layout_width="match_parent"
