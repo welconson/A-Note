@@ -13,7 +13,9 @@ public class RandomUtil {
     private static String TAG = "RandomUtil";
     public static String randomString(int length){
         Date date = new Date();
-        String randomString = date.toString();
+        long millisecond =  date.getTime();
+        String randomString = String.valueOf(millisecond);
+        randomString.substring(randomString.length() - length);
         Log.i(TAG, "randomString: " + randomString);
         return randomString;
     }

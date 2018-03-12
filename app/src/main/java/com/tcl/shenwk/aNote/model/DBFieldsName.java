@@ -20,10 +20,11 @@ public interface DBFieldsName {
     String HAS_ARCHIVED = "has_archived";
     String IS_LABELED_DISCARDED = "is_labeled_discarded";
 
-    //MULTIMEDIA table fields
-    String MULTIMEDIA_TABLE_NAME = "multimedia";
-    String MULTIMEDIA_ID = "multimedia_id";
-    String FILE_NAME = "file_name";
-    String FILE_PATH = "file_path";
+    //RESOURCE_DATA table fields
+    String RESOURCE_TABLE_NAME = "resource";
+    String RESOURCE_ID = "resource_id";
+    String RESOURCE_FILE_NAME = "resource_file_name";
+    String RESOURCE_PATH = "resource_path";
     String DATA_TYPE = "data_type";
+    String SPAN_START = "span_start";
 }

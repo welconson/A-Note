@@ -15,11 +15,8 @@ public class StringUtil {
     }
 
     @SuppressLint("DefaultLocale")
-    public static String DurationFormat(String s){
-        if(s != null){
-            int durationSecond = Integer.valueOf(s) / 1000;
-            return String.format("%2d:%02d", durationSecond / 60, durationSecond % 60);
-        }
-        return null;
+    public static String DurationFormat(int duration){
+        int durationSecond = duration / 1000;
+        return String.format("%2d:%02d", durationSecond / 60, durationSecond % 60);
     }
 }

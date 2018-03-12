@@ -34,15 +34,13 @@ public interface Constants {
     //db constants start
     String A_NOTE_DATABASE_NAME = "a_note_local.db";
     int DB_VERSION = 1;
-    /*
-    multimedia resource type
-     */
-    int MULTIMEDIA_TYPE_IMAGE = 0;
     //db constants end
 
     //file constants start
     String CONTENT_FILE_NAME = "content";
-    int CONTENT_FILE_NAME_LENGTH = 12;
+    int NOTE_DIRECTORY_LENGTH = 12;
+    int RESOURCE_FILE_NAME_LENGTH = 12;
+    String RESOURCE_DIR = "resourceData";
     //file constants end
 
     //Intent request code
@@ -50,7 +48,14 @@ public interface Constants {
     int SELECT_AUDIO = 1;
     //Intent request code
 
-    //Span size constant
+    //Span size constant(dp)
     int VIEW_SPAN_HEIGHT = 72;
     int VIEW_SPAN_WIDTH = 216;
+    //Span size constant(dp)
+
+    //Resource data type
+    int RESOURCE_TYPE_IMAGE = 0;
+    int RESOURCE_TYPE_AUDIO = 1;
+    int RESOURCE_TYPE_VIDEO = 2;
+    //Resource data type
 }

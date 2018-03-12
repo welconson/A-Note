@@ -100,7 +100,7 @@ public class HomePageActivity extends AppCompatActivity
 //                Snackbar.make(view, "add note", Snackbar.LENGTH_SHORT)
 //                        .setAction("Action", null).show();
                 Intent intent = new Intent(HomePageActivity.this, EditNoteActivity.class);
-                intent.putExtra(Constants.ACTION_EDIT_NOTE, EditNoteActivity.EDIT_TYPE_ADD);
+                intent.putExtra(Constants.ACTION_EDIT_NOTE, EditNoteActivity.EDIT_TYPE_CREATE);
                 startActivity(intent);
             }
         });

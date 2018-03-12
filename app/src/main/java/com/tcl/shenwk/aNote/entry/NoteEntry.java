@@ -13,7 +13,7 @@ import java.util.Date;
 public class NoteEntry implements Serializable{
     private long noteId;
     private String noteTitle;
-    private String noteContentPath;
+    private String notePath;
     private String createTimestamp;
     private String updateTimestamp;
     private String locationInfo;
@@ -21,10 +21,10 @@ public class NoteEntry implements Serializable{
     private int isLabeledDiscarded;
     private String noteContent;
 
-    public NoteEntry(String noteTitle, String noteContentPath, String createTimestamp, String updateTimestamp,
+    public NoteEntry(String noteTitle, String notePath, String createTimestamp, String updateTimestamp,
                      String locationInfo, int hasArchived, int isLabeledDiscarded) {
         this.noteTitle = noteTitle;
-        this.noteContentPath = noteContentPath;
+        this.notePath = notePath;
         this.createTimestamp = createTimestamp;
         this.updateTimestamp = updateTimestamp;
         this.locationInfo = locationInfo;
@@ -60,12 +60,12 @@ public class NoteEntry implements Serializable{
         this.noteTitle = noteTitle;
     }
 
-    public String getNoteContentPath() {
-        return noteContentPath;
+    public String getNotePath() {
+        return notePath;
     }
 
-    public void setNoteContentPath(String noteContentPath) {
-        this.noteContentPath = noteContentPath;
+    public void setNotePath(String notePath) {
+        this.notePath = notePath;
     }
 
     public String getCreateTimestamp() {

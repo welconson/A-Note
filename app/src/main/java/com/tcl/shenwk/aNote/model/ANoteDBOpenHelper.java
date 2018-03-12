@@ -25,8 +25,9 @@ public class ANoteDBOpenHelper extends SQLiteOpenHelper {
                 + IS_LABELED_DISCARDED + " INTEGER " + " )";
         db.execSQL(sql);
         Log.i("ANoteDBOpenHelper", "onCreate: " + sql);
-        sql = "CREATE TABLE " + MULTIMEDIA_TABLE_NAME + " ( " + MULTIMEDIA_ID + " INTEGER PRIMARY KEY AUTOINCREMENT, "
-                + FILE_NAME + " TEXT NOT NULL, " + FILE_PATH + " TEXT NOT NULL, " + DATA_TYPE + " INTEGER " + " )";
+        sql = "CREATE TABLE " + RESOURCE_TABLE_NAME + " ( " + RESOURCE_ID + " INTEGER PRIMARY KEY AUTOINCREMENT, "
+                + NOTE_ID + " INTEGER, " + RESOURCE_FILE_NAME + " TEXT NOT NULL, " + RESOURCE_PATH + " TEXT NOT NULL, "
+                + DATA_TYPE + " INTEGER, " + SPAN_START + " INTEGER " +  " )";
         db.execSQL(sql);
         Log.i("ANoteDBOpenHelper", "onCreate: " + sql);
     }

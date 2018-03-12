@@ -1,18 +1,25 @@
 package com.tcl.shenwk.aNote.util;
 
+import android.content.ContentResolver;
 import android.content.Context;
+import android.content.res.AssetFileDescriptor;
+import android.database.Cursor;
+import android.net.Uri;
 import android.os.Environment;
+import android.provider.MediaStore;
 import android.util.Log;
 
-import com.tcl.shenwk.aNote.model.DBFieldsName;
-
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileDescriptor;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.OutputStream;
 
 /**
  * File utility.
@@ -21,32 +28,29 @@ import java.io.InputStreamReader;
 
 public class FileUtil {
     private static String TAG = "FileUtil";
-    private static String fileRootDir = null;
 
     /**
      *
      * @param context   context for file operation.
      * @param content   content of note to be saved.
-     * @param dirName   directory to store note content and attachments.
+     * @param filePath   file path where the content is stored.
      * @return  return whether operate successfully.
      */
-    public static boolean writeFile(Context context, String content, String dirName){
-        if(fileRootDir == null)
-            fileRootDir = context.getFilesDir().getAbsolutePath();
-        if(createDir(fileRootDir+ File.separator + dirName) != null) {
-            File file = createFile(fileRootDir+ File.separator
-                    + dirName + File.separator + Constants.CONTENT_FILE_NAME);
-            if(file == null)
-                return false;
-            try {
-                FileOutputStream fileOutputStream = new FileOutputStream(file);
-                if(content != null) {
-                    fileOutputStream.write(content.getBytes());
-                }
-                fileOutputStream.close();
-            } catch (IOException e) {
-                e.printStackTrace();
+    public static boolean writeFile(Context context, String content, String filePath){
+        if(filePath == null)
+            return false;
+        File file = createFile(filePath);
+        Log.i(TAG, "writeFile: filePath " + filePath);
+        if(file == null)
+            return false;
+        try {
+            FileOutputStream fileOutputStream = new FileOutputStream(file);
+            if(content != null) {
+                fileOutputStream.write(content.getBytes());
             }
+            fileOutputStream.close();
+        } catch (IOException e) {
+            e.printStackTrace();
         }
         return true;
     }
@@ -56,23 +60,28 @@ public class FileUtil {
      * @param dirName directory name to create.
      * @return  return whether operate successfully.
      */
-    public static File createDir(String dirName){
+    public static boolean createDir(String dirName){
+        if(dirName == null)
+            return false;
         File dir = new File(dirName);
         if(!dir.exists()) {
             if (!dir.mkdir()) {
                 Log.i(TAG, "createDir: create note directory " + dirName + " failed");
-                return null;
+                return false;
             }
+            Log.i(TAG, "createDir: " + dirName + " success");
         }
-        return dir;
+        return true;
     }
 
     /**
      *
      * @param name  file name to create.
-     * @return  return whether operate successfully.
+     * @return  the File is created, or null if failed.
      */
     public static File createFile(String name){
+        if(name == null)
+            return null;
         File file = new File(name);
         if(!file.exists()){
             try {
@@ -86,12 +95,16 @@ public class FileUtil {
         return file;
     }
 
-    public static String readNoteContent(Context context, String dirName){
-        if(fileRootDir == null)
-            fileRootDir = context.getFilesDir().getAbsolutePath();
+    public static boolean isFileExist(String filepath){
+        if(filepath != null) {
+            File file = new File(filepath);
+            return file.exists();
+        }else return false;
+    }
+
+    public static String readFile(Context context, String filePath){
         StringBuilder contentBuilder = new StringBuilder();
-        File file =  new File(fileRootDir+ File.separator
-                + dirName + File.separator + Constants.CONTENT_FILE_NAME);
+        File file =  new File(filePath);
         if(file.exists()){
             try {
                 FileInputStream fileInputStream = new FileInputStream(file);
@@ -108,33 +121,147 @@ public class FileUtil {
         return contentBuilder.toString();
     }
 
-    public static void deleteFile(String name){
+    /**
+     *
+     * @param name filename excluded directory.
+     */
+    public static boolean deleteFile(String name){
         File file = new File(name);
-        if(file.exists() && !file.isDirectory()){
+        boolean ret = true;
+        if(!file.isDirectory()){
             if (file.delete()) {
                 Log.i(TAG, "deleteFile: delete file " + file.getAbsolutePath() + " successfully");
             }
             else{
                 Log.i(TAG, "deleteFile: delete file " + file.getAbsolutePath() + " failed");
+                ret = false;
             }
         }
+        return ret;
+    }
+
+    /**
+     *  Recursively delete files under the pointed directory.
+     * @param path directory need to delete.
+     * @return  true if all operation handled successfully, or false.
+     */
+    public static boolean deleteDirectoryAndFiles(String path){
+        if(path == null)
+            return false;
+        boolean ret = true;
+        File file = new File(path);
+        if(file.isDirectory()){
+            String[] childList = file.list();
+            for(String child : childList) {
+                if (!deleteDirectoryAndFiles(path + File.separator + child)) {
+                    ret = false;
+                }
+            }
+            //directory delete here
+            if(!file.delete()){
+                ret = false;
+                Log.i(TAG, "deleteDirectoryAndFiles: directory failed " + path);
+            }else{
+                Log.i(TAG, "deleteDirectoryAndFiles: directory successfully " + path);
+            }
+        }
+        //normal file delete here
+        else if(!file.delete()){
+            ret = false;
+            Log.i(TAG, "deleteDirectoryAndFiles: normal file failed " + path);
+        }
+        else Log.i(TAG, "deleteDirectoryAndFiles: normal file successfully " + path);
+        return ret;
     }
 
     public static boolean isExternalStorageWritable() {
         String state = Environment.getExternalStorageState();
-        if (Environment.MEDIA_MOUNTED.equals(state)) {
-            return true;
-        }
-        return false;
+        return Environment.MEDIA_MOUNTED.equals(state);
     }
 
     /* Checks if external storage is available to at least read */
     public static boolean isExternalStorageReadable() {
         String state = Environment.getExternalStorageState();
-        if (Environment.MEDIA_MOUNTED.equals(state) ||
-                Environment.MEDIA_MOUNTED_READ_ONLY.equals(state)) {
-            return true;
+        return Environment.MEDIA_MOUNTED.equals(state) ||
+                Environment.MEDIA_MOUNTED_READ_ONLY.equals(state);
+    }
+
+    public static boolean saveFileOfUri(Context context, Uri sourceUri, String filePath){
+        Log.i(TAG, "saveFileOfUri: sava file path = " + filePath);
+
+        // TODO: 2018/3/11 Judge whether the file had exist
+        //open the file referred by the uri
+        BufferedInputStream bis;
+        AssetFileDescriptor fd = null;
+        ContentResolver resolver = context.getContentResolver();
+        try {
+            fd = resolver.openAssetFileDescriptor(sourceUri, "r");
+        } catch(FileNotFoundException e) {
+            throw new IllegalArgumentException();
         }
-        return false;
+        if (fd == null) {
+            throw new IllegalArgumentException();
+        }
+        FileDescriptor descriptor = fd.getFileDescriptor();
+        bis = new BufferedInputStream(new FileInputStream(descriptor));
+
+        BufferedOutputStream bos = null;
+        try {
+            bos = new BufferedOutputStream(new FileOutputStream(filePath, false));
+            byte[] buf = new byte[1024];
+            while(bis.read(buf) != -1){
+                bos.write(buf);
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        } finally {
+            try {
+                bis.close();
+                if (bos != null) bos.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+        return true;
+    }
+
+    /**
+     *
+     * @param context activity context.
+     * @param contentUri uri with the content.
+     * @return name of the uri file.
+     */
+    public static String getFileNameFromURI(Context context, Uri contentUri, int resourceType) {
+        if(contentUri == null){
+            return null;
+        }
+        Cursor cursor;
+        String ret = null;
+        String[] proj;
+        switch (resourceType){
+            case Constants.RESOURCE_TYPE_IMAGE:
+                proj = new String[]{MediaStore.Images.Media.DISPLAY_NAME};break;
+            case Constants.RESOURCE_TYPE_AUDIO:
+                proj = new String[]{MediaStore.Audio.Media.DISPLAY_NAME};break;
+            case Constants.RESOURCE_TYPE_VIDEO:
+                proj = new String[]{MediaStore.Video.Media.DISPLAY_NAME};break;
+                default:proj = new String[]{""};
+        }
+        contentUri.getScheme();
+        cursor = context.getContentResolver().query(contentUri,  proj, null, null, null);
+        if(cursor != null) {
+            int column_index = cursor.getColumnIndexOrThrow(proj[0]);
+            cursor.moveToFirst();
+            ret = cursor.getString(column_index);
+            cursor.close();
+            Log.i(TAG, "getFileNameFromURI: try " + ret);
+        }
+        return ret;
+    }
+
+    public static Uri getUriFromFile(String filePath){
+        if(filePath == null)
+            return null;
+        return Uri.fromFile(new File(filePath));
     }
 }

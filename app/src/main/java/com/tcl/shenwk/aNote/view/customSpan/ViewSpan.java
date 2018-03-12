@@ -2,19 +2,15 @@ package com.tcl.shenwk.aNote.view.customSpan;
 
 import android.graphics.Canvas;
 import android.graphics.Paint;
-import android.graphics.Rect;
 import android.graphics.drawable.Drawable;
+import android.net.Uri;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.text.style.DynamicDrawableSpan;
-import android.text.style.ReplacementSpan;
-import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
-import android.view.ViewGroup;
-import android.widget.TextView;
 
-import com.tcl.shenwk.aNote.R;
+import com.tcl.shenwk.aNote.util.FileUtil;
 
 /**
  * Replace default implementation Drawable with View, so we can custom
@@ -27,40 +23,34 @@ public abstract class ViewSpan extends DynamicDrawableSpan implements View.OnTou
     private View mView;
     private float mCurrentX;
     private float mCurrentY;
-    private int xOffset;
-    private int yOffset;
+    private Uri mResourceDataUri;
+    private String mFileName;
+    private String mFilePath;
+    private int mResourceDataType;
 
-    public ViewSpan(View view, int x, int y) {
+     private ViewSpan(View view){
         super(DynamicDrawableSpan.ALIGN_BOTTOM);
         this.mView = view;
-        xOffset = x;
-        yOffset = y;
-        mView.setOnTouchListener(new View.OnTouchListener() {
-            @Override
-            public boolean onTouch(View v, MotionEvent event) {
-                Log.i(TAG, "ViewSpan onTouch: x = " + event.getX() + " , y = " + event.getY());
-                return false;
-            }
-        });
-//        mView.findViewById(R.id.setting).setOnTouchListener(new View.OnTouchListener() {
+        measure();
+         //        mView.setOnTouchListener(new View.OnTouchListener() {
 //            @Override
 //            public boolean onTouch(View v, MotionEvent event) {
-//                Log.i(TAG, "onTouch: setting");
-//                return true;
+//                Log.i(TAG, "ViewSpan onTouch: x = " + event.getX() + " , y = " + event.getY());
+//                return false;
 //            }
 //        });
-//        mView.setOnClickListener(new View.OnClickListener() {
-//            @Override
-//            public void onClick(View v) {
-//                Log.i(TAG, "onClick: ");
-//            }
-//        });
-        measure();
-//        final int widthSpec = View.MeasureSpec.makeMeasureSpec(500, View.MeasureSpec.EXACTLY);
-//        final int heightSpec = View.MeasureSpec.makeMeasureSpec(500, View.MeasureSpec.EXACTLY);
-//        mView.measure(widthSpec, heightSpec);
-//        Log.i(TAG, "getSize: after height = " + mView.getMeasuredHeight() +
-//                " , width = " + mView.getMeasuredWidth());
+    }
+
+    ViewSpan(View view, Uri uri) {
+        this(view);
+        this.mResourceDataUri = uri;
+        this.mFileName = FileUtil.getFileNameFromURI(view.getContext(), uri, getResourceDataType());
+    }
+
+    ViewSpan(View view, String fileName, String filePath){
+        this(view);
+        this.mFileName = fileName;
+        this.mFilePath = filePath;
     }
 
     @Override
@@ -89,7 +79,7 @@ public abstract class ViewSpan extends DynamicDrawableSpan implements View.OnTou
         if (mVerticalAlignment == ALIGN_BASELINE) {
             transY -= paint.getFontMetricsInt().descent;
         }
-        Log.i(TAG, "draw: x = " + (int)x + " , y = " + transY);
+//        Log.i(TAG, "draw: x = " + (int)x + " , y = " + transY);
         mCurrentX = x;
         mCurrentY = transY;
         canvas.translate(x, transY);
@@ -102,15 +92,34 @@ public abstract class ViewSpan extends DynamicDrawableSpan implements View.OnTou
     public boolean onTouch(View v, MotionEvent event) {
         int []location = new int[2];
         mView.getLocationOnScreen(location);
+        // We need to adjust the event relative location of the View.
+        // Calculate offset of the View inside the TextView.
         event.offsetLocation(- v.getPaddingLeft() - mCurrentX, - v.getPaddingTop() - mCurrentY);
-        Log.i(TAG, "onTouch: x = " + event.getX() + " , y = " + event.getY());
         mView.dispatchTouchEvent(event);
         return true;
     }
 
+    /**
+     * Implement the method in subclass to set right size of view measuring,
+     * cause the view will never be added to View Tree.
+     */
     public abstract void measure();
+
+    public abstract int getResourceDataType();
 
     public View getView(){
         return mView;
+    }
+
+    public Uri getResourceDataUri() {
+        return mResourceDataUri;
+    }
+
+    public String getFileName() {
+        return mFileName;
+    }
+
+    public String getFilePath() {
+        return mFilePath;
     }
 }

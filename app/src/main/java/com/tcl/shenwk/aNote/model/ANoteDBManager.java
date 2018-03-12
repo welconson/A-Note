@@ -7,11 +7,14 @@ import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteStatement;
 import android.util.Log;
 
+import com.tcl.shenwk.aNote.entry.ResourceDataEntry;
 import com.tcl.shenwk.aNote.entry.NoteEntry;
 import com.tcl.shenwk.aNote.util.Constants;
 
 import java.util.ArrayList;
 import java.util.List;
+
+import static com.tcl.shenwk.aNote.model.DBFieldsName.*;
 
 /**
  * Local database accessing interfaces.
@@ -48,10 +51,10 @@ public class ANoteDBManager {
         long ret = -1;
         if(noteEntry == null)
             return ret;
-        String sql = "insert into " + DBFieldsName.NOTE_TABLE_NAME + " (" + DBFieldsName.NOTE_TITLE + ", "
-                + DBFieldsName.NOTE_CONTENT_PATH + ", " + DBFieldsName.CREATE_TIMESTAMP + ", "
-                + DBFieldsName.UPDATE_TIMESTAMP + ", " + DBFieldsName.LOCATION_INFO + ", "
-                + DBFieldsName.HAS_ARCHIVED + ", " + DBFieldsName.IS_LABELED_DISCARDED + ") "
+        String sql = "insert into " + NOTE_TABLE_NAME + " (" + NOTE_TITLE + ", "
+                + NOTE_CONTENT_PATH + ", " + CREATE_TIMESTAMP + ", "
+                + UPDATE_TIMESTAMP + ", " + LOCATION_INFO + ", "
+                + HAS_ARCHIVED + ", " + IS_LABELED_DISCARDED + ") "
                 + " values(?,?,?,?,?,?,?);";
         SQLiteDatabase database = mDBHelper.getWritableDatabase();
         database.beginTransaction();
@@ -59,9 +62,9 @@ public class ANoteDBManager {
         if(noteEntry.getNoteTitle() == null)
             statement.bindNull(1);
         else statement.bindString(1, noteEntry.getNoteTitle());
-        if(noteEntry.getNoteContentPath() == null)
+        if(noteEntry.getNotePath() == null)
             statement.bindNull(2);
-        else statement.bindString(2, noteEntry.getNoteContentPath());
+        else statement.bindString(2, noteEntry.getNotePath());
         if(noteEntry.getCreateTimestamp() == null)
             statement.bindNull(3);
         else statement.bindString(3, noteEntry.getCreateTimestamp());
@@ -93,17 +96,17 @@ public class ANoteDBManager {
         SQLiteDatabase database = mDBHelper.getWritableDatabase();
         ContentValues contentValues = new ContentValues();
         if((updateFlags & UpdateFlagTable.UPDATE_NOTE_TITLE) != 0 && noteEntry.getNoteTitle() != null)
-            contentValues.put(DBFieldsName.NOTE_TITLE, noteEntry.getNoteTitle());
-        contentValues.put(DBFieldsName.UPDATE_TIMESTAMP, noteEntry.getUpdateTimestamp());
+            contentValues.put(NOTE_TITLE, noteEntry.getNoteTitle());
+        contentValues.put(UPDATE_TIMESTAMP, noteEntry.getUpdateTimestamp());
         if((updateFlags & UpdateFlagTable.UPDATE_LOCATION_INFO) != 0 && noteEntry.getLocationInfo() != null)
-            contentValues.put(DBFieldsName.LOCATION_INFO, noteEntry.getLocationInfo());
+            contentValues.put(LOCATION_INFO, noteEntry.getLocationInfo());
         if((updateFlags & UpdateFlagTable.UPDATE_HAS_ARCHIVED) != 0)
-            contentValues.put(DBFieldsName.HAS_ARCHIVED, noteEntry.getHasArchived());
+            contentValues.put(HAS_ARCHIVED, noteEntry.getHasArchived());
         if((updateFlags & UpdateFlagTable.UPDATE_IS_LABELED_DISCARDED) != 0)
-            contentValues.put(DBFieldsName.IS_LABELED_DISCARDED, noteEntry.getIsLabeledDiscarded());
+            contentValues.put(IS_LABELED_DISCARDED, noteEntry.getIsLabeledDiscarded());
         if (contentValues.size() != 0) {
-            ret = database.update(DBFieldsName.NOTE_TABLE_NAME, contentValues,
-                    DBFieldsName.NOTE_ID + " = " + noteEntry.getNoteId(), null);
+            ret = database.update(NOTE_TABLE_NAME, contentValues,
+                    NOTE_ID + " = " + noteEntry.getNoteId(), null);
         }
         database.close();
         if(ret == -1) {
@@ -117,19 +120,19 @@ public class ANoteDBManager {
     public List<NoteEntry> queryAllNotesRecord(){
         List<NoteEntry> noteEntries = new ArrayList<>();
         SQLiteDatabase database = mDBHelper.getReadableDatabase();
-        String orderBy = DBFieldsName.NOTE_ID + " DESC";
-        Cursor cursor = database.query(DBFieldsName.NOTE_TABLE_NAME, null, null,
+        String orderBy = NOTE_ID + " DESC";
+        Cursor cursor = database.query(NOTE_TABLE_NAME, null, null,
                 null, null, null, orderBy);
         while(cursor.moveToNext()){
             NoteEntry noteEntry = new NoteEntry();
-            noteEntry.setNoteId(cursor.getLong(cursor.getColumnIndex(DBFieldsName.NOTE_ID)));
-            noteEntry.setNoteTitle(cursor.getString(cursor.getColumnIndex(DBFieldsName.NOTE_TITLE)));
-            noteEntry.setNoteContentPath(cursor.getString(cursor.getColumnIndex(DBFieldsName.NOTE_CONTENT_PATH)));
-            noteEntry.setCreateTimestamp(cursor.getString(cursor.getColumnIndex(DBFieldsName.CREATE_TIMESTAMP)));
-            noteEntry.setUpdateTimestamp(cursor.getString(cursor.getColumnIndex(DBFieldsName.UPDATE_TIMESTAMP)));
-            noteEntry.setLocationInfo(cursor.getString(cursor.getColumnIndex(DBFieldsName.LOCATION_INFO)));
-            noteEntry.setHasArchived(cursor.getInt(cursor.getColumnIndex(DBFieldsName.HAS_ARCHIVED)));
-            noteEntry.setIsLabeledDiscarded(cursor.getInt(cursor.getColumnIndex(DBFieldsName.IS_LABELED_DISCARDED)));
+            noteEntry.setNoteId(cursor.getLong(cursor.getColumnIndex(NOTE_ID)));
+            noteEntry.setNoteTitle(cursor.getString(cursor.getColumnIndex(NOTE_TITLE)));
+            noteEntry.setNotePath(cursor.getString(cursor.getColumnIndex(NOTE_CONTENT_PATH)));
+            noteEntry.setCreateTimestamp(cursor.getString(cursor.getColumnIndex(CREATE_TIMESTAMP)));
+            noteEntry.setUpdateTimestamp(cursor.getString(cursor.getColumnIndex(UPDATE_TIMESTAMP)));
+            noteEntry.setLocationInfo(cursor.getString(cursor.getColumnIndex(LOCATION_INFO)));
+            noteEntry.setHasArchived(cursor.getInt(cursor.getColumnIndex(HAS_ARCHIVED)));
+            noteEntry.setIsLabeledDiscarded(cursor.getInt(cursor.getColumnIndex(IS_LABELED_DISCARDED)));
             noteEntries.add(noteEntry);
         }
         cursor.close();
@@ -140,18 +143,18 @@ public class ANoteDBManager {
     public NoteEntry querySingleNoteRecordById(long noteId){
         SQLiteDatabase database = mDBHelper.getReadableDatabase();
         NoteEntry noteEntry = new NoteEntry();
-        String whereClause = DBFieldsName.NOTE_ID + " = " + noteId;
-        Cursor cursor = database.query(DBFieldsName.NOTE_TABLE_NAME, null, whereClause,
+        String whereClause = NOTE_ID + " = " + noteId;
+        Cursor cursor = database.query(NOTE_TABLE_NAME, null, whereClause,
                 null, null, null, null);
         if(cursor.moveToNext()){
-            noteEntry.setNoteId(cursor.getLong(cursor.getColumnIndex(DBFieldsName.NOTE_ID)));
-            noteEntry.setNoteTitle(cursor.getString(cursor.getColumnIndex(DBFieldsName.NOTE_TITLE)));
-            noteEntry.setNoteContentPath(cursor.getString(cursor.getColumnIndex(DBFieldsName.NOTE_CONTENT_PATH)));
-            noteEntry.setCreateTimestamp(cursor.getString(cursor.getColumnIndex(DBFieldsName.CREATE_TIMESTAMP)));
-            noteEntry.setUpdateTimestamp(cursor.getString(cursor.getColumnIndex(DBFieldsName.UPDATE_TIMESTAMP)));
-            noteEntry.setLocationInfo(cursor.getString(cursor.getColumnIndex(DBFieldsName.LOCATION_INFO)));
-            noteEntry.setHasArchived(cursor.getInt(cursor.getColumnIndex(DBFieldsName.HAS_ARCHIVED)));
-            noteEntry.setIsLabeledDiscarded(cursor.getInt(cursor.getColumnIndex(DBFieldsName.IS_LABELED_DISCARDED)));
+            noteEntry.setNoteId(cursor.getLong(cursor.getColumnIndex(NOTE_ID)));
+            noteEntry.setNoteTitle(cursor.getString(cursor.getColumnIndex(NOTE_TITLE)));
+            noteEntry.setNotePath(cursor.getString(cursor.getColumnIndex(NOTE_CONTENT_PATH)));
+            noteEntry.setCreateTimestamp(cursor.getString(cursor.getColumnIndex(CREATE_TIMESTAMP)));
+            noteEntry.setUpdateTimestamp(cursor.getString(cursor.getColumnIndex(UPDATE_TIMESTAMP)));
+            noteEntry.setLocationInfo(cursor.getString(cursor.getColumnIndex(LOCATION_INFO)));
+            noteEntry.setHasArchived(cursor.getInt(cursor.getColumnIndex(HAS_ARCHIVED)));
+            noteEntry.setIsLabeledDiscarded(cursor.getInt(cursor.getColumnIndex(IS_LABELED_DISCARDED)));
         }
         cursor.close();
         database.close();
@@ -163,8 +166,72 @@ public class ANoteDBManager {
             return;
         }
         SQLiteDatabase database = mDBHelper.getWritableDatabase();
-        String whereClause = DBFieldsName.NOTE_ID + " = " + noteId;
-        database.delete(DBFieldsName.NOTE_TABLE_NAME, whereClause, null);
+        String whereClause = NOTE_ID + " = " + noteId;
+        database.delete(NOTE_TABLE_NAME, whereClause, null);
+        database.close();
+    }
+
+    /**
+     * Resource data record database operation
+     */
+    public long insertResourceData(long noteId, ResourceDataEntry resourceDataEntry){
+        long ret = -1;
+        if(resourceDataEntry == null)
+            return ret;
+        Log.i(TAG, "insertResourceData: resouceDataEntry " + (resourceDataEntry == null));
+        String sql = "insert into " + RESOURCE_TABLE_NAME + " ( " + NOTE_ID + ", "
+                + RESOURCE_FILE_NAME + ", " + RESOURCE_PATH  + ", " + DATA_TYPE + ", "
+                + SPAN_START  +  " ) " + "values(?, ?, ?, ?, ?)";
+        Log.i(TAG, "insertResourceData: " + sql);
+        SQLiteDatabase database = mDBHelper.getWritableDatabase();
+        database.beginTransaction();
+        SQLiteStatement statement = database.compileStatement(sql);
+        statement.bindLong(1, noteId);
+        if(resourceDataEntry.getFileName() != null)
+            statement.bindString(2, resourceDataEntry.getFileName());
+        else statement.bindNull(2);
+        if(resourceDataEntry.getPath() != null)
+            statement.bindString(3, resourceDataEntry.getPath());
+        else statement.bindNull(3);
+        statement.bindLong(4, resourceDataEntry.getDataType());
+        statement.bindLong(5, resourceDataEntry.getSpanStart());
+
+        ret = statement.executeInsert();
+        database.setTransactionSuccessful();
+        database.endTransaction();
+        mDBHelper.close();
+        return ret;
+    }
+
+    public List<ResourceDataEntry> queryAllResourceDataByNoteId(long noteId){
+        List<ResourceDataEntry> resourceDataEntries = new ArrayList<>();
+        SQLiteDatabase database = mDBHelper.getReadableDatabase();
+        String orderBy = SPAN_START + " ASC";
+        String sql = NOTE_ID  + " = " + noteId;
+        Cursor cursor = database.query(RESOURCE_TABLE_NAME, null, sql,
+                null, null, null, orderBy);
+        while(cursor.moveToNext()){
+            ResourceDataEntry resourceDataEntry = new ResourceDataEntry();
+            resourceDataEntry.setResourceId(cursor.getLong(cursor.getColumnIndex(RESOURCE_ID)));
+            resourceDataEntry.setNoteId(cursor.getLong(cursor.getColumnIndex(NOTE_ID)));
+            resourceDataEntry.setFileName(cursor.getString(cursor.getColumnIndex(RESOURCE_FILE_NAME)));
+            resourceDataEntry.setPath(cursor.getString(cursor.getColumnIndex(RESOURCE_PATH)));
+            resourceDataEntry.setDataType(cursor.getInt(cursor.getColumnIndex(DATA_TYPE)));
+            resourceDataEntry.setSpanStart(cursor.getInt(cursor.getColumnIndex(SPAN_START)));
+            resourceDataEntries.add(resourceDataEntry);
+        }
+        cursor.close();
+        database.close();
+        return resourceDataEntries;
+    }
+
+    public void deleteResourceData(long resourceId){
+        if(resourceId < 0){
+            return;
+        }
+        SQLiteDatabase database = mDBHelper.getWritableDatabase();
+        String whereClause = RESOURCE_ID + " = " + resourceId;
+        database.delete(RESOURCE_TABLE_NAME, whereClause, null);
         database.close();
     }
 }
