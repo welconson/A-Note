@@ -1,5 +1,6 @@
 package com.tcl.shenwk.aNote.view.customSpan;
 
+import android.content.Context;
 import android.content.res.Resources;
 import android.media.MediaMetadataRetriever;
 import android.net.Uri;
@@ -11,6 +12,7 @@ import android.view.View;
 import android.view.ViewGroup;
 
 import com.tcl.shenwk.aNote.R;
+import com.tcl.shenwk.aNote.entry.ResourceDataEntry;
 import com.tcl.shenwk.aNote.util.Constants;
 import com.tcl.shenwk.aNote.view.activity.EditNoteActivity;
 
@@ -24,24 +26,17 @@ public class AudioViewSpan extends ViewSpan {
     private static final String TAG = "AudioViewSpan";
     private final int mDuration;
 
-    public AudioViewSpan(View view, Uri uri) {
-        super(view, uri);
-        // Invoke MediaMetadataRetriever to get concrete information about the media resource
-        MediaMetadataRetriever mmr = new MediaMetadataRetriever();
-        mmr.setDataSource(view.getContext(), uri);
-        String durationString = mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION);
-        mDuration = durationString == null ? 0 : Integer.valueOf(durationString);
+    public AudioViewSpan(View view, Uri uri, ResourceDataEntry resourceDataEntry) {
+        super(view, uri, resourceDataEntry);
+        mDuration = extractDurationByUri(view.getContext(), uri);
         Log.i(TAG, "AudioViewSpan: mDuration = " + mDuration);
 
         init();
     }
 
-    public AudioViewSpan(View view, String fileName, String filePath){
-        super(view, fileName, filePath);
-        MediaMetadataRetriever mmr = new MediaMetadataRetriever();
-        mmr.setDataSource(filePath);
-        String durationString = mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION);
-        mDuration = durationString == null ? 0 : Integer.valueOf(durationString);
+    public AudioViewSpan(View view, ResourceDataEntry resourceDataEntry){
+        super(view, resourceDataEntry);
+        mDuration = extractDurationByFilePath(resourceDataEntry.getPath());
         Log.i(TAG, "AudioViewSpan: mDuration = " + mDuration);
 
         init();
@@ -101,4 +96,19 @@ public class AudioViewSpan extends ViewSpan {
             Log.i(TAG, "AudioViewSpan: error layout xml file for AudioViewSpan");
         }
     }
+
+    private int extractDurationByUri(Context context, Uri uri){
+        MediaMetadataRetriever mmr = new MediaMetadataRetriever();
+        mmr.setDataSource(context, uri);
+        String durationString = mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION);
+        return durationString == null ? 0 : Integer.valueOf(durationString);
+    }
+
+    private int extractDurationByFilePath(String filePath){
+        MediaMetadataRetriever mmr = new MediaMetadataRetriever();
+        mmr.setDataSource(filePath);
+        String durationString = mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION);
+        return durationString == null ? 0 : Integer.valueOf(durationString);
+    }
+
 }

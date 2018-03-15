@@ -9,6 +9,8 @@ public interface Constants {
     //span tag start
     String IMAGE_SPAN_TAG = "[image]";
     String AUDIO_SPAN_TAG = "[audio]";
+    String VIDEO_SPAN_TAG = "[video]";
+    String FILE_SPAN_TAG = "[file]";
     //span tag end
 
     //
@@ -17,13 +19,15 @@ public interface Constants {
     int LABELED_DISCARD = 1;
     int NOTE_LABELED_DISCARD = 0;
     int NO_NOTE_ID = -1;
+    int NO_RESOURCE_ID = -1;
     //
 
     //Extra name start
     String ACTION_EDIT_NOTE = "com.tcl.shenwk.aNote.edit_type";
     String EDIT_NOTE_ID = "note_id";
-    String ITEM_POSITION = "item_position";
-    String ITEM_ENTRY = "item_entry";
+    String ITEM_POSITION = "position";
+    String ITEM_NOTE_ENTRY = "note";
+    String ITEM_RESOURCE_ENTRY = "res";
     int DEFAULT_ITEM_POSITION = -1;
     int ITEM_BEGIN_POSITION = 0;
     String ACTION_TO_HOME_PAGE = "action_to_home_page";
@@ -41,6 +45,7 @@ public interface Constants {
     int NOTE_DIRECTORY_LENGTH = 12;
     int RESOURCE_FILE_NAME_LENGTH = 12;
     String RESOURCE_DIR = "resourceData";
+    int PREVIEW_CONTENT_TEXT_LENGTH = 220;
     //file constants end
 
     //Intent request code
@@ -48,14 +53,18 @@ public interface Constants {
     int SELECT_AUDIO = 1;
     //Intent request code
 
-    //Span size constant(dp)
+    //View span size constant(dp)
     int VIEW_SPAN_HEIGHT = 72;
     int VIEW_SPAN_WIDTH = 216;
-    //Span size constant(dp)
+    //View span size constant(dp)
 
     //Resource data type
     int RESOURCE_TYPE_IMAGE = 0;
     int RESOURCE_TYPE_AUDIO = 1;
     int RESOURCE_TYPE_VIDEO = 2;
+    int RESOURCE_TYPE_FILE = 3;
     //Resource data type
+
+    //Toast text
+    String TOAST_TEXT_WITHOUT_PERMISSION = "Permission Denial";
 }

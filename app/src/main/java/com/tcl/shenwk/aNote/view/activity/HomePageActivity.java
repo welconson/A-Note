@@ -20,8 +20,11 @@ import android.view.MenuItem;
 
 import com.tcl.shenwk.aNote.R;
 import com.tcl.shenwk.aNote.entry.NoteEntry;
-import com.tcl.shenwk.aNote.model.EditNoteHandler;
+import com.tcl.shenwk.aNote.entry.ResourceDataEntry;
+import com.tcl.shenwk.aNote.model.ANoteDBManager;
+import com.tcl.shenwk.aNote.model.NoteHandler;
 import com.tcl.shenwk.aNote.util.Constants;
+import com.tcl.shenwk.aNote.util.FileUtil;
 import com.tcl.shenwk.aNote.util.StringUtil;
 import com.tcl.shenwk.aNote.view.CustomAdapter;
 import com.tcl.shenwk.aNote.view.navigationItem.NavigationItemHandler;
@@ -116,10 +119,10 @@ public class HomePageActivity extends AppCompatActivity
         navigationItemHandler = new NavigationItemHandler(navigationView, drawer);
         mRecyclerView = findViewById(R.id.home_page_list);
         mRecyclerView.setLayoutManager(new LinearLayoutManager(HomePageActivity.this));
-        List<NoteEntry> noteEntries = EditNoteHandler.getAllNotesList(HomePageActivity.this);
-        Log.i(TAG, "initializeView: size " + noteEntries.size());
+        List<PreviewNoteEntry> previewNoteList = NoteHandler.getAllPreviewNoteList(HomePageActivity.this);
+        Log.i(TAG, "initializeView: size " + previewNoteList.size());
         CustomAdapter customAdapter = new CustomAdapter(getLayoutInflater(),
-               noteEntries );
+               previewNoteList );
         mRecyclerView.setAdapter(customAdapter);
     }
 
@@ -133,12 +136,15 @@ public class HomePageActivity extends AppCompatActivity
                 == Constants.HOME_PAGE_UPDATE_RESUME) {
             CustomAdapter adapter = (CustomAdapter) mRecyclerView.getAdapter();
             String action = intent.getStringExtra(Constants.ACTION_EDIT_NOTE);
-            NoteEntry noteEntry = (NoteEntry) intent.getSerializableExtra(Constants.ITEM_ENTRY);
+            PreviewNoteEntry previewNoteEntry = new PreviewNoteEntry();
+            previewNoteEntry.noteEntry = (NoteEntry) intent.getSerializableExtra(Constants.ITEM_NOTE_ENTRY);
+            previewNoteEntry.preResourceDataEntries = ANoteDBManager.getInstance(
+                    HomePageActivity.this).queryAllResourceDataByNoteId(previewNoteEntry.noteEntry.getNoteId());
             if (StringUtil.equal(action, EditNoteActivity.EDIT_TYPE_MODIFY)) {
                 adapter.refreshSingleItemByPosition(intent.getIntExtra(Constants.ITEM_POSITION, Constants.DEFAULT_ITEM_POSITION),
-                        noteEntry);
+                        previewNoteEntry);
             } else {
-                adapter.addItem(noteEntry);
+                adapter.addItem(previewNoteEntry);
             }
             intent.putExtra(Constants.ACTION_TO_HOME_PAGE, Constants.HOME_PAGE_NORMAL_RESUME);
         }
@@ -149,5 +155,10 @@ public class HomePageActivity extends AppCompatActivity
     protected void onNewIntent(Intent intent) {
         super.onNewIntent(intent);
         setIntent(intent);
+    }
+
+    public static class PreviewNoteEntry{
+        public NoteEntry noteEntry;
+        public List<ResourceDataEntry> preResourceDataEntries;
     }
 }

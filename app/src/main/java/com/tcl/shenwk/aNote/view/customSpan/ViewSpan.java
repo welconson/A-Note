@@ -10,6 +10,8 @@ import android.text.style.DynamicDrawableSpan;
 import android.view.MotionEvent;
 import android.view.View;
 
+import com.tcl.shenwk.aNote.entry.ResourceDataEntry;
+import com.tcl.shenwk.aNote.util.Constants;
 import com.tcl.shenwk.aNote.util.FileUtil;
 
 /**
@@ -24,13 +26,12 @@ public abstract class ViewSpan extends DynamicDrawableSpan implements View.OnTou
     private float mCurrentX;
     private float mCurrentY;
     private Uri mResourceDataUri;
-    private String mFileName;
-    private String mFilePath;
-    private int mResourceDataType;
+    private ResourceDataEntry mResourceDataEntry;
 
-     private ViewSpan(View view){
+     ViewSpan(View view, ResourceDataEntry resourceDataEntry){
         super(DynamicDrawableSpan.ALIGN_BOTTOM);
         this.mView = view;
+        this.mResourceDataEntry = resourceDataEntry;
         measure();
          //        mView.setOnTouchListener(new View.OnTouchListener() {
 //            @Override
@@ -41,16 +42,10 @@ public abstract class ViewSpan extends DynamicDrawableSpan implements View.OnTou
 //        });
     }
 
-    ViewSpan(View view, Uri uri) {
-        this(view);
+    ViewSpan(View view, Uri uri, ResourceDataEntry resourceDataEntry) {
+        this(view, resourceDataEntry);
         this.mResourceDataUri = uri;
-        this.mFileName = FileUtil.getFileNameFromURI(view.getContext(), uri, getResourceDataType());
-    }
-
-    ViewSpan(View view, String fileName, String filePath){
-        this(view);
-        this.mFileName = fileName;
-        this.mFilePath = filePath;
+        this.mResourceDataEntry.setDataType(getResourceDataType());
     }
 
     @Override
@@ -105,7 +100,19 @@ public abstract class ViewSpan extends DynamicDrawableSpan implements View.OnTou
      */
     public abstract void measure();
 
+    /**
+     * Offer inside ViewSpan resource data type, used for saving and initializing.
+     * @return ViewSpan resource data type.
+     */
     public abstract int getResourceDataType();
+
+    /**
+     * Offer resource id, used for updating resource record.
+     * @return Resource id inside database.
+     */
+    public long getResourceId(){
+        return mResourceDataEntry.getResourceId();
+    }
 
     public View getView(){
         return mView;
@@ -116,10 +123,14 @@ public abstract class ViewSpan extends DynamicDrawableSpan implements View.OnTou
     }
 
     public String getFileName() {
-        return mFileName;
+        return mResourceDataEntry.getFileName();
     }
 
     public String getFilePath() {
-        return mFilePath;
+        return mResourceDataEntry.getPath();
+    }
+
+    public ResourceDataEntry getResourceDataEntry() {
+        return mResourceDataEntry;
     }
 }

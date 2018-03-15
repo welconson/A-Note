@@ -1,15 +1,19 @@
 package com.tcl.shenwk.aNote.entry;
 
+import com.tcl.shenwk.aNote.util.Constants;
+
+import java.io.Serializable;
+
 /**
  * Multi media data
  * Created by shenwk on 2018/3/10.
  */
 
-public class ResourceDataEntry {
-    private long resourceId;
-    private long noteId;
+public class ResourceDataEntry implements Serializable{
+    private long resourceId = Constants.NO_RESOURCE_ID;
+    private long noteId = Constants.NO_NOTE_ID;
     private String fileName;
-    private String path;
+    private String path = null;
     private int dataType;
     private int spanStart;
 

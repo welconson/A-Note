@@ -8,6 +8,7 @@ import android.net.Uri;
 import android.os.Environment;
 import android.provider.MediaStore;
 import android.util.Log;
+import android.widget.Toast;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
@@ -66,12 +67,16 @@ public class FileUtil {
         File dir = new File(dirName);
         if(!dir.exists()) {
             if (!dir.mkdir()) {
-                Log.i(TAG, "createDir: create note directory " + dirName + " failed");
+                Log.i(TAG, "createDir: create directory " + dirName + " failed");
                 return false;
             }
             Log.i(TAG, "createDir: " + dirName + " success");
+            return true;
         }
-        return true;
+        else {
+            Log.i(TAG, "createDir: failed directory exist");
+            return false;
+        }
     }
 
     /**
@@ -102,7 +107,7 @@ public class FileUtil {
         }else return false;
     }
 
-    public static String readFile(Context context, String filePath){
+    public static String readFile(String filePath){
         StringBuilder contentBuilder = new StringBuilder();
         File file =  new File(filePath);
         if(file.exists()){
@@ -248,13 +253,22 @@ public class FileUtil {
                 default:proj = new String[]{""};
         }
         contentUri.getScheme();
-        cursor = context.getContentResolver().query(contentUri,  proj, null, null, null);
-        if(cursor != null) {
-            int column_index = cursor.getColumnIndexOrThrow(proj[0]);
-            cursor.moveToFirst();
-            ret = cursor.getString(column_index);
-            cursor.close();
-            Log.i(TAG, "getFileNameFromURI: try " + ret);
+        try {
+            context.getContentResolver().openAssetFileDescriptor(contentUri, "r");
+            cursor = context.getContentResolver().query(contentUri,  proj, null, null, null);
+            if(cursor != null) {
+                int column_index = cursor.getColumnIndexOrThrow(proj[0]);
+                cursor.moveToFirst();
+                ret = cursor.getString(column_index);
+                cursor.close();
+                Log.i(TAG, "getFileNameFromURI: try " + ret);
+            }
+        } catch (SecurityException e) {
+            e.printStackTrace();
+            Toast.makeText(context, Constants.TOAST_TEXT_WITHOUT_PERMISSION, Toast.LENGTH_SHORT).show();
+            ret = null;
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
         }
         return ret;
     }
@@ -263,5 +277,24 @@ public class FileUtil {
         if(filePath == null)
             return null;
         return Uri.fromFile(new File(filePath));
+    }
+
+    public static boolean isUriPointToExternalStorage(Context context,Uri uri){
+        boolean ret = false;
+        if(uri == null)
+            return false;
+        try{
+            context.getContentResolver().openAssetFileDescriptor(uri, "r");
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        } catch (SecurityException e){
+            e.printStackTrace();
+            ret = true;
+        }
+        return ret;
+    }
+
+    public static String getContentFileName(String notePath){
+        return notePath + File.separator + Constants.CONTENT_FILE_NAME;
     }
 }

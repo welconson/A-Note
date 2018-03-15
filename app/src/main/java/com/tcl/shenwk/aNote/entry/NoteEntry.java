@@ -19,7 +19,6 @@ public class NoteEntry implements Serializable{
     private String locationInfo;
     private int hasArchived;
     private int isLabeledDiscarded;
-    private String noteContent;
 
     public NoteEntry(String noteTitle, String notePath, String createTimestamp, String updateTimestamp,
                      String locationInfo, int hasArchived, int isLabeledDiscarded) {
@@ -37,11 +36,9 @@ public class NoteEntry implements Serializable{
         Date date = new Date();
         createTimestamp = date.toString();
         updateTimestamp = date.toString();
-        noteContent = null;
         noteTitle = null;
         hasArchived = Constants.NOT_ARCHIVED;
         isLabeledDiscarded = Constants.NOTE_LABELED_DISCARD;
-        noteContent = null;
     }
 
     public long getNoteId() {
@@ -106,13 +103,5 @@ public class NoteEntry implements Serializable{
 
     public void setIsLabeledDiscarded(int isLabeledDiscarded) {
         this.isLabeledDiscarded = isLabeledDiscarded;
-    }
-
-    public String getNoteContent() {
-        return noteContent;
-    }
-
-    public void setNoteContent(String noteContent) {
-        this.noteContent = noteContent;
     }
 }

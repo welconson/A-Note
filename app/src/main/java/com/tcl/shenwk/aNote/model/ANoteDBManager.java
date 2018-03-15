@@ -174,11 +174,10 @@ public class ANoteDBManager {
     /**
      * Resource data record database operation
      */
-    public long insertResourceData(long noteId, ResourceDataEntry resourceDataEntry){
+    public long insertResourceData(ResourceDataEntry resourceDataEntry){
         long ret = -1;
         if(resourceDataEntry == null)
             return ret;
-        Log.i(TAG, "insertResourceData: resouceDataEntry " + (resourceDataEntry == null));
         String sql = "insert into " + RESOURCE_TABLE_NAME + " ( " + NOTE_ID + ", "
                 + RESOURCE_FILE_NAME + ", " + RESOURCE_PATH  + ", " + DATA_TYPE + ", "
                 + SPAN_START  +  " ) " + "values(?, ?, ?, ?, ?)";
@@ -186,7 +185,7 @@ public class ANoteDBManager {
         SQLiteDatabase database = mDBHelper.getWritableDatabase();
         database.beginTransaction();
         SQLiteStatement statement = database.compileStatement(sql);
-        statement.bindLong(1, noteId);
+        statement.bindLong(1, resourceDataEntry.getNoteId());
         if(resourceDataEntry.getFileName() != null)
             statement.bindString(2, resourceDataEntry.getFileName());
         else statement.bindNull(2);
@@ -197,6 +196,10 @@ public class ANoteDBManager {
         statement.bindLong(5, resourceDataEntry.getSpanStart());
 
         ret = statement.executeInsert();
+        if(ret == -1){
+            Log.i(TAG, "insertResourceData: insert resourceDataEntry error of noteId " + resourceDataEntry.getNoteId());
+        }
+        else Log.i(TAG, "insertResourceData: insert resourceDataEntry successfully");
         database.setTransactionSuccessful();
         database.endTransaction();
         mDBHelper.close();
@@ -225,6 +228,27 @@ public class ANoteDBManager {
         return resourceDataEntries;
     }
 
+    public ResourceDataEntry queryFirstResourceDataByNoteId(long noteId){
+        ResourceDataEntry resourceDataEntry = null;
+        SQLiteDatabase database = mDBHelper.getReadableDatabase();
+        String orderBy = SPAN_START + " ASC";
+        String sql = NOTE_ID  + " = " + noteId;
+        Cursor cursor = database.query(RESOURCE_TABLE_NAME, null, sql,
+                null, null, null, orderBy);
+        if(cursor.moveToNext()){
+            resourceDataEntry = new ResourceDataEntry();
+            resourceDataEntry.setResourceId(cursor.getLong(cursor.getColumnIndex(RESOURCE_ID)));
+            resourceDataEntry.setNoteId(cursor.getLong(cursor.getColumnIndex(NOTE_ID)));
+            resourceDataEntry.setFileName(cursor.getString(cursor.getColumnIndex(RESOURCE_FILE_NAME)));
+            resourceDataEntry.setPath(cursor.getString(cursor.getColumnIndex(RESOURCE_PATH)));
+            resourceDataEntry.setDataType(cursor.getInt(cursor.getColumnIndex(DATA_TYPE)));
+            resourceDataEntry.setSpanStart(cursor.getInt(cursor.getColumnIndex(SPAN_START)));
+        }
+        cursor.close();
+        database.close();
+        return resourceDataEntry;
+    }
+
     public void deleteResourceData(long resourceId){
         if(resourceId < 0){
             return;
@@ -232,6 +256,25 @@ public class ANoteDBManager {
         SQLiteDatabase database = mDBHelper.getWritableDatabase();
         String whereClause = RESOURCE_ID + " = " + resourceId;
         database.delete(RESOURCE_TABLE_NAME, whereClause, null);
+        database.close();
+    }
+
+    public void updateResourceData(ResourceDataEntry resourceDataEntry){
+        if(resourceDataEntry == null){
+            return;
+        }
+        // There is just a kind of possibility that we need to update the span_start filed.
+        SQLiteDatabase database = mDBHelper.getWritableDatabase();
+        ContentValues contentValues = new ContentValues();
+        contentValues.put(SPAN_START, resourceDataEntry.getSpanStart());
+        if (contentValues.size() != 0) {
+            if (database.update(RESOURCE_TABLE_NAME, contentValues,
+                    RESOURCE_ID + " = " + resourceDataEntry.getResourceId(), null) == -1) {
+                Log.i(TAG, "updateResourceData: resource data record update error");
+            } else {
+                Log.i(TAG, "updateResourceData: resource data record update successfully");
+            }
+        }
         database.close();
     }
 }
