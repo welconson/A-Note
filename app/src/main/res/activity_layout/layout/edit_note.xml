@@ -7,48 +7,77 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:theme="@style/AppTheme">
+
     <LinearLayout
+        android:id="@+id/linearLayout"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:orientation="vertical">
+
         <include
             layout="@layout/edit_note_bar"
             android:layout_width="match_parent"
             android:layout_height="?attr/actionBarSize" />
+
         <EditText
             android:id="@+id/note_title"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:paddingStart="@dimen/text_padding"
-            android:paddingEnd="@dimen/text_padding"
             android:background="@null"
             android:hint="@string/title_hint"
             android:inputType="text|textMultiLine"
-            />
+            android:paddingEnd="@dimen/text_padding"
+            android:paddingStart="@dimen/text_padding" />
+
         <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="wrap_content">
+            android:layout_height="wrap_content"
+            android:id="@+id/edit_tool_bar">
+
             <include layout="@layout/image_button" />
+
             <include layout="@layout/location_button" />
-            <include layout="@layout/audio_button"/>
+
+            <include layout="@layout/audio_button" />
         </LinearLayout>
-        <LinearLayout
+
+        <ScrollView
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:orientation="vertical"
             android:id="@+id/edit_area">
-            <EditText
-                android:id="@+id/note_content"
+            <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:background="@null"
-                android:focusable="true"
-                android:focusableInTouchMode="true"
-                android:inputType="text|textMultiLine"
-                android:paddingStart="@dimen/text_padding"
-                android:paddingEnd="@dimen/text_padding"
-                android:hint="@string/content_hint" />
-        </LinearLayout>
+                android:orientation="vertical"
+                android:scrollbars="vertical">
+
+                <EditText
+                    android:id="@+id/note_content"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:background="@null"
+                    android:focusable="true"
+                    android:focusableInTouchMode="true"
+                    android:hint="@string/content_hint"
+                    android:inputType="text|textMultiLine"
+                    android:paddingEnd="@dimen/text_padding"
+                    android:paddingStart="@dimen/text_padding" />
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="200dp"/>
+            </LinearLayout>
+        </ScrollView>
     </LinearLayout>
+
+    <android.support.design.widget.FloatingActionButton
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="@dimen/floating_button_margin"
+        android:layout_marginBottom="@dimen/floating_button_margin"
+        android:id="@+id/edit_note_button"
+        app:backgroundTint="@android:color/holo_blue_light"
+        app:layout_anchor="@+id/linearLayout"
+        app:layout_anchorGravity="right|bottom"
+        app:srcCompat="@drawable/ic_edit" />
 
 </android.support.design.widget.CoordinatorLayout>

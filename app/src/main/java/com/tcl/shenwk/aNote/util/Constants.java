@@ -6,11 +6,12 @@ package com.tcl.shenwk.aNote.util;
  */
 
 public interface Constants {
+    char TAG = 65532;
     //span tag start
-    String IMAGE_SPAN_TAG = "[image]";
-    String AUDIO_SPAN_TAG = "[audio]";
-    String VIDEO_SPAN_TAG = "[video]";
-    String FILE_SPAN_TAG = "[file]";
+    String IMAGE_SPAN_TAG = "" + TAG;
+    String AUDIO_SPAN_TAG = "" + TAG;
+    String VIDEO_SPAN_TAG = "" + TAG;
+    String FILE_SPAN_TAG = "" + TAG;
     //span tag end
 
     //
@@ -53,6 +54,11 @@ public interface Constants {
     int SELECT_AUDIO = 1;
     //Intent request code
 
+    //message what start
+    int MESSAGE_ON_ACTIVITY_RESULT = 0;
+    //message what end
+
+
     //View span size constant(dp)
     int VIEW_SPAN_HEIGHT = 72;
     int VIEW_SPAN_WIDTH = 216;
@@ -67,4 +73,5 @@ public interface Constants {
 
     //Toast text
     String TOAST_TEXT_WITHOUT_PERMISSION = "Permission Denial";
+    String TOAST_NEW_NOTE_WITH_NOTHING = "do not save a empty note";
 }

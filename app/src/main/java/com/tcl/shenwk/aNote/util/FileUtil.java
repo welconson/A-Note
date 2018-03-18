@@ -19,8 +19,10 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
+import java.util.Arrays;
 
 /**
  * File utility.
@@ -100,7 +102,7 @@ public class FileUtil {
         return file;
     }
 
-    public static boolean isFileExist(String filepath){
+    public static boolean isFileOrDirectoryExist(String filepath){
         if(filepath != null) {
             File file = new File(filepath);
             return file.exists();
@@ -113,11 +115,10 @@ public class FileUtil {
         if(file.exists()){
             try {
                 FileInputStream fileInputStream = new FileInputStream(file);
-                BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(fileInputStream));
                 byte[] buffer = new byte[1024];
-                String line;
-                while((line = bufferedReader.readLine()) != null){
-                    contentBuilder.append(line);
+                int length;
+                while((length = fileInputStream.read(buffer, 0, 1024)) != -1){
+                    contentBuilder.append(new String(buffer, 0, length));
                 }
             } catch (IOException e) {
                 e.printStackTrace();

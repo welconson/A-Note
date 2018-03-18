@@ -16,4 +16,5 @@
     <dimen name="span_view_image_height_margin">18dp</dimen>
     <dimen name="span_view_image_width_margin">8dp</dimen>
     <dimen name="span_view_image_dimen">36dp</dimen>
+    <dimen name="floating_button_margin">15dp</dimen>
 </resources>

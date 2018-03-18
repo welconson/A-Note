@@ -25,7 +25,7 @@ public abstract class ViewSpan extends DynamicDrawableSpan implements View.OnTou
     private View mView;
     private float mCurrentX;
     private float mCurrentY;
-    private Uri mResourceDataUri;
+    private Uri mResourceDataUri = null;
     private ResourceDataEntry mResourceDataEntry;
 
      ViewSpan(View view, ResourceDataEntry resourceDataEntry){
@@ -33,19 +33,15 @@ public abstract class ViewSpan extends DynamicDrawableSpan implements View.OnTou
         this.mView = view;
         this.mResourceDataEntry = resourceDataEntry;
         measure();
-         //        mView.setOnTouchListener(new View.OnTouchListener() {
-//            @Override
-//            public boolean onTouch(View v, MotionEvent event) {
-//                Log.i(TAG, "ViewSpan onTouch: x = " + event.getX() + " , y = " + event.getY());
-//                return false;
-//            }
-//        });
     }
 
     ViewSpan(View view, Uri uri, ResourceDataEntry resourceDataEntry) {
-        this(view, resourceDataEntry);
+        super(DynamicDrawableSpan.ALIGN_BOTTOM);
+        this.mView = view;
+        this.mResourceDataEntry = resourceDataEntry;
         this.mResourceDataUri = uri;
         this.mResourceDataEntry.setDataType(getResourceDataType());
+        measure();
     }
 
     @Override
@@ -91,7 +87,7 @@ public abstract class ViewSpan extends DynamicDrawableSpan implements View.OnTou
         // Calculate offset of the View inside the TextView.
         event.offsetLocation(- v.getPaddingLeft() - mCurrentX, - v.getPaddingTop() - mCurrentY);
         mView.dispatchTouchEvent(event);
-        return true;
+        return false;
     }
 
     /**

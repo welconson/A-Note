@@ -2,6 +2,7 @@ package com.tcl.shenwk.aNote.view;
 
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.BitmapFactory;
 import android.graphics.drawable.Drawable;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
@@ -94,20 +95,19 @@ public class CustomAdapter extends RecyclerView.Adapter<CustomViewHolder> {
             setItemInfoLayoutParameterWithResource(viewItem);
             switch (previewNoteEntry.preResourceDataEntries.get(0).getDataType()){
                 case Constants.RESOURCE_TYPE_IMAGE:
-                    imageView.setBackground(context.getDrawable(R.color.colorPrimary));
-                    imageView.setBackground(Drawable.createFromPath(
-                            previewNoteEntry.preResourceDataEntries.get(0).getFileName()));
+                    imageView.setImageBitmap(BitmapFactory.decodeFile(
+                            previewNoteEntry.preResourceDataEntries.get(0).getPath()));
                     break;
                 case Constants.RESOURCE_TYPE_AUDIO:
-                    imageView.setBackground(context.getDrawable(R.color.colorPrimary));
+                    imageView.setBackground(context.getDrawable(R.color.primaryGrey));
                     imageView.setImageDrawable(context.getDrawable(R.drawable.ic_audiotrack));
                     break;
                 case Constants.RESOURCE_TYPE_VIDEO:
-                    imageView.setBackground(context.getDrawable(R.color.colorPrimary));
+                    imageView.setBackground(context.getDrawable(R.color.primaryGrey));
                     imageView.setImageDrawable(context.getDrawable(R.drawable.ic_videocam));
                     break;
                 case Constants.RESOURCE_TYPE_FILE:
-                    imageView.setBackground(context.getDrawable(R.color.colorPrimary));
+                    imageView.setBackground(context.getDrawable(R.color.primaryGrey));
                     imageView.setImageDrawable(context.getDrawable(R.drawable.ic_insert_drive_file));
                     break;
                     default:

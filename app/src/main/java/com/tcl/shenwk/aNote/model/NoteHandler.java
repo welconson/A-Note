@@ -15,7 +15,6 @@ import com.tcl.shenwk.aNote.view.customSpan.ViewSpan;
 
 import java.io.File;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 
 /**
@@ -78,22 +77,27 @@ public class NoteHandler {
                         List<String> resourcePathList = new ArrayList<>();
                         for (ViewSpan viewSpan : viewSpans) {
                             ResourceDataEntry resourceDataEntry = viewSpan.getResourceDataEntry();
-                            resourceDataEntry.setSpanStart(editable.getSpanStart(viewSpan));
-                            // set resource entry with the valid note id
-                            resourceDataEntry.setNoteId(noteId);
-                            Log.i(TAG, "saveNote: span start " + editable.getSpanStart(viewSpan));
-                            String resourcePath =saveResourceData(context, resourceDir,
-                                    resourceDataEntry, viewSpan.getResourceDataUri());
-                            if(resourcePath != null) {
-                                resourcePathList.add(resourcePath);
-                            }
-                            // once there is a file saving occurs error,
-                            // delete all new files created in this part.
-                            else {
-                                for(String resourcePathToDelete : resourcePathList){
-                                    FileUtil.deleteFile(resourcePathToDelete);
+                            int spanStart = editable.getSpanStart(viewSpan);
+                            if(spanStart == -1) {
+                                if(viewSpan.getFilePath() != null)
+                                    deleteResourceData(context, resourceDataEntry);
+                            }else {
+                                resourceDataEntry.setSpanStart(spanStart);
+                                // set resource entry with the valid note id
+                                resourceDataEntry.setNoteId(noteId);
+                                String resourcePath = saveResourceData(context, resourceDir,
+                                        resourceDataEntry, viewSpan.getResourceDataUri());
+                                if (resourcePath != null) {
+                                    resourcePathList.add(resourcePath);
                                 }
-                                break;
+                                // once there is a file saving occurs error,
+                                // delete all new files created in this part.
+                                else {
+                                    for (String resourcePathToDelete : resourcePathList) {
+                                        FileUtil.deleteFile(resourcePathToDelete);
+                                    }
+                                    break;
+                                }
                             }
                         }
                     }
@@ -146,8 +150,11 @@ public class NoteHandler {
 
 
     private static String createNoteDirectory(Context context){
-        String directory = context.getFilesDir().getAbsolutePath()+ File.separator +
-                RandomUtil.randomString(Constants.NOTE_DIRECTORY_LENGTH);
+        String directory;
+        do{
+            directory = context.getFilesDir().getAbsolutePath()+ File.separator +
+                    RandomUtil.randomString(Constants.NOTE_DIRECTORY_LENGTH);
+        }while (FileUtil.isFileOrDirectoryExist(directory));
         if(!FileUtil.createDir(directory)) {
             Log.i(TAG, "saveNote: new note create directory error");
             return null;
@@ -163,7 +170,7 @@ public class NoteHandler {
     private static String createNoteResourceDirectory(String notePath){
         String resourceDir = notePath + File.separator
                 + Constants.RESOURCE_DIR;
-        if(!FileUtil.isFileExist(resourceDir )){
+        if(!FileUtil.isFileOrDirectoryExist(resourceDir )){
             if (!FileUtil.createDir(resourceDir)) {
                 Log.i(TAG, "saveNote: create resource data directory failed");
                 return null;
@@ -188,7 +195,7 @@ public class NoteHandler {
         if(resourceDataEntry.getPath() == null) {
             // resource data is new
             // first get a path for it
-            resourcePath = createResourceDataPath(resourceDir);
+            resourcePath = generateResourceDataPath(resourceDir);
             resourceDataEntry.setPath(resourcePath);
 
             if (FileUtil.saveFileOfUri(context, resourceUri,
@@ -211,12 +218,28 @@ public class NoteHandler {
         return resourcePath;
     }
 
-    private static String createResourceDataPath(String resourceDir){
+    /**
+     * Generate a resource data path corresponding to the resource directory, and
+     * ensure the return value will be a path have not been used before.
+     * @param resourceDir   the directory for resource data to store.
+     * @return  valid path string.
+     */
+    private static String generateResourceDataPath(String resourceDir){
         String resourcePath;
         do {
             resourcePath = resourceDir + File.separator +
                     RandomUtil.randomString(Constants.RESOURCE_FILE_NAME_LENGTH);
-        }while(FileUtil.isFileExist(resourcePath));
+        }while(FileUtil.isFileOrDirectoryExist(resourcePath));
         return resourcePath;
+    }
+
+    private static void deleteResourceData(Context context, ResourceDataEntry resourceDataEntry){
+        if(resourceDataEntry != null && resourceDataEntry.getPath() != null){
+            ANoteDBManager.getInstance(context).deleteResourceData(resourceDataEntry.getResourceId());
+            if (FileUtil.deleteFile(resourceDataEntry.getPath())) {
+                Log.i(TAG, "deleteResourceData delete data file: successfully");
+            }
+            else Log.i(TAG, "deleteResourceData delete data file: failed");
+        }
     }
 }

@@ -1,25 +1,24 @@
 package com.tcl.shenwk.aNote.multiMediaInputSupport;
 
 import android.text.Layout;
-import android.text.Selection;
 import android.text.Spannable;
-import android.text.method.ArrowKeyMovementMethod;
 import android.text.method.MovementMethod;
 import android.text.method.ScrollingMovementMethod;
 import android.text.method.Touch;
 import android.view.MotionEvent;
-import android.widget.Scroller;
 import android.widget.TextView;
 
-import com.tcl.shenwk.aNote.CustomSpanSharedUtility;
 import com.tcl.shenwk.aNote.view.customSpan.ViewSpan;
 
 /**
- * Created by shenwk on 2018/1/29.
+ * Inside TextView, there is a MovementMethod, provided cursor positioning,
+ * scrolling and text selection functionality.Here we add event reaction to
+ * make our custom spans to receive the motion event.
+ * Created by shenwk on 2018/3/16.
  */
 
-public class CustomMovementMethod extends ArrowKeyMovementMethod {
-    private static CustomMovementMethod mInstance = null;
+public class CustomScrollingMovementMethod extends ScrollingMovementMethod {
+    private static MovementMethod sInstance;
     @Override
     public boolean onTouchEvent(TextView widget, Spannable buffer, MotionEvent event) {
         int action = event.getAction();
@@ -45,13 +44,14 @@ public class CustomMovementMethod extends ArrowKeyMovementMethod {
 //                Selection.setSelection(buffer, off);
             }
         }
-        super.onTouchEvent(widget, buffer, event);
-        return true;
+        Touch.onTouchEvent(widget, buffer, event);
+        return false;
     }
 
-    public static CustomMovementMethod getInstance(){
-        if(mInstance == null)
-            mInstance = new CustomMovementMethod();
-        return mInstance;
+    public static MovementMethod getInstance() {
+        if (sInstance == null)
+            sInstance = new CustomScrollingMovementMethod();
+
+        return sInstance;
     }
 }
