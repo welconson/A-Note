@@ -5,11 +5,14 @@
     <string name="navigation_drawer_close">Close navigation drawer</string>
 
     <string name="action_settings">Settings</string>
-    <string name="add_note">add</string>
+    <string name="add">add</string>
     <string name="back">back</string>
     <string name="setting">setting</string>
     <string name="search">search</string>
     <string name="title_hint">Note Title</string>
     <string name="content_hint">No content</string>
     <string name="item_no_title">Untitled note</string>
+    <string name="add_tag_hint">add a new tag</string>
+    <string name="ok">OK</string>
+    <string name="cancel">Cancel</string>
 </resources>

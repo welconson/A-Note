@@ -1,4 +1,4 @@
-package com.tcl.shenwk.aNote.view;
+package com.tcl.shenwk.aNote.view.ViewHolder;
 
 import android.support.v7.widget.RecyclerView;
 import android.view.View;

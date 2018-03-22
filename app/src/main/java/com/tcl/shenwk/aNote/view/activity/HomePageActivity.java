@@ -24,9 +24,8 @@ import com.tcl.shenwk.aNote.entry.ResourceDataEntry;
 import com.tcl.shenwk.aNote.model.ANoteDBManager;
 import com.tcl.shenwk.aNote.model.NoteHandler;
 import com.tcl.shenwk.aNote.util.Constants;
-import com.tcl.shenwk.aNote.util.FileUtil;
 import com.tcl.shenwk.aNote.util.StringUtil;
-import com.tcl.shenwk.aNote.view.CustomAdapter;
+import com.tcl.shenwk.aNote.view.adapter.CustomAdapter;
 import com.tcl.shenwk.aNote.view.navigationItem.NavigationItemHandler;
 
 import java.util.List;

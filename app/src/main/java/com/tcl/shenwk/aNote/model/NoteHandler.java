@@ -7,6 +7,7 @@ import android.util.Log;
 
 import com.tcl.shenwk.aNote.entry.NoteEntry;
 import com.tcl.shenwk.aNote.entry.ResourceDataEntry;
+import com.tcl.shenwk.aNote.entry.TagRecordEntry;
 import com.tcl.shenwk.aNote.util.Constants;
 import com.tcl.shenwk.aNote.util.FileUtil;
 import com.tcl.shenwk.aNote.util.RandomUtil;
@@ -31,10 +32,11 @@ public class NoteHandler {
      *                  information content and attachments inside note.
      * @param context   context used to operate on files.
      * @param editable  content of note.
+     * @param tagRecordEntries
      * @return  true if no error, or false and do nothing.
      */
     public static boolean saveNote(NoteEntry noteEntry, Context context, Editable editable,
-                                   List<ViewSpan> viewSpans){
+                                   List<ViewSpan> viewSpans, List<TagRecordEntry> tagRecordEntries){
         long noteId = noteEntry.getNoteId();
         boolean ret = true;
         boolean isNewRecord = false;
@@ -73,12 +75,14 @@ public class NoteHandler {
                         ret = false;
                     // if resource directory does not exist, ignore next step
                     if (ret){
-                        // TODO: 2018/3/13 handler ViewSpan removing situation
                         List<String> resourcePathList = new ArrayList<>();
                         for (ViewSpan viewSpan : viewSpans) {
                             ResourceDataEntry resourceDataEntry = viewSpan.getResourceDataEntry();
                             int spanStart = editable.getSpanStart(viewSpan);
+                            // if the ViewSpan still remain in TextView
                             if(spanStart == -1) {
+                                // if the ViewSpan do not exist in TextView and saved before,
+                                // delete the formal unused resource data here.
                                 if(viewSpan.getFilePath() != null)
                                     deleteResourceData(context, resourceDataEntry);
                             }else {
@@ -240,6 +244,27 @@ public class NoteHandler {
                 Log.i(TAG, "deleteResourceData delete data file: successfully");
             }
             else Log.i(TAG, "deleteResourceData delete data file: failed");
+        }
+    }
+
+    public static void saveTagRecord(Context context, long noteId, List<TagRecordEntry>  tagRecordEntries){
+        if(tagRecordEntries == null)
+            return;
+        for(TagRecordEntry tagRecordEntry : tagRecordEntries){
+            switch (tagRecordEntry.status){
+                case TagRecordEntry.NEW_CREATE:
+                    tagRecordEntry.setNoteId(noteId);
+                    long ret = ANoteDBManager.getInstance(context).insertTagRecord(tagRecordEntry);
+                    if(ret != Constants.NO_TAG_RECORD_ID) {
+                        tagRecordEntry.setTagId(ret);
+                    }
+                    break;
+                case TagRecordEntry.TO_DELETE:
+                    ANoteDBManager.getInstance(context).deleteTagRecord(tagRecordEntry.getTagRecordId());
+                    break;
+            }
+            tagRecordEntry.setNoteId(noteId);
+
         }
     }
 }

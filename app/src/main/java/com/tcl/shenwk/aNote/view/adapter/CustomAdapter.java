@@ -1,9 +1,8 @@
-package com.tcl.shenwk.aNote.view;
+package com.tcl.shenwk.aNote.view.adapter;
 
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.BitmapFactory;
-import android.graphics.drawable.Drawable;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.Gravity;
@@ -23,6 +22,7 @@ import com.tcl.shenwk.aNote.entry.ResourceDataEntry;
 import com.tcl.shenwk.aNote.model.NoteHandler;
 import com.tcl.shenwk.aNote.util.Constants;
 import com.tcl.shenwk.aNote.util.FileUtil;
+import com.tcl.shenwk.aNote.view.ViewHolder.CustomViewHolder;
 import com.tcl.shenwk.aNote.view.activity.EditNoteActivity;
 import com.tcl.shenwk.aNote.view.activity.HomePageActivity;
 
@@ -208,8 +208,8 @@ public class CustomAdapter extends RecyclerView.Adapter<CustomViewHolder> {
                     ResourceDataEntry resourceDataEntry = resourceDataEntries.get(spanCount);
                     int spanStart = resourceDataEntry.getSpanStart();
                     if (spanStart < Constants.PREVIEW_CONTENT_TEXT_LENGTH - spanLength) {
-                        int spanEnd = spanStart;
-                        String tag = getResourceTag(resourceDataEntry.getDataType());
+                        int spanEnd;
+                        String tag = Constants.RESOURCE_TAG;
                         spanLength += tag.length();
                         previewText += oriContent.substring(end, spanStart) + " ";
                         spanEnd = spanStart + tag.length();

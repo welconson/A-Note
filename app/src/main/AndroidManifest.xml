@@ -23,7 +23,7 @@
             </intent-filter>
         </activity>
         <activity android:name=".view.activity.EditNoteActivity"
-            android:label="@string/add_note"
+            android:label="@string/add"
             android:theme="@style/AppTheme.ActionBar"
             >
         </activity>

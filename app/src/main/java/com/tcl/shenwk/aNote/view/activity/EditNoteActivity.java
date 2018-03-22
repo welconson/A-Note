@@ -2,6 +2,7 @@ package com.tcl.shenwk.aNote.view.activity;
 
 import android.Manifest;
 import android.annotation.SuppressLint;
+import android.app.FragmentManager;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.net.Uri;
@@ -18,7 +19,6 @@ import android.text.Spanned;
 import android.text.TextWatcher;
 import android.util.Log;
 import android.view.LayoutInflater;
-import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.WindowManager;
@@ -30,8 +30,9 @@ import android.widget.Toast;
 import com.tcl.shenwk.aNote.R;
 import com.tcl.shenwk.aNote.entry.NoteEntry;
 import com.tcl.shenwk.aNote.entry.ResourceDataEntry;
+import com.tcl.shenwk.aNote.entry.TagRecordEntry;
+import com.tcl.shenwk.aNote.model.ANoteDBManager;
 import com.tcl.shenwk.aNote.model.NoteHandler;
-import com.tcl.shenwk.aNote.multiMediaInputSupport.CustomMovementMethod;
 import com.tcl.shenwk.aNote.multiMediaInputSupport.CustomScrollingMovementMethod;
 import com.tcl.shenwk.aNote.util.FileUtil;
 import com.tcl.shenwk.aNote.util.ImeController;
@@ -39,8 +40,11 @@ import com.tcl.shenwk.aNote.util.Constants;
 import com.tcl.shenwk.aNote.util.PermissionUtil;
 import com.tcl.shenwk.aNote.util.StringUtil;
 import com.tcl.shenwk.aNote.view.customSpan.AudioViewSpan;
+import com.tcl.shenwk.aNote.view.customSpan.FileViewSpan;
 import com.tcl.shenwk.aNote.view.customSpan.ImageViewSpan;
+import com.tcl.shenwk.aNote.view.customSpan.VideoViewSpan;
 import com.tcl.shenwk.aNote.view.customSpan.ViewSpan;
+import com.tcl.shenwk.aNote.view.fragment.TagEditFragment;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -59,6 +63,7 @@ public class EditNoteActivity extends AppCompatActivity{
     public static int MODE_EDIT = 0;
     public static int MODE_PREVIEW = 1;
     private int mMode = MODE_PREVIEW;
+    private View mEditLayout;
     private EditText mNoteContentText;
     private EditText mNoteTitle;
     private ImeController mImeController;
@@ -66,12 +71,16 @@ public class EditNoteActivity extends AppCompatActivity{
     private ImageButton mSaveButton;
     private ImageButton mAddImageButton;
     private ImageButton mAddAudioButton;
+    private ImageButton mAddVideoButton;
+    private ImageButton mAddFileButton;
+    private ImageButton mTagEditor;
     private FloatingActionButton mEditNoteButton;
     private View mEditToolBar;
     private NoteEntry mNoteEntry;
     private boolean mIsModified;
     private boolean mIsNewNote;
-    private List<ViewSpan> viewSpans;
+    private List<ViewSpan> mViewSpans;
+    private List<TagRecordEntry> mTagRecordEntries;
 
     private List<ActivityResult> unhandledActivityResults = new ArrayList<>();
     @SuppressLint("ClickableViewAccessibility")
@@ -82,8 +91,9 @@ public class EditNoteActivity extends AppCompatActivity{
         final Intent intent = getIntent();
         mImeController = new ImeController(this);
         mIsModified = false;
-        viewSpans = new ArrayList<>();
+        mViewSpans = new ArrayList<>();
 
+        mEditLayout = findViewById(R.id.linearLayout);
         mEditToolBar = findViewById(R.id.edit_tool_bar);
         mBackButton = findViewById(R.id.back);
         mBackButton.setOnClickListener(backButtonOnClickListener);
@@ -121,9 +131,15 @@ public class EditNoteActivity extends AppCompatActivity{
         mAddImageButton = findViewById(R.id.add_image_button);
         mAddImageButton.setOnClickListener(addImageButtonOnClickListener);
         mAddAudioButton = findViewById(R.id.add_audio_button);
-        mAddAudioButton.setOnClickListener(addAudioButtonOnclickListener);
+        mAddAudioButton.setOnClickListener(addAudioButtonOnClickListener);
+        mAddVideoButton = findViewById(R.id.add_video_button);
+        mAddVideoButton.setOnClickListener(addVideoButtonOnClickListener);
+        mAddFileButton = findViewById(R.id.add_file_button);
+        mAddFileButton.setOnClickListener(addFileButtonOnClickListener);
         mEditNoteButton = findViewById(R.id.edit_note_button);
         mEditNoteButton.setOnClickListener(editNoteButtonOnClickListener);
+        mTagEditor = findViewById(R.id.tag_editor);
+        mTagEditor.setOnClickListener(tagEditorOnClickListener);
 
         int mode;
         String action_edit = intent.getStringExtra(Constants.ACTION_EDIT_NOTE);
@@ -137,6 +153,8 @@ public class EditNoteActivity extends AppCompatActivity{
             inflateViewSpanWithResourceEntry(NoteHandler.getResourceDataById(
                     EditNoteActivity.this, mNoteEntry.getNoteId()));
             mIsNewNote = false;
+            mTagRecordEntries = ANoteDBManager.getInstance(EditNoteActivity.this).
+                    queryAllTagRecordByNoteId(mNoteEntry.getNoteId());
         }
         else {
             mode = MODE_EDIT;
@@ -154,10 +172,10 @@ public class EditNoteActivity extends AppCompatActivity{
 
     private ResourceDataEntry getFirstResource() {
         ResourceDataEntry resourceDataEntry = null;
-        if(viewSpans.size() > 0){
+        if(mViewSpans.size() > 0){
             Editable editable = mNoteContentText.getText();
             int firstSpanStart = editable.length();
-            for(ViewSpan viewSpan : viewSpans){
+            for(ViewSpan viewSpan : mViewSpans){
                 int spanStart = editable.getSpanStart(viewSpan);
                 if(firstSpanStart > spanStart){
                     firstSpanStart = spanStart;
@@ -242,16 +260,16 @@ public class EditNoteActivity extends AppCompatActivity{
      */
     public void addSpan(ViewSpan viewSpan){
         if(viewSpan != null){
-            viewSpans.add(viewSpan);
+            mViewSpans.add(viewSpan);
         }
     }
 
     public void removeSpan(ViewSpan viewSpan){
         if(viewSpan != null) {
             int index = 0;
-            for(ViewSpan iterator : viewSpans) {
+            for(ViewSpan iterator : mViewSpans) {
                 if(iterator == viewSpan) {
-                    viewSpans.remove(index);
+                    mViewSpans.remove(index);
                     break;
                 }
                 index++;
@@ -279,8 +297,12 @@ public class EditNoteActivity extends AppCompatActivity{
                     duration = ((AudioViewSpan)viewSpan).getDuration();
                     break;
                 case Constants.RESOURCE_TYPE_VIDEO:
-                    view = layoutInflater.inflate(R.layout.audio_span_layout, (ViewGroup) mNoteContentText.getParent(), false);
-                    viewSpan = new AudioViewSpan(view, resourceDataEntry);
+                    view = layoutInflater.inflate(R.layout.video_span_layout, (ViewGroup) mNoteContentText.getParent(), false);
+                    viewSpan = new VideoViewSpan(view, resourceDataEntry);
+                    break;
+                case Constants.RESOURCE_TYPE_FILE:
+                    view = layoutInflater.inflate(R.layout.file_span_layout, (ViewGroup) mNoteContentText.getParent(), false);
+                    viewSpan = new FileViewSpan(view, resourceDataEntry);
                     break;
                     default:continue;
             }
@@ -288,9 +310,9 @@ public class EditNoteActivity extends AppCompatActivity{
             spannableStringBuilder.setSpan(viewSpan, resourceDataEntry.getSpanStart(),
                     editPosition, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
             if(duration != -1) {
-                TextView textView = view.findViewById(R.id.audio_time);
+                TextView textView = view.findViewById(R.id.duration);
                 textView.setText(StringUtil.DurationFormat(duration));
-                textView = view.findViewById(R.id.audio_title);
+                textView = view.findViewById(R.id.resource_name);
                 textView.setText(viewSpan.getFileName());
             }
             addSpan(viewSpan);
@@ -357,45 +379,63 @@ public class EditNoteActivity extends AppCompatActivity{
         LayoutInflater layoutInflater = getLayoutInflater();
         View view;
         ViewSpan viewSpan;
-        String fileName = FileUtil.getFileNameFromURI(EditNoteActivity.this, uri, type);
-        String tag;
         switch (type){
             case Constants.RESOURCE_TYPE_IMAGE: {
                 view = layoutInflater.inflate(R.layout.image_span_layout, (ViewGroup) mNoteContentText.getParent(), false);
 
                 ResourceDataEntry resourceDataEntry = new ResourceDataEntry();
-                resourceDataEntry.setFileName(fileName);
-                Log.d(TAG, "createViewSpanForUriResource: filename " + fileName);
                 viewSpan = new ImageViewSpan(view, uri, resourceDataEntry);
 
-                tag = Constants.IMAGE_SPAN_TAG;
                 break;
             }
             case Constants.RESOURCE_TYPE_AUDIO: {
                 view = layoutInflater.inflate(R.layout.audio_span_layout, (ViewGroup) mNoteContentText.getParent(), false);
 
                 ResourceDataEntry resourceDataEntry = new ResourceDataEntry();
-                resourceDataEntry.setFileName(fileName);
 
                 viewSpan = new AudioViewSpan(view, uri, resourceDataEntry);
-                TextView textView = view.findViewById(R.id.audio_time);
+                TextView textView = view.findViewById(R.id.duration);
                 textView.setText(StringUtil.DurationFormat(((AudioViewSpan)viewSpan).getDuration()));
-                textView = view.findViewById(R.id.audio_title);
-                textView.setText(fileName);
+                textView = view.findViewById(R.id.resource_name);
+                textView.setText(viewSpan.getFileName());
 
-                tag = Constants.AUDIO_SPAN_TAG;
+                break;
+            }
+            case Constants.RESOURCE_TYPE_VIDEO:{
+                view = layoutInflater.inflate(R.layout.video_span_layout, (ViewGroup) mNoteContentText.getParent(), false);
+
+                ResourceDataEntry resourceDataEntry = new ResourceDataEntry();
+
+                viewSpan = new VideoViewSpan(view, uri, resourceDataEntry);
+                TextView textView = view.findViewById(R.id.duration);
+                textView.setText(StringUtil.DurationFormat(((VideoViewSpan)viewSpan).getDuration()));
+                textView = view.findViewById(R.id.resource_name);
+                textView.setText(viewSpan.getFileName());
+
+                break;
+            }
+            case Constants.RESOURCE_TYPE_FILE:{
+                view = layoutInflater.inflate(R.layout.file_span_layout, (ViewGroup) mNoteContentText.getParent(), false);
+
+                ResourceDataEntry resourceDataEntry = new ResourceDataEntry();
+
+                viewSpan = new FileViewSpan(view, uri, resourceDataEntry);
+                TextView textView = view.findViewById(R.id.duration);
+                textView.setText("File");
+                textView = view.findViewById(R.id.resource_name);
+                textView.setText(viewSpan.getFileName());
+
                 break;
             }
             default:
                 viewSpan = null;
-                tag = "";
                 Log.i(TAG, "createViewSpanForUriResource: view span type error");
         }
         if(viewSpan != null) {
             int spanStart = mNoteContentText.getSelectionEnd();
             SpannableStringBuilder spannableStringBuilder = new SpannableStringBuilder(mNoteContentText.getText());
-            spannableStringBuilder.insert(spanStart, tag);
-            int editPosition = spanStart + tag.length();
+            spannableStringBuilder.insert(spanStart, Constants.RESOURCE_TAG);
+            int editPosition = spanStart + Constants.RESOURCE_TAG.length();
             spannableStringBuilder.setSpan(viewSpan, spanStart,
                     editPosition, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
             mNoteContentText.setText(spannableStringBuilder);
@@ -405,6 +445,11 @@ public class EditNoteActivity extends AppCompatActivity{
         }
     }
 
+    public List<TagRecordEntry> getNoteTagRecord(){
+        return mTagRecordEntries;
+    }
+
+    //listener callback definitions
     private View.OnClickListener saveButtonOnClickListener = new View.OnClickListener() {
         @Override
         public void onClick(View v) {
@@ -415,9 +460,16 @@ public class EditNoteActivity extends AppCompatActivity{
             }
             else if(mIsModified) {
                 mNoteEntry.setNoteTitle(mNoteTitle.getText().toString());
-                if (!NoteHandler.saveNote(mNoteEntry, EditNoteActivity.this,
-                        mNoteContentText.getText(), viewSpans))
-                    Log.i(TAG, "onClick: save note failed");
+                if (NoteHandler.saveNote(mNoteEntry, EditNoteActivity.this,
+                        mNoteContentText.getText(), mViewSpans, mTagRecordEntries)){
+                    // Only when it is a new note, we will save tag records there, or
+                    // we will do it when choosing tags is just done.
+                    if(mIsNewNote){
+                        mIsNewNote = false;
+                        NoteHandler.saveTagRecord(EditNoteActivity.this,
+                                mNoteEntry.getNoteId(), mTagRecordEntries);
+                    }
+                } else Log.i(TAG, "onClick: save note failed");
                 Log.i(TAG, "onClick: save button onclick " + mNoteEntry.getNoteId());
             }
             modeSetting(MODE_PREVIEW);
@@ -435,7 +487,7 @@ public class EditNoteActivity extends AppCompatActivity{
         }
     };
 
-    private View.OnClickListener addAudioButtonOnclickListener = new View.OnClickListener() {
+    private View.OnClickListener addAudioButtonOnClickListener = new View.OnClickListener() {
         @Override
         public void onClick(View v) {
             Intent intent = new Intent();
@@ -443,6 +495,28 @@ public class EditNoteActivity extends AppCompatActivity{
             intent.setAction(Intent.ACTION_GET_CONTENT);
             intent.addCategory(Intent.CATEGORY_OPENABLE);
             startActivityForResult(Intent.createChooser(intent, null), Constants.SELECT_AUDIO);
+        }
+    };
+
+    private View.OnClickListener addVideoButtonOnClickListener = new View.OnClickListener() {
+        @Override
+        public void onClick(View v) {
+            Intent intent = new Intent();
+            intent.setType("video/*");
+            intent.setAction(Intent.ACTION_GET_CONTENT);
+            intent.addCategory(Intent.CATEGORY_OPENABLE);
+            startActivityForResult(Intent.createChooser(intent, null), Constants.SELECT_VIDEO);
+        }
+    };
+
+    private View.OnClickListener addFileButtonOnClickListener = new View.OnClickListener() {
+        @Override
+        public void onClick(View v) {
+            Intent intent = new Intent();
+            intent.setType("*/*");
+            intent.setAction(Intent.ACTION_GET_CONTENT);
+            intent.addCategory(Intent.CATEGORY_OPENABLE);
+            startActivityForResult(Intent.createChooser(intent, null), Constants.SELECT_FILE);
         }
     };
 
@@ -473,6 +547,19 @@ public class EditNoteActivity extends AppCompatActivity{
         }
     };
 
+    private View.OnClickListener tagEditorOnClickListener = new View.OnClickListener() {
+        @Override
+        public void onClick(View v) {
+            FragmentManager fragmentManager = getFragmentManager();
+//            fragmentManager.beginTransaction()
+//                    .add(R.id.edit_note_layout, new TagEditFragment())
+//                    .commit();
+            TagEditFragment tagEditFragment = new TagEditFragment();
+            tagEditFragment.setExitCallback(tagSelectDoneCallback);
+            tagEditFragment.show(fragmentManager, "test");
+        }
+    };
+
     private TextWatcher textWatcher = new TextWatcher() {
         @Override
         public void beforeTextChanged(CharSequence s, int start, int count, int after) {
@@ -488,6 +575,23 @@ public class EditNoteActivity extends AppCompatActivity{
         @Override
         public void afterTextChanged(Editable s) {
 
+        }
+    };
+
+    private TagEditFragment.ExitCallback tagSelectDoneCallback = new TagEditFragment.ExitCallback() {
+        @Override
+        public void onTagSelectDone(List<TagRecordEntry> tagRecordEntries) {
+            if(mTagRecordEntries == null) {
+                mTagRecordEntries = tagRecordEntries;
+            }
+            else {
+                mTagRecordEntries.clear();
+                mTagRecordEntries = tagRecordEntries;
+            }
+            if(!mIsNewNote){
+                NoteHandler.saveTagRecord(EditNoteActivity.this,
+                        mNoteEntry.getNoteId(), tagRecordEntries);
+            }
         }
     };
 }

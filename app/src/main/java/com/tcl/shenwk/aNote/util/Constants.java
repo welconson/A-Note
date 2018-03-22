@@ -12,6 +12,7 @@ public interface Constants {
     String AUDIO_SPAN_TAG = "" + TAG;
     String VIDEO_SPAN_TAG = "" + TAG;
     String FILE_SPAN_TAG = "" + TAG;
+    String RESOURCE_TAG = new String(new char[]{TAG});
     //span tag end
 
     //
@@ -21,6 +22,8 @@ public interface Constants {
     int NOTE_LABELED_DISCARD = 0;
     int NO_NOTE_ID = -1;
     int NO_RESOURCE_ID = -1;
+    int NO_TAG_ID = -1;
+    int NO_TAG_RECORD_ID = -1;
     //
 
     //Extra name start
@@ -52,6 +55,8 @@ public interface Constants {
     //Intent request code
     int SELECT_IMAGE = 0;
     int SELECT_AUDIO = 1;
+    int SELECT_VIDEO = 2;
+    int SELECT_FILE = 3;
     //Intent request code
 
     //message what start
@@ -61,7 +66,7 @@ public interface Constants {
 
     //View span size constant(dp)
     int VIEW_SPAN_HEIGHT = 72;
-    int VIEW_SPAN_WIDTH = 216;
+    int VIEW_SPAN_WIDTH = 288;
     //View span size constant(dp)
 
     //Resource data type
@@ -74,4 +79,5 @@ public interface Constants {
     //Toast text
     String TOAST_TEXT_WITHOUT_PERMISSION = "Permission Denial";
     String TOAST_NEW_NOTE_WITH_NOTHING = "do not save a empty note";
+    String TOAST_TAG_NOT_EMPTY = "tag name can not be a empty value";
 }

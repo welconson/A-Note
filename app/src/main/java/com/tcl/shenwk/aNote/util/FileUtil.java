@@ -7,6 +7,7 @@ import android.database.Cursor;
 import android.net.Uri;
 import android.os.Environment;
 import android.provider.MediaStore;
+import android.provider.OpenableColumns;
 import android.util.Log;
 import android.widget.Toast;
 
@@ -251,6 +252,8 @@ public class FileUtil {
                 proj = new String[]{MediaStore.Audio.Media.DISPLAY_NAME};break;
             case Constants.RESOURCE_TYPE_VIDEO:
                 proj = new String[]{MediaStore.Video.Media.DISPLAY_NAME};break;
+            case Constants.RESOURCE_TYPE_FILE:
+                proj = new String[]{OpenableColumns.DISPLAY_NAME};break;
                 default:proj = new String[]{""};
         }
         contentUri.getScheme();

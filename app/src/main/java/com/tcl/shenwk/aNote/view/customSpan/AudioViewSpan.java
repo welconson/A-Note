@@ -1,20 +1,18 @@
 package com.tcl.shenwk.aNote.view.customSpan;
 
 import android.content.Context;
-import android.content.res.Resources;
 import android.media.MediaMetadataRetriever;
 import android.net.Uri;
-import android.support.v7.app.AppCompatActivity;
-import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
-import android.view.ViewGroup;
 
 import com.tcl.shenwk.aNote.R;
 import com.tcl.shenwk.aNote.entry.ResourceDataEntry;
 import com.tcl.shenwk.aNote.util.Constants;
-import com.tcl.shenwk.aNote.view.activity.EditNoteActivity;
+import com.tcl.shenwk.aNote.util.FileUtil;
+
+import java.io.File;
 
 /**
  * Used for Audio as a span to replace the [audio] tag.
@@ -29,6 +27,8 @@ public class AudioViewSpan extends ViewSpan {
     public AudioViewSpan(View view, Uri uri, ResourceDataEntry resourceDataEntry) {
         super(view, uri, resourceDataEntry);
         mDuration = extractDurationByUri(view.getContext(), uri);
+        resourceDataEntry.setFileName(FileUtil.getFileNameFromURI(view.getContext(),
+                uri, resourceDataEntry.getDataType()));
         Log.i(TAG, "AudioViewSpan: mDuration = " + mDuration);
 
         init();
@@ -61,7 +61,7 @@ public class AudioViewSpan extends ViewSpan {
     }
 
     private void init(){
-        View play = getView().findViewById(R.id.play_audio);
+        View play = getView().findViewById(R.id.open_button);
         if(play != null) {
             play.setOnClickListener(new View.OnClickListener() {
                 @Override

@@ -7,8 +7,10 @@ import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteStatement;
 import android.util.Log;
 
+import com.tcl.shenwk.aNote.entry.NoteTagEntry;
 import com.tcl.shenwk.aNote.entry.ResourceDataEntry;
 import com.tcl.shenwk.aNote.entry.NoteEntry;
+import com.tcl.shenwk.aNote.entry.TagRecordEntry;
 import com.tcl.shenwk.aNote.util.Constants;
 
 import java.util.ArrayList;
@@ -275,6 +277,133 @@ public class ANoteDBManager {
                 Log.i(TAG, "updateResourceData: resource data record update successfully");
             }
         }
+        database.close();
+    }
+
+    /**
+     * TAG table database operations.
+     */
+    public long insertTag(NoteTagEntry noteTagEntry){
+        long ret = -1;
+        String sql = "insert into " + TAG_TABLE_NAME + " ( " + TAG_NAME + ", "
+                + TAG_CREATE_TIMESTAMP + ", " + TAG_ROOT_ID + " ) " + " values(?,?,?)";
+        Log.i(TAG, "insertTag: " + sql);
+        SQLiteDatabase database = mDBHelper.getWritableDatabase();
+        SQLiteStatement statement = database.compileStatement(sql);
+        database.beginTransaction();
+        if(noteTagEntry.getTagName() != null)
+            statement.bindString(1, noteTagEntry.getTagName());
+        else statement.bindNull(1);
+        if(noteTagEntry.getCreateTime() != null)
+            statement.bindString(2, noteTagEntry.getCreateTime());
+        else statement.bindNull(2);
+        statement.bindLong(3, noteTagEntry.getRootTagId());
+        ret = statement.executeInsert();
+        if(ret == -1)
+            Log.i(TAG, "insertTag: insert tag entry error");
+        else Log.i(TAG, "insertTag: insert tag successfully");
+        database.setTransactionSuccessful();
+        database.endTransaction();
+        mDBHelper.close();
+        return ret;
+    }
+
+    public List<NoteTagEntry> queryAllTag(){
+        List<NoteTagEntry> noteTagEntries = new ArrayList<>();
+        SQLiteDatabase database = mDBHelper.getReadableDatabase();
+        Cursor cursor = database.query(TAG_TABLE_NAME, null, null,
+                null, null, null, null);
+        while(cursor.moveToNext()){
+            NoteTagEntry noteTagEntry = new NoteTagEntry();
+            noteTagEntry.setTagId(cursor.getLong(cursor.getColumnIndex(TAG_ID)));
+            noteTagEntry.setTagName(cursor.getString(cursor.getColumnIndex(TAG_NAME)));
+            noteTagEntry.setCreateTime(cursor.getString(cursor.getColumnIndex(TAG_CREATE_TIMESTAMP)));
+            noteTagEntry.setRootTagId(cursor.getLong(cursor.getColumnIndex(TAG_ROOT_ID)));
+            noteTagEntries.add(noteTagEntry);
+        }
+        cursor.close();
+        database.close();
+        return noteTagEntries;
+    }
+
+    public void updateTag(NoteTagEntry noteTagEntry){
+        if(noteTagEntry.getTagId() < 0)
+            return;
+        SQLiteDatabase database = mDBHelper.getWritableDatabase();
+        ContentValues contentValues = new ContentValues();
+        contentValues.put(TAG_NAME, noteTagEntry.getTagName());
+        contentValues.put(TAG_ROOT_ID, noteTagEntry.getRootTagId());
+        String whereClause = TAG_ID + " = " + noteTagEntry.getTagId();
+        if(contentValues.size() != 0){
+            if(database.update(TAG_TABLE_NAME, contentValues, whereClause, null) == -1)
+                Log.i(TAG, "updateTag: update tag " + noteTagEntry.getTagId() + " failed");
+            else
+                Log.i(TAG, "updateTag: update tag successfully");
+        }
+        database.close();
+    }
+
+    public void deleteTag(long tagId){
+        if(tagId < 0)
+            return;
+        SQLiteDatabase database = mDBHelper.getWritableDatabase();
+        String whereClause = TAG_ID + " = " + tagId;
+        database.delete(TAG_TABLE_NAME, whereClause, null);
+        database.close();
+    }
+
+    /**
+     * TAG_NOTE_RECORD database operations.
+     */
+    public long insertTagRecord(TagRecordEntry tagRecordEntry){
+        long ret = 1;
+        SQLiteDatabase database = mDBHelper.getWritableDatabase();
+        String sql = "INSERT INTO " + TAG_RECORD_TABLE_NAME + " ( " + TAG_ID + ", "
+                + NOTE_ID + ", " + TAG_RECORD_CREATE_TIMESTAMP + " ) " + "VALUES(?,?,?)";
+        Log.i(TAG, "insertTagRecord: " + sql);
+        SQLiteStatement statement = database.compileStatement(sql);
+        database.beginTransaction();
+        statement.bindLong(1, tagRecordEntry.getTagId());
+        statement.bindLong(2, tagRecordEntry.getNoteId());
+        if(tagRecordEntry.getCreateTimestamp() == null)
+            statement.bindNull(3);
+        else statement.bindString(3, tagRecordEntry.getCreateTimestamp());
+        ret = statement.executeInsert();
+        if(ret == -1)
+            Log.i(TAG, "insertTagRecord: insert tag record failed");
+        else Log.i(TAG, "insertTagRecord: insert tag record successfully");
+        database.setTransactionSuccessful();
+        database.endTransaction();
+        database.close();
+        return ret;
+    }
+
+    public List<TagRecordEntry> queryAllTagRecordByNoteId(long noteId){
+        List<TagRecordEntry> tagRecordEntries = new ArrayList<>();
+        SQLiteDatabase database = mDBHelper.getReadableDatabase();
+        String selection = NOTE_ID + " = " + noteId;
+        Cursor cursor = database.query(TAG_RECORD_TABLE_NAME, null, selection,
+                null, null, null, null);
+        while(cursor.moveToNext()){
+            TagRecordEntry tagRecordEntry = new TagRecordEntry();
+            tagRecordEntry.setTagRecordId(cursor.getLong(cursor.getColumnIndex(TAG_RECORD_ID)));
+            tagRecordEntry.setTagId(cursor.getLong(cursor.getColumnIndex(TAG_ID)));
+            tagRecordEntry.setNoteId(cursor.getLong(cursor.getColumnIndex(NOTE_ID)));
+            tagRecordEntry.setCreateTimestamp(cursor.getString(cursor.getColumnIndex(TAG_RECORD_CREATE_TIMESTAMP)));
+            tagRecordEntries.add(tagRecordEntry);
+        }
+        cursor.close();
+        database.close();
+        return tagRecordEntries;
+    }
+
+    public void deleteTagRecord(long tagRecordId){
+        if(tagRecordId < 0)
+            return;
+        SQLiteDatabase database = mDBHelper.getWritableDatabase();
+        String whereClause = TAG_RECORD_ID + " = " + tagRecordId;
+        Log.i(TAG, "deleteTagRecord: " + whereClause);
+        database.delete(TAG_RECORD_TABLE_NAME, whereClause, null);
         database.close();
     }
 }

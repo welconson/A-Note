@@ -16,6 +16,7 @@ import android.widget.ImageView;
 import com.tcl.shenwk.aNote.R;
 import com.tcl.shenwk.aNote.entry.ResourceDataEntry;
 import com.tcl.shenwk.aNote.util.Constants;
+import com.tcl.shenwk.aNote.util.FileUtil;
 
 import java.io.FileNotFoundException;
 
@@ -34,6 +35,8 @@ public class ImageViewSpan extends ViewSpan{
 
     public ImageViewSpan(View view, Uri uri, ResourceDataEntry resourceDataEntry) {
         super(view, uri, resourceDataEntry);
+        resourceDataEntry.setFileName(FileUtil.getFileNameFromURI(view.getContext(),
+                uri, resourceDataEntry.getDataType()));
         setViewReaction();
     }
 

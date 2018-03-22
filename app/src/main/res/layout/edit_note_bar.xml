@@ -44,6 +44,14 @@
             android:background="@drawable/ic_redo"
             android:contentDescription="@string/back" />
         <ImageButton
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/tag_editor"
+            android:layout_centerVertical="true"
+            android:layout_toStartOf="@+id/setting"
+            android:layout_marginEnd="@dimen/fab_margin"
+            android:background="@drawable/ic_label"/>
+        <ImageButton
             android:id="@+id/setting"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"

@@ -1,6 +1,7 @@
 package com.tcl.shenwk.aNote.model;
 
 /**
+ * Database fields definition
  * Created by shenwk on 2018/2/5.
  */
 
@@ -27,4 +28,16 @@ public interface DBFieldsName {
     String RESOURCE_PATH = "resource_path";
     String DATA_TYPE = "data_type";
     String SPAN_START = "span_start";
+
+    //TAG table fields
+    String TAG_TABLE_NAME = "tag";
+    String TAG_ID = "tag_id";
+    String TAG_NAME = "tag_name";
+    String TAG_CREATE_TIMESTAMP = "tag_create_timestamp";
+    String TAG_ROOT_ID = "tag_root_id";
+
+    //TAG_NOTE_RECORD table fields
+    String TAG_RECORD_TABLE_NAME = "tag_note_record_table_name";
+    String TAG_RECORD_ID = "tag_note_record_id";
+    String TAG_RECORD_CREATE_TIMESTAMP = "tag_note_record_create_timestamp";
 }
