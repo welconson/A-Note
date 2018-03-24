@@ -16,6 +16,7 @@ import com.tcl.shenwk.aNote.view.customSpan.ViewSpan;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
 /**
@@ -121,7 +122,7 @@ public class NoteHandler {
 
     public static List<HomePageActivity.PreviewNoteEntry> getAllPreviewNoteList(Context context){
         List<HomePageActivity.PreviewNoteEntry> previewNoteEntries = new ArrayList<>();
-        List<NoteEntry> noteEntries = ANoteDBManager.getInstance(context).queryAllNotesRecord();
+        List<NoteEntry> noteEntries = ANoteDBManager.getInstance(context).queryAllNoteRecord();
         for (NoteEntry noteEntry : noteEntries) {
             HomePageActivity.PreviewNoteEntry previewNoteEntry = new HomePageActivity.PreviewNoteEntry();
             previewNoteEntry.noteEntry = noteEntry;
@@ -149,6 +150,8 @@ public class NoteHandler {
 
     public static void deleteNote(Context context, NoteEntry noteEntry){
         ANoteDBManager.getInstance(context).deleteNoteRecord(noteEntry.getNoteId());
+        ANoteDBManager.getInstance(context).deleteTagRecordByNoteId(noteEntry.getNoteId());
+        ANoteDBManager.getInstance(context).deleteResourceDataByNoteId(noteEntry.getNoteId());
         FileUtil.deleteDirectoryAndFiles(noteEntry.getNotePath());
     }
 
@@ -250,21 +253,41 @@ public class NoteHandler {
     public static void saveTagRecord(Context context, long noteId, List<TagRecordEntry>  tagRecordEntries){
         if(tagRecordEntries == null)
             return;
-        for(TagRecordEntry tagRecordEntry : tagRecordEntries){
+        Iterator<TagRecordEntry> tagRecordEntryIterator= tagRecordEntries.iterator();
+        while(tagRecordEntryIterator.hasNext()){
+            TagRecordEntry tagRecordEntry = tagRecordEntryIterator.next();
             switch (tagRecordEntry.status){
                 case TagRecordEntry.NEW_CREATE:
                     tagRecordEntry.setNoteId(noteId);
                     long ret = ANoteDBManager.getInstance(context).insertTagRecord(tagRecordEntry);
                     if(ret != Constants.NO_TAG_RECORD_ID) {
-                        tagRecordEntry.setTagId(ret);
+                        tagRecordEntry.setTagRecordId(ret);
+                        tagRecordEntry.status = TagRecordEntry.NORMAL;
                     }
                     break;
                 case TagRecordEntry.TO_DELETE:
                     ANoteDBManager.getInstance(context).deleteTagRecord(tagRecordEntry.getTagRecordId());
+                    tagRecordEntryIterator.remove();
                     break;
             }
             tagRecordEntry.setNoteId(noteId);
 
         }
+    }
+
+    public static List<HomePageActivity.PreviewNoteEntry> transformNoteEntryToPreviewList(
+            Context context, List<NoteEntry> noteEntries){
+        List<HomePageActivity.PreviewNoteEntry> previewNoteEntries = new ArrayList<>();
+        if(noteEntries == null)
+            return previewNoteEntries;
+        for (NoteEntry noteEntry : noteEntries) {
+            HomePageActivity.PreviewNoteEntry previewNoteEntry = new HomePageActivity.PreviewNoteEntry();
+            previewNoteEntry.noteEntry = noteEntry;
+            previewNoteEntry.preResourceDataEntries =
+                    ANoteDBManager.getInstance(context).queryAllResourceDataByNoteId(
+                            previewNoteEntry.noteEntry.getNoteId());
+            previewNoteEntries.add(previewNoteEntry);
+        }
+        return previewNoteEntries;
     }
 }

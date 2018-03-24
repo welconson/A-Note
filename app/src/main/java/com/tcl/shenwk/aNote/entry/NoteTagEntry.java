@@ -1,6 +1,7 @@
 package com.tcl.shenwk.aNote.entry;
 
 import com.tcl.shenwk.aNote.util.Constants;
+import com.tcl.shenwk.aNote.util.DateUtil;
 
 import java.util.Date;
 
@@ -12,7 +13,7 @@ import java.util.Date;
 public class NoteTagEntry {
     private long tagId = Constants.NO_TAG_ID;
     private String tagName;
-    private String createTime;
+    private long createTime;
     private long rootTagId = Constants.NO_TAG_ID;
 
     public NoteTagEntry() {
@@ -24,7 +25,7 @@ public class NoteTagEntry {
      */
     public NoteTagEntry(String tagName) {
         this.tagName = tagName;
-        this.createTime = new Date().toString();
+        this.createTime = DateUtil.getInstance().getTime();
     }
 
     public long getTagId() {
@@ -43,11 +44,11 @@ public class NoteTagEntry {
         this.tagName = tagName;
     }
 
-    public String getCreateTime() {
+    public long getCreateTime() {
         return createTime;
     }
 
-    public void setCreateTime(String createTime) {
+    public void setCreateTime(long createTime) {
         this.createTime = createTime;
     }
 

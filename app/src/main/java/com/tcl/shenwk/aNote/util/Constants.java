@@ -26,7 +26,7 @@ public interface Constants {
     int NO_TAG_RECORD_ID = -1;
     //
 
-    //Extra name start
+    //Extra name and value start
     String ACTION_EDIT_NOTE = "com.tcl.shenwk.aNote.edit_type";
     String EDIT_NOTE_ID = "note_id";
     String ITEM_POSITION = "position";
@@ -34,10 +34,16 @@ public interface Constants {
     String ITEM_RESOURCE_ENTRY = "res";
     int DEFAULT_ITEM_POSITION = -1;
     int ITEM_BEGIN_POSITION = 0;
-    String ACTION_TO_HOME_PAGE = "action_to_home_page";
+
+
+    String EDIT_TO_HOME_PAGE_STATUS = "action_to_home_page";
     int HOME_PAGE_NORMAL_RESUME = 0;
     int HOME_PAGE_UPDATE_RESUME = 1;
-    //Extra name end
+
+    String RESULT_SOURCE_TO_HOME_PAGE = "result_to_home_page";
+    int FROM_NO_WHERE = -1;
+    int FROM_EDIT_ACTIVITY = 0;
+    //Extra name and values end
 
     //db constants start
     String A_NOTE_DATABASE_NAME = "a_note_local.db";

@@ -12,8 +12,7 @@ import java.util.Date;
 public class RandomUtil {
     private static String TAG = "RandomUtil";
     public static String randomString(int length){
-        Date date = new Date();
-        long millisecond =  date.getTime();
+        long millisecond =  DateUtil.getInstance().getTime();
         String randomString = String.valueOf(millisecond);
         randomString.substring(randomString.length() - length);
         Log.i(TAG, "randomString: " + randomString);

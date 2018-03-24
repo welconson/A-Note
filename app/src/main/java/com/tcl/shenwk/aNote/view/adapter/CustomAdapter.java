@@ -22,7 +22,7 @@ import com.tcl.shenwk.aNote.entry.ResourceDataEntry;
 import com.tcl.shenwk.aNote.model.NoteHandler;
 import com.tcl.shenwk.aNote.util.Constants;
 import com.tcl.shenwk.aNote.util.FileUtil;
-import com.tcl.shenwk.aNote.view.ViewHolder.CustomViewHolder;
+import com.tcl.shenwk.aNote.view.viewholder.CustomViewHolder;
 import com.tcl.shenwk.aNote.view.activity.EditNoteActivity;
 import com.tcl.shenwk.aNote.view.activity.HomePageActivity;
 

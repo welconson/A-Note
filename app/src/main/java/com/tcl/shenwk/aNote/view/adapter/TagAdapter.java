@@ -10,7 +10,7 @@ import com.tcl.shenwk.aNote.R;
 import com.tcl.shenwk.aNote.entry.NoteTagEntry;
 import com.tcl.shenwk.aNote.entry.TagRecordEntry;
 import com.tcl.shenwk.aNote.util.StringUtil;
-import com.tcl.shenwk.aNote.view.ViewHolder.SelectTagViewHolder;
+import com.tcl.shenwk.aNote.view.viewholder.SelectTagViewHolder;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -34,7 +34,7 @@ public class TagAdapter extends RecyclerView.Adapter {
     @Override
     public RecyclerView.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
         final SelectTagViewHolder selectTagViewHolder = new SelectTagViewHolder(
-                layoutInflater.inflate(R.layout.tag_item, parent, false));
+                layoutInflater.inflate(R.layout.tag_edit_item, parent, false));
         selectTagViewHolder.checkBox.setOnCheckedChangeListener(checkBoxOnCheckListener);
         return selectTagViewHolder;
     }

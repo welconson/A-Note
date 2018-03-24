@@ -1,6 +1,7 @@
 package com.tcl.shenwk.aNote.entry;
 
 import com.tcl.shenwk.aNote.util.Constants;
+import com.tcl.shenwk.aNote.util.DateUtil;
 
 import java.io.Serializable;
 import java.util.Date;
@@ -14,13 +15,13 @@ public class NoteEntry implements Serializable{
     private long noteId;
     private String noteTitle;
     private String notePath;
-    private String createTimestamp;
-    private String updateTimestamp;
+    private long createTimestamp;
+    private long updateTimestamp;
     private String locationInfo;
     private int hasArchived;
     private int isLabeledDiscarded;
 
-    public NoteEntry(String noteTitle, String notePath, String createTimestamp, String updateTimestamp,
+    public NoteEntry(String noteTitle, String notePath, long createTimestamp, long updateTimestamp,
                      String locationInfo, int hasArchived, int isLabeledDiscarded) {
         this.noteTitle = noteTitle;
         this.notePath = notePath;
@@ -33,9 +34,8 @@ public class NoteEntry implements Serializable{
 
     public NoteEntry() {
         noteId = Constants.NO_NOTE_ID;
-        Date date = new Date();
-        createTimestamp = date.toString();
-        updateTimestamp = date.toString();
+        createTimestamp = DateUtil.getInstance().getTime();
+        updateTimestamp = DateUtil.getInstance().getTime();
         noteTitle = null;
         hasArchived = Constants.NOT_ARCHIVED;
         isLabeledDiscarded = Constants.NOTE_LABELED_DISCARD;
@@ -65,19 +65,19 @@ public class NoteEntry implements Serializable{
         this.notePath = notePath;
     }
 
-    public String getCreateTimestamp() {
+    public long getCreateTimestamp() {
         return createTimestamp;
     }
 
-    public void setCreateTimestamp(String createTimestamp) {
+    public void setCreateTimestamp(long createTimestamp) {
         this.createTimestamp = createTimestamp;
     }
 
-    public String getUpdateTimestamp() {
+    public long getUpdateTimestamp() {
         return updateTimestamp;
     }
 
-    public void setUpdateTimestamp(String updateTimestamp) {
+    public void setUpdateTimestamp(long updateTimestamp) {
         this.updateTimestamp = updateTimestamp;
     }
 

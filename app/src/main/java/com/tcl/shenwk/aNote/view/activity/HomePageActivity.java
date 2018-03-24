@@ -1,15 +1,12 @@
 package com.tcl.shenwk.aNote.view.activity;
 
+import android.app.Fragment;
+import android.app.FragmentManager;
 import android.content.Intent;
 import android.os.Bundle;
-import android.support.design.widget.FloatingActionButton;
-import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
-import android.view.Gravity;
-import android.view.LayoutInflater;
 import android.view.Menu;
-import android.view.View;
 import android.support.design.widget.NavigationView;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
@@ -20,27 +17,55 @@ import android.view.MenuItem;
 
 import com.tcl.shenwk.aNote.R;
 import com.tcl.shenwk.aNote.entry.NoteEntry;
+import com.tcl.shenwk.aNote.entry.NoteTagEntry;
 import com.tcl.shenwk.aNote.entry.ResourceDataEntry;
 import com.tcl.shenwk.aNote.model.ANoteDBManager;
-import com.tcl.shenwk.aNote.model.NoteHandler;
 import com.tcl.shenwk.aNote.util.Constants;
-import com.tcl.shenwk.aNote.util.StringUtil;
-import com.tcl.shenwk.aNote.view.adapter.CustomAdapter;
-import com.tcl.shenwk.aNote.view.navigationItem.NavigationItemHandler;
+import com.tcl.shenwk.aNote.view.fragment.AllNoteFragment;
+import com.tcl.shenwk.aNote.view.fragment.TagManagerFragment;
 
 import java.util.List;
 
 public class HomePageActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener {
     private static String TAG = "HomePageActivity";
-    private NavigationItemHandler navigationItemHandler;
-    private RecyclerView mRecyclerView;
+    private RecyclerView recyclerView;
+    private List<NoteEntry> noteEntries;
+    private List<NoteTagEntry> noteTagEntries;
+    private Menu mMenu;
+    private int mCheckedMenuItemId;
+    private DrawerLayout mDrawer;
+    private FragmentManager mFragmentManager;
+
+    private static final String ALL_NOTES_FRAGMENT_TAG = "all_notes";
+    private static final String TAG_MANAGER_FRAGMENT_TAG = "tag_manager";
+    private static final String UNARCHIVED_FRAGMENT_TAG = "unarchived";
+    private static final String DISCARD_DRAWER_FRAGMENT_TAG = "discard_drawer";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         Log.i(TAG, "onCreate: ");
-        initializeView();
+        setContentView(R.layout.home_page);
+
+        // Set toolbar
+        Toolbar toolbar = (Toolbar) findViewById(R.id.home_page_toolbar);
+        setSupportActionBar(toolbar);
+//        final LayoutInflater inflater = getLayoutInflater();
+//        View view =  inflater.inflate(R.layout.tool_bar_button, null);
+//        toolbar.addView(view, -1, new Toolbar.LayoutParams(Gravity.END));
+//        view = inflater.inflate(R.layout.tool_bar_button, null);
+//        toolbar.addView(view, -1, new Toolbar.LayoutParams(Gravity.END));
+        setNavigationDrawer(toolbar);
+
+        mFragmentManager = getFragmentManager();
+
+        Fragment fragment = new AllNoteFragment();
+        mFragmentManager.beginTransaction()
+                .add(R.id.content_main_frame, fragment, ALL_NOTES_FRAGMENT_TAG)
+                .commit();
+
+        noteEntries = ANoteDBManager.getInstance(HomePageActivity.this).queryAllNoteRecord();
     }
 
     @Override
@@ -75,77 +100,74 @@ public class HomePageActivity extends AppCompatActivity
         return super.onOptionsItemSelected(item);
     }
 
-    @SuppressWarnings("StatementWithEmptyBody")
     @Override
     public boolean onNavigationItemSelected(MenuItem item) {
-        return navigationItemHandler.handleItemSelected(item);
-    }
-
-    public void initializeView(){
-        setContentView(R.layout.home_page);
-        if (getSupportActionBar() == null) {
-            Log.i(TAG, "initializeView: return null");
+        Log.i(TAG, "onNavigationItemSelected: ");
+        int id = item.getItemId();
+        boolean isCheckedSameItem = false;
+        Class fragmentClass = null;
+        String tag = "";
+        if(id == mCheckedMenuItemId) {
+            isCheckedSameItem = true;
         }
+        mCheckedMenuItemId = id;
+        switch (id) {
+            case R.id.all_note:
+                if(noteEntries == null)
+                    noteEntries = ANoteDBManager.getInstance(HomePageActivity.this).queryAllNoteRecord();
+                fragmentClass = AllNoteFragment.class;
+                tag = ALL_NOTES_FRAGMENT_TAG;
+                break;
+            case R.id.tag:
+                if(noteTagEntries == null)
+                    noteTagEntries = ANoteDBManager.getInstance(HomePageActivity.this).queryAllTag();
+                fragmentClass = TagManagerFragment.class;
+                tag = TAG_MANAGER_FRAGMENT_TAG;
+                break;
+            case R.id.archive:
 
-        Toolbar toolbar = (Toolbar) findViewById(R.id.home_page_toolbar);
-        final LayoutInflater inflater = getLayoutInflater();
-        View view =  inflater.inflate(R.layout.tool_bar_button, null);
-        toolbar.addView(view, -1, new Toolbar.LayoutParams(Gravity.END));
-        view = inflater.inflate(R.layout.tool_bar_button, null);
-        toolbar.addView(view, -1, new Toolbar.LayoutParams(Gravity.END));
-        setSupportActionBar(toolbar);
+                break;
+            case R.id.discard_drawer:
 
-        FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.add_note_button);
-        fab.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-//                Snackbar.make(view, "add note", Snackbar.LENGTH_SHORT)
-//                        .setAction("Action", null).show();
-                Intent intent = new Intent(HomePageActivity.this, EditNoteActivity.class);
-                intent.putExtra(Constants.ACTION_EDIT_NOTE, EditNoteActivity.EDIT_TYPE_CREATE);
-                startActivity(intent);
+                break;
+            case R.id.nav_share:
+
+                break;
+            case R.id.nav_send:
+
+                break;
+        }
+        mDrawer.closeDrawer(GravityCompat.START);
+        if(!isCheckedSameItem){
+            if(fragmentClass != null) {
+                try {
+                    mFragmentManager.beginTransaction()
+                            .replace(R.id.content_main_frame, ((Fragment) fragmentClass.newInstance()), tag)
+                            .commit();
+                } catch (InstantiationException | IllegalAccessException e) {
+                    e.printStackTrace();
+                }
             }
-        });
-
-        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
-        ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
-                this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
-        drawer.addDrawerListener(toggle);
-        toggle.syncState();
-
-        NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
-        navigationView.setNavigationItemSelectedListener(this);
-        navigationItemHandler = new NavigationItemHandler(navigationView, drawer);
-        mRecyclerView = findViewById(R.id.home_page_list);
-        mRecyclerView.setLayoutManager(new LinearLayoutManager(HomePageActivity.this));
-        List<PreviewNoteEntry> previewNoteList = NoteHandler.getAllPreviewNoteList(HomePageActivity.this);
-        Log.i(TAG, "initializeView: size " + previewNoteList.size());
-        CustomAdapter customAdapter = new CustomAdapter(getLayoutInflater(),
-               previewNoteList );
-        mRecyclerView.setAdapter(customAdapter);
+        }
+        // true to check the item is selected.
+        return true;
     }
 
     @Override
     protected void onPostResume() {
         Log.i(TAG, "onPostResume: running");
         Intent intent = getIntent();
-        // Examine whether any note has been modified.
-        // If modified, update RecyclerView data set and display.
-        if(intent.getIntExtra(Constants.ACTION_TO_HOME_PAGE, Constants.HOME_PAGE_NORMAL_RESUME)
-                == Constants.HOME_PAGE_UPDATE_RESUME) {
-            CustomAdapter adapter = (CustomAdapter) mRecyclerView.getAdapter();
-            String action = intent.getStringExtra(Constants.ACTION_EDIT_NOTE);
-            PreviewNoteEntry previewNoteEntry = new PreviewNoteEntry();
-            previewNoteEntry.noteEntry = (NoteEntry) intent.getSerializableExtra(Constants.ITEM_NOTE_ENTRY);
-            previewNoteEntry.preResourceDataEntries = ANoteDBManager.getInstance(
-                    HomePageActivity.this).queryAllResourceDataByNoteId(previewNoteEntry.noteEntry.getNoteId());
-            if (StringUtil.equal(action, EditNoteActivity.EDIT_TYPE_MODIFY)) {
-                adapter.refreshSingleItemByPosition(intent.getIntExtra(Constants.ITEM_POSITION, Constants.DEFAULT_ITEM_POSITION),
-                        previewNoteEntry);
-            } else {
-                adapter.addItem(previewNoteEntry);
-            }
-            intent.putExtra(Constants.ACTION_TO_HOME_PAGE, Constants.HOME_PAGE_NORMAL_RESUME);
+        // ensure which is the result from
+        switch (intent.getIntExtra(Constants.RESULT_SOURCE_TO_HOME_PAGE, Constants.FROM_NO_WHERE)){
+            case Constants.FROM_EDIT_ACTIVITY:
+                AllNoteFragment allNoteFragment = (AllNoteFragment) mFragmentManager.findFragmentByTag("all_note");
+                if(allNoteFragment != null){
+                    OnEditActivityFinishedListener onEditActivityFinishedListener = allNoteFragment.getOnEditActivityFinishedListener();
+                    if(onEditActivityFinishedListener != null) {
+                        onEditActivityFinishedListener.onEditActivityFinished(intent);
+                    }
+                }
+                break;
         }
         super.onPostResume();
     }
@@ -156,8 +178,34 @@ public class HomePageActivity extends AppCompatActivity
         setIntent(intent);
     }
 
+    public List<NoteEntry> getNoteEntries() {
+        return noteEntries;
+    }
+
+    public List<NoteTagEntry> getNoteTagEntries() {
+        return noteTagEntries;
+    }
+
     public static class PreviewNoteEntry{
         public NoteEntry noteEntry;
         public List<ResourceDataEntry> preResourceDataEntries;
+    }
+
+    private void setNavigationDrawer(Toolbar toolbar){
+        mDrawer = (DrawerLayout) findViewById(R.id.drawer_layout);
+        ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
+                this, mDrawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
+        mDrawer.addDrawerListener(toggle);
+        toggle.syncState();
+
+        NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
+        navigationView.setNavigationItemSelectedListener(this);
+        mMenu = navigationView.getMenu();
+        mMenu.getItem(0).setChecked(true);
+        mCheckedMenuItemId = mMenu.getItem(0).getItemId();
+    }
+
+    public interface OnEditActivityFinishedListener {
+        void onEditActivityFinished(Intent intent);
     }
 }

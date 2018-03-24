@@ -1,5 +1,7 @@
 package com.tcl.shenwk.aNote.entry;
 
+import com.tcl.shenwk.aNote.util.DateUtil;
+
 import java.util.Date;
 
 /**
@@ -19,13 +21,13 @@ public class TagRecordEntry {
     private long tagRecordId;
     private long noteId;
     private long tagId;
-    private String createTimestamp;
+    private long createTimestamp;
 
     public int status = NORMAL;
 
     public TagRecordEntry(long tagId) {
         this.tagId = tagId;
-        createTimestamp = new Date().toString();
+        createTimestamp = DateUtil.getInstance().getTime();
     }
 
     public TagRecordEntry() {
@@ -56,11 +58,11 @@ public class TagRecordEntry {
         this.tagId = tagId;
     }
 
-    public String getCreateTimestamp() {
+    public long getCreateTimestamp() {
         return createTimestamp;
     }
 
-    public void setCreateTimestamp(String createTimestamp) {
+    public void setCreateTimestamp(long createTimestamp) {
         this.createTimestamp = createTimestamp;
     }
 }

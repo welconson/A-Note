@@ -3,27 +3,24 @@
     xmlns:tools="http://schemas.android.com/tools"
     tools:showIn="navigation_view">
 
-    <group
-        android:checkableBehavior="single"
-        android:enabled="true">
+    <group android:checkableBehavior="single">
         <item
-            android:id="@+id/nav_camera"
-            android:icon="@drawable/ic_menu_camera"
-            android:title="Import" />
+            android:id="@+id/all_note"
+            android:icon="@drawable/ic_all_notes"
+            android:title="@string/all_note" />
         <item
-            android:id="@+id/nav_gallery"
-            android:icon="@drawable/ic_menu_gallery"
-            android:title="Gallery" />
+            android:id="@+id/tag"
+            android:icon="@drawable/ic_tag"
+            android:title="@string/tag"/>
         <item
-            android:id="@+id/nav_slideshow"
-            android:icon="@drawable/ic_menu_slideshow"
-            android:title="Slideshow" />
+            android:id="@+id/archive"
+            android:icon="@drawable/ic_archive"
+            android:title="@string/archived" />
         <item
-            android:id="@+id/nav_manage"
-            android:icon="@drawable/ic_menu_manage"
-            android:title="Tools" />
+            android:id="@+id/discard_drawer"
+            android:icon="@drawable/ic_delete"
+            android:title="@string/discard_drawer" />
     </group>
-
     <item android:title="Communicate">
         <menu>
             <item

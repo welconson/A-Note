@@ -15,4 +15,10 @@
     <string name="add_tag_hint">add a new tag</string>
     <string name="ok">OK</string>
     <string name="cancel">Cancel</string>
+
+    <string name="all_note">All Notes</string>
+    <string name="tag">Tags</string>
+    <string name="archived">Archived</string>
+    <string name="unarchived">Unarchived</string>
+    <string name="discard_drawer">Discard Drawer</string>
 </resources>

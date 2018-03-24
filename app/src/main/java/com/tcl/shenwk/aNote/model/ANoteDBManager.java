@@ -67,12 +67,8 @@ public class ANoteDBManager {
         if(noteEntry.getNotePath() == null)
             statement.bindNull(2);
         else statement.bindString(2, noteEntry.getNotePath());
-        if(noteEntry.getCreateTimestamp() == null)
-            statement.bindNull(3);
-        else statement.bindString(3, noteEntry.getCreateTimestamp());
-        if(noteEntry.getUpdateTimestamp() == null)
-            statement.bindNull(4);
-        else statement.bindString(4, noteEntry.getUpdateTimestamp());
+        statement.bindLong(3, noteEntry.getCreateTimestamp());
+        statement.bindLong(4, noteEntry.getUpdateTimestamp());
         if(noteEntry.getLocationInfo() == null)
             statement.bindNull(5);
         else statement.bindString(5, noteEntry.getLocationInfo());
@@ -119,7 +115,7 @@ public class ANoteDBManager {
         }
     }
 
-    public List<NoteEntry> queryAllNotesRecord(){
+    public List<NoteEntry> queryAllNoteRecord(){
         List<NoteEntry> noteEntries = new ArrayList<>();
         SQLiteDatabase database = mDBHelper.getReadableDatabase();
         String orderBy = NOTE_ID + " DESC";
@@ -130,8 +126,8 @@ public class ANoteDBManager {
             noteEntry.setNoteId(cursor.getLong(cursor.getColumnIndex(NOTE_ID)));
             noteEntry.setNoteTitle(cursor.getString(cursor.getColumnIndex(NOTE_TITLE)));
             noteEntry.setNotePath(cursor.getString(cursor.getColumnIndex(NOTE_CONTENT_PATH)));
-            noteEntry.setCreateTimestamp(cursor.getString(cursor.getColumnIndex(CREATE_TIMESTAMP)));
-            noteEntry.setUpdateTimestamp(cursor.getString(cursor.getColumnIndex(UPDATE_TIMESTAMP)));
+            noteEntry.setCreateTimestamp(cursor.getLong(cursor.getColumnIndex(CREATE_TIMESTAMP)));
+            noteEntry.setUpdateTimestamp(cursor.getLong(cursor.getColumnIndex(UPDATE_TIMESTAMP)));
             noteEntry.setLocationInfo(cursor.getString(cursor.getColumnIndex(LOCATION_INFO)));
             noteEntry.setHasArchived(cursor.getInt(cursor.getColumnIndex(HAS_ARCHIVED)));
             noteEntry.setIsLabeledDiscarded(cursor.getInt(cursor.getColumnIndex(IS_LABELED_DISCARDED)));
@@ -152,8 +148,8 @@ public class ANoteDBManager {
             noteEntry.setNoteId(cursor.getLong(cursor.getColumnIndex(NOTE_ID)));
             noteEntry.setNoteTitle(cursor.getString(cursor.getColumnIndex(NOTE_TITLE)));
             noteEntry.setNotePath(cursor.getString(cursor.getColumnIndex(NOTE_CONTENT_PATH)));
-            noteEntry.setCreateTimestamp(cursor.getString(cursor.getColumnIndex(CREATE_TIMESTAMP)));
-            noteEntry.setUpdateTimestamp(cursor.getString(cursor.getColumnIndex(UPDATE_TIMESTAMP)));
+            noteEntry.setCreateTimestamp(cursor.getLong(cursor.getColumnIndex(CREATE_TIMESTAMP)));
+            noteEntry.setUpdateTimestamp(cursor.getLong(cursor.getColumnIndex(UPDATE_TIMESTAMP)));
             noteEntry.setLocationInfo(cursor.getString(cursor.getColumnIndex(LOCATION_INFO)));
             noteEntry.setHasArchived(cursor.getInt(cursor.getColumnIndex(HAS_ARCHIVED)));
             noteEntry.setIsLabeledDiscarded(cursor.getInt(cursor.getColumnIndex(IS_LABELED_DISCARDED)));
@@ -261,6 +257,16 @@ public class ANoteDBManager {
         database.close();
     }
 
+    public void deleteResourceDataByNoteId(long noteId){
+        if(noteId < 0){
+            return;
+        }
+        SQLiteDatabase database = mDBHelper.getWritableDatabase();
+        String whereClause = NOTE_ID + " = " + noteId;
+        database.delete(RESOURCE_TABLE_NAME, whereClause, null);
+        database.close();
+    }
+
     public void updateResourceData(ResourceDataEntry resourceDataEntry){
         if(resourceDataEntry == null){
             return;
@@ -294,9 +300,7 @@ public class ANoteDBManager {
         if(noteTagEntry.getTagName() != null)
             statement.bindString(1, noteTagEntry.getTagName());
         else statement.bindNull(1);
-        if(noteTagEntry.getCreateTime() != null)
-            statement.bindString(2, noteTagEntry.getCreateTime());
-        else statement.bindNull(2);
+        statement.bindLong(2, noteTagEntry.getCreateTime());
         statement.bindLong(3, noteTagEntry.getRootTagId());
         ret = statement.executeInsert();
         if(ret == -1)
@@ -317,7 +321,26 @@ public class ANoteDBManager {
             NoteTagEntry noteTagEntry = new NoteTagEntry();
             noteTagEntry.setTagId(cursor.getLong(cursor.getColumnIndex(TAG_ID)));
             noteTagEntry.setTagName(cursor.getString(cursor.getColumnIndex(TAG_NAME)));
-            noteTagEntry.setCreateTime(cursor.getString(cursor.getColumnIndex(TAG_CREATE_TIMESTAMP)));
+            noteTagEntry.setCreateTime(cursor.getLong(cursor.getColumnIndex(TAG_CREATE_TIMESTAMP)));
+            noteTagEntry.setRootTagId(cursor.getLong(cursor.getColumnIndex(TAG_ROOT_ID)));
+            noteTagEntries.add(noteTagEntry);
+        }
+        cursor.close();
+        database.close();
+        return noteTagEntries;
+    }
+
+    public List<NoteTagEntry> queryAllSubTagByTagId(long tagId){
+        List<NoteTagEntry> noteTagEntries = new ArrayList<>();
+        SQLiteDatabase database = mDBHelper.getReadableDatabase();
+        String selection = TAG_ROOT_ID + " = " + tagId;
+        Cursor cursor = database.query(TAG_TABLE_NAME, null, selection,
+                null, null, null, null);
+        while(cursor.moveToNext()){
+            NoteTagEntry noteTagEntry = new NoteTagEntry();
+            noteTagEntry.setTagId(cursor.getLong(cursor.getColumnIndex(TAG_ID)));
+            noteTagEntry.setTagName(cursor.getString(cursor.getColumnIndex(TAG_NAME)));
+            noteTagEntry.setCreateTime(cursor.getLong(cursor.getColumnIndex(TAG_CREATE_TIMESTAMP)));
             noteTagEntry.setRootTagId(cursor.getLong(cursor.getColumnIndex(TAG_ROOT_ID)));
             noteTagEntries.add(noteTagEntry);
         }
@@ -365,9 +388,7 @@ public class ANoteDBManager {
         database.beginTransaction();
         statement.bindLong(1, tagRecordEntry.getTagId());
         statement.bindLong(2, tagRecordEntry.getNoteId());
-        if(tagRecordEntry.getCreateTimestamp() == null)
-            statement.bindNull(3);
-        else statement.bindString(3, tagRecordEntry.getCreateTimestamp());
+        statement.bindLong(3, tagRecordEntry.getCreateTimestamp());
         ret = statement.executeInsert();
         if(ret == -1)
             Log.i(TAG, "insertTagRecord: insert tag record failed");
@@ -389,7 +410,27 @@ public class ANoteDBManager {
             tagRecordEntry.setTagRecordId(cursor.getLong(cursor.getColumnIndex(TAG_RECORD_ID)));
             tagRecordEntry.setTagId(cursor.getLong(cursor.getColumnIndex(TAG_ID)));
             tagRecordEntry.setNoteId(cursor.getLong(cursor.getColumnIndex(NOTE_ID)));
-            tagRecordEntry.setCreateTimestamp(cursor.getString(cursor.getColumnIndex(TAG_RECORD_CREATE_TIMESTAMP)));
+            tagRecordEntry.setCreateTimestamp(cursor.getLong(cursor.getColumnIndex(TAG_RECORD_CREATE_TIMESTAMP)));
+            tagRecordEntries.add(tagRecordEntry);
+        }
+        cursor.close();
+        database.close();
+        return tagRecordEntries;
+    }
+
+    public List<TagRecordEntry> queryTagRecordByTagId(long tagId){
+        List<TagRecordEntry> tagRecordEntries = new ArrayList<>();
+        SQLiteDatabase database = mDBHelper.getReadableDatabase();
+        String selection = TAG_ID + " = " + tagId;
+        String orderBy = NOTE_ID + " DESC";
+        Cursor cursor = database.query(TAG_RECORD_TABLE_NAME, null, selection,
+                null, null, null, null);
+        while(cursor.moveToNext()){
+            TagRecordEntry tagRecordEntry = new TagRecordEntry();
+            tagRecordEntry.setTagRecordId(cursor.getLong(cursor.getColumnIndex(TAG_RECORD_ID)));
+            tagRecordEntry.setTagId(cursor.getLong(cursor.getColumnIndex(TAG_ID)));
+            tagRecordEntry.setNoteId(cursor.getLong(cursor.getColumnIndex(NOTE_ID)));
+            tagRecordEntry.setCreateTimestamp(cursor.getLong(cursor.getColumnIndex(TAG_RECORD_CREATE_TIMESTAMP)));
             tagRecordEntries.add(tagRecordEntry);
         }
         cursor.close();
@@ -402,6 +443,16 @@ public class ANoteDBManager {
             return;
         SQLiteDatabase database = mDBHelper.getWritableDatabase();
         String whereClause = TAG_RECORD_ID + " = " + tagRecordId;
+        Log.i(TAG, "deleteTagRecord: " + whereClause);
+        database.delete(TAG_RECORD_TABLE_NAME, whereClause, null);
+        database.close();
+    }
+
+    public void deleteTagRecordByNoteId(long noteId){
+        if(noteId < 0)
+            return;
+        SQLiteDatabase database = mDBHelper.getWritableDatabase();
+        String whereClause = NOTE_ID + " = " + noteId;
         Log.i(TAG, "deleteTagRecord: " + whereClause);
         database.delete(TAG_RECORD_TABLE_NAME, whereClause, null);
         database.close();

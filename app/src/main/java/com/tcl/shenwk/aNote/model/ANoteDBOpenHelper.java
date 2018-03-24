@@ -21,8 +21,8 @@ public class ANoteDBOpenHelper extends SQLiteOpenHelper {
     @Override
     public void onCreate(SQLiteDatabase db) {
         String sql = "CREATE TABLE " + NOTE_TABLE_NAME + " ( " + NOTE_ID + " INTEGER PRIMARY KEY AUTOINCREMENT, "
-                + NOTE_TITLE + " TEXT NOT NULL, " + NOTE_CONTENT_PATH + " TEXT NOT NULL, " + CREATE_TIMESTAMP + " TEXT, "
-                + UPDATE_TIMESTAMP + " TEXT, " + LOCATION_INFO + " TEXT, " + HAS_ARCHIVED + " INTEGER, "
+                + NOTE_TITLE + " TEXT NOT NULL, " + NOTE_CONTENT_PATH + " TEXT NOT NULL, " + CREATE_TIMESTAMP + " INTEGER, "
+                + UPDATE_TIMESTAMP + " INTEGER, " + LOCATION_INFO + " TEXT, " + HAS_ARCHIVED + " INTEGER, "
                 + IS_LABELED_DISCARDED + " INTEGER " + " )";
         db.execSQL(sql);
         Log.i(TAG, "onCreate: " + sql);
@@ -35,18 +35,18 @@ public class ANoteDBOpenHelper extends SQLiteOpenHelper {
 
         sql = "CREATE TABLE " + TAG_TABLE_NAME + " (" + TAG_ID + " INTEGER PRIMARY KEY AUTOINCREMENT, "
                 + NOTE_ID + " INTEGER, " + TAG_NAME + " TEXT NOT NULL, " + TAG_ROOT_ID + " INTEGER, "
-                + TAG_CREATE_TIMESTAMP + " TEXT "+ ")";
+                + TAG_CREATE_TIMESTAMP + " INTEGER "+ ")";
         db.execSQL(sql);
         Log.d(TAG, "onCreate: " + sql);
 
         sql = "CREATE TABLE " + TAG_RECORD_TABLE_NAME + " (" + TAG_RECORD_ID + " INTEGER PRIMARY KEY AUTOINCREMENT, "
-                + TAG_ID + " INTEGER, " + NOTE_ID + " INTEGER, " + TAG_RECORD_CREATE_TIMESTAMP + " TEXT NOT NULL " + ")";
+                + TAG_ID + " INTEGER, " + NOTE_ID + " INTEGER, " + TAG_RECORD_CREATE_TIMESTAMP + " INTEGER " + ")";
         db.execSQL(sql);
         Log.d(TAG, "onCreate: " + sql);
     }
 
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
-
+        Log.i(TAG, "onUpgrade: oldVersion = " + oldVersion + " , newVersion = " + newVersion);
     }
 }

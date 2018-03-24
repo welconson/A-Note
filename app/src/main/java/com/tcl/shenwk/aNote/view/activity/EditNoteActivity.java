@@ -456,7 +456,6 @@ public class EditNoteActivity extends AppCompatActivity{
             if(mIsNewNote && mNoteContentText.getEditableText().length() == 0 &&
                     mNoteTitle.getEditableText().length() == 0){
                 Toast.makeText(EditNoteActivity.this, Constants.TOAST_NEW_NOTE_WITH_NOTHING, Toast.LENGTH_SHORT).show();
-
             }
             else if(mIsModified) {
                 mNoteEntry.setNoteTitle(mNoteTitle.getText().toString());
@@ -531,17 +530,18 @@ public class EditNoteActivity extends AppCompatActivity{
         @Override
         public void onClick(View v) {
             Intent nextIntent = new Intent(EditNoteActivity.this, HomePageActivity.class);
+            nextIntent.putExtra(Constants.RESULT_SOURCE_TO_HOME_PAGE, Constants.FROM_EDIT_ACTIVITY);
             if(mIsModified) {
                 Intent intent = getIntent();
                 nextIntent.putExtra(Constants.ITEM_NOTE_ENTRY, mNoteEntry);
                 nextIntent.putExtra(Constants.ACTION_EDIT_NOTE, intent.getStringExtra(Constants.ACTION_EDIT_NOTE));
                 nextIntent.putExtra(Constants.ITEM_POSITION, intent.getIntExtra(
                         Constants.ITEM_POSITION, Constants.DEFAULT_ITEM_POSITION));
-                nextIntent.putExtra(Constants.ACTION_TO_HOME_PAGE, Constants.HOME_PAGE_UPDATE_RESUME);
+                nextIntent.putExtra(Constants.EDIT_TO_HOME_PAGE_STATUS, Constants.HOME_PAGE_UPDATE_RESUME);
                 nextIntent.putExtra(Constants.ITEM_RESOURCE_ENTRY, getFirstResource());
             }
             else{
-                nextIntent.putExtra(Constants.ACTION_TO_HOME_PAGE, Constants.HOME_PAGE_NORMAL_RESUME);
+                nextIntent.putExtra(Constants.EDIT_TO_HOME_PAGE_STATUS, Constants.HOME_PAGE_NORMAL_RESUME);
             }
             EditNoteActivity.this.startActivity(nextIntent);
         }

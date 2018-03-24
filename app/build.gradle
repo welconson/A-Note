@@ -22,7 +22,8 @@ android {
                     [
                             'src/main/res/activity_layout',
                             'src/main/res/button_layout',
-                            'src/main/res'
+                            'src/main/res',
+                            'src/main/res/fragment_layout'
                     ]
         }
     }
