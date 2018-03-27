@@ -70,6 +70,7 @@ public class NoteHandler {
 
                 // if note record does not exist, ignore next step
                 if (ret) {
+                    DataProvider.getInstance(context).updateNoteEntry();
                     noteEntry.setNoteId(noteId);
                     String resourceDir = createNoteResourceDirectory(noteEntry.getNotePath());
                     if(resourceDir == null)
@@ -122,7 +123,7 @@ public class NoteHandler {
 
     public static List<HomePageActivity.PreviewNoteEntry> getAllPreviewNoteList(Context context){
         List<HomePageActivity.PreviewNoteEntry> previewNoteEntries = new ArrayList<>();
-        List<NoteEntry> noteEntries = ANoteDBManager.getInstance(context).queryAllNoteRecord();
+        List<NoteEntry> noteEntries = DataProvider.getInstance(context).getAllNoteEntry();
         for (NoteEntry noteEntry : noteEntries) {
             HomePageActivity.PreviewNoteEntry previewNoteEntry = new HomePageActivity.PreviewNoteEntry();
             previewNoteEntry.noteEntry = noteEntry;

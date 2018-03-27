@@ -424,7 +424,7 @@ public class ANoteDBManager {
         String selection = TAG_ID + " = " + tagId;
         String orderBy = NOTE_ID + " DESC";
         Cursor cursor = database.query(TAG_RECORD_TABLE_NAME, null, selection,
-                null, null, null, null);
+                null, null, null, orderBy);
         while(cursor.moveToNext()){
             TagRecordEntry tagRecordEntry = new TagRecordEntry();
             tagRecordEntry.setTagRecordId(cursor.getLong(cursor.getColumnIndex(TAG_RECORD_ID)));

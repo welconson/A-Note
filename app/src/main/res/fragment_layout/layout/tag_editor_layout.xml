@@ -30,7 +30,7 @@
             </RelativeLayout>
 
 
-            <include layout="@layout/tag_recycler_layout" />
+            <include layout="@layout/tag_edit_recycler_layout" />
 
             <RelativeLayout
                 android:layout_width="match_parent"

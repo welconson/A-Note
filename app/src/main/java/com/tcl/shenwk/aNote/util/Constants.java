@@ -27,7 +27,7 @@ public interface Constants {
     //
 
     //Extra name and value start
-    String ACTION_EDIT_NOTE = "com.tcl.shenwk.aNote.edit_type";
+    String ACTION_TYPE_OF_EDIT_NOTE = "com.tcl.shenwk.aNote.edit_type";
     String EDIT_NOTE_ID = "note_id";
     String ITEM_POSITION = "position";
     String ITEM_NOTE_ENTRY = "note";

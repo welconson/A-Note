@@ -1,6 +1,9 @@
 package com.tcl.shenwk.aNote.util;
 
 
+import android.content.Context;
+import android.text.format.DateUtils;
+
 import java.util.Date;
 
 /**
@@ -24,5 +27,9 @@ public class DateUtil {
 
     public long getTime(){
         return date.getTime();
+    }
+
+    public String getHumanReadableTimeString(Context context, long time){
+        return DateUtils.getRelativeTimeSpanString(context, time, false).toString();
     }
 }

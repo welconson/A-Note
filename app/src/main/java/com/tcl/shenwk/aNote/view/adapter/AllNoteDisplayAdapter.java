@@ -22,7 +22,6 @@ import com.tcl.shenwk.aNote.entry.ResourceDataEntry;
 import com.tcl.shenwk.aNote.model.NoteHandler;
 import com.tcl.shenwk.aNote.util.Constants;
 import com.tcl.shenwk.aNote.util.FileUtil;
-import com.tcl.shenwk.aNote.view.viewholder.CustomViewHolder;
 import com.tcl.shenwk.aNote.view.activity.EditNoteActivity;
 import com.tcl.shenwk.aNote.view.activity.HomePageActivity;
 
@@ -33,12 +32,13 @@ import java.util.List;
  * Created by shenwk on 2018/2/6.
  */
 
-public class CustomAdapter extends RecyclerView.Adapter<CustomViewHolder> {
-    private static String TAG = "CustomAdapter";
+public class AllNoteDisplayAdapter extends RecyclerView.Adapter {
+    private static String TAG = "AllNoteDisplayAdapter";
     private LayoutInflater mInflater = null;
     private List<HomePageActivity.PreviewNoteEntry> mPreviewNoteEntryList;
+    private OnItemClickListener onItemClickListener;
 
-    public CustomAdapter(LayoutInflater inflater, List<HomePageActivity.PreviewNoteEntry> previewNoteEntries) {
+    public AllNoteDisplayAdapter(LayoutInflater inflater, List<HomePageActivity.PreviewNoteEntry> previewNoteEntries) {
         super();
         mInflater = inflater;
         mPreviewNoteEntryList = previewNoteEntries;
@@ -51,11 +51,10 @@ public class CustomAdapter extends RecyclerView.Adapter<CustomViewHolder> {
     }
 
     @Override
-    public void onBindViewHolder(final CustomViewHolder holder, int position) {
+    public void onBindViewHolder(RecyclerView.ViewHolder holder, int position) {
         View viewItem = holder.itemView;
         HomePageActivity.PreviewNoteEntry previewNoteEntry = mPreviewNoteEntryList.get(position);
         setViewItemDisplay(previewNoteEntry, viewItem);
-        setViewItemInteraction(viewItem, holder);
     }
 
     @Override
@@ -121,46 +120,6 @@ public class CustomAdapter extends RecyclerView.Adapter<CustomViewHolder> {
             imageView.setImageDrawable(null);
             setItemInfoLayoutParameterToNoResource(viewItem);
         }
-    }
-
-    private void setViewItemInteraction(View viewItem, final RecyclerView.ViewHolder holder){
-        viewItem.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                int position = holder.getAdapterPosition();
-                NoteEntry noteEntry = mPreviewNoteEntryList.get(position).noteEntry;
-                Intent intent = new Intent(v.getContext(), EditNoteActivity.class);
-                intent.putExtra(Constants.ACTION_EDIT_NOTE, EditNoteActivity.EDIT_TYPE_MODIFY);
-                intent.putExtra(Constants.EDIT_NOTE_ID, noteEntry.getNoteId());
-                intent.putExtra(Constants.ITEM_NOTE_ENTRY, noteEntry);
-                intent.putExtra(Constants.ITEM_POSITION, position);
-                v.getContext().startActivity(intent);
-            }
-        });
-        viewItem.setOnLongClickListener(new View.OnLongClickListener() {
-            @Override
-            public boolean onLongClick(final View v) {
-                PopupMenu popupMenu = new PopupMenu(v.getContext(), v);
-                Menu menu = popupMenu.getMenu();
-                menu.add("delete");
-                menu.getItem(0).setOnMenuItemClickListener(new MenuItem.OnMenuItemClickListener() {
-                    @Override
-                    public boolean onMenuItemClick(MenuItem item) {
-                        int position = holder.getAdapterPosition();
-                        NoteEntry noteEntry = mPreviewNoteEntryList.get(position).noteEntry;
-                        Log.i(TAG, "onMenuItemClick: delete onClick");
-                        NoteHandler.removeNote(v.getContext(), noteEntry);
-                        mPreviewNoteEntryList.remove(position);
-                        notifyItemRemoved(position);
-                        return true;
-                    }
-                });
-                menu.add("detail");
-                popupMenu.setGravity(Gravity.END);
-                popupMenu.show();
-                return true;
-            }
-        });
     }
 
     /**
@@ -257,5 +216,52 @@ public class CustomAdapter extends RecyclerView.Adapter<CustomViewHolder> {
                 break;
         }
         return tag;
+    }
+
+    public class CustomViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener, View.OnLongClickListener{
+        public CustomViewHolder(View itemView) {
+            super(itemView);
+            itemView.setOnClickListener(this);
+            itemView.setOnLongClickListener(this);
+        }
+
+        @Override
+        public void onClick(View v) {
+            int position = getAdapterPosition();
+            if(onItemClickListener != null){
+                onItemClickListener.onItemClick(position, mPreviewNoteEntryList.get(position).noteEntry);
+            }
+        }
+
+        @Override
+        public boolean onLongClick(final View v) {
+            PopupMenu popupMenu = new PopupMenu(v.getContext(), v);
+            Menu menu = popupMenu.getMenu();
+            menu.add("delete");
+            menu.getItem(0).setOnMenuItemClickListener(new MenuItem.OnMenuItemClickListener() {
+                @Override
+                public boolean onMenuItemClick(MenuItem item) {
+                    int position = getAdapterPosition();
+                    NoteEntry noteEntry = mPreviewNoteEntryList.get(position).noteEntry;
+                    Log.i(TAG, "onMenuItemClick: delete onClick");
+                    NoteHandler.removeNote(v.getContext(), noteEntry);
+                    mPreviewNoteEntryList.remove(position);
+                    notifyItemRemoved(position);
+                    return true;
+                }
+            });
+            menu.add("detail");
+            popupMenu.setGravity(Gravity.END);
+            popupMenu.show();
+            return true;
+        }
+    }
+
+    public interface OnItemClickListener {
+        void onItemClick(int position, NoteEntry noteEntry);
+    }
+
+    public void setOnItemClickListener(OnItemClickListener onItemClickListener) {
+        this.onItemClickListener = onItemClickListener;
     }
 }

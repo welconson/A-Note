@@ -16,6 +16,7 @@ import com.tcl.shenwk.aNote.R;
 import com.tcl.shenwk.aNote.entry.NoteTagEntry;
 import com.tcl.shenwk.aNote.entry.TagRecordEntry;
 import com.tcl.shenwk.aNote.model.ANoteDBManager;
+import com.tcl.shenwk.aNote.model.DataProvider;
 import com.tcl.shenwk.aNote.util.Constants;
 import com.tcl.shenwk.aNote.view.activity.EditNoteActivity;
 import com.tcl.shenwk.aNote.view.adapter.TagAdapter;
@@ -89,6 +90,7 @@ public class TagEditFragment extends DialogFragment {
                         noteTagEntry.setTagId(tagId);
                         tagAdapter.addNewTag(noteTagEntry);
                         textView.setText("");
+                        DataProvider.getInstance(getContext()).updateNoteTagEntry();
                     }
                 }
             }

@@ -6,6 +6,7 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
+import android.view.KeyEvent;
 import android.view.Menu;
 import android.support.design.widget.NavigationView;
 import android.support.v4.view.GravityCompat;
@@ -20,7 +21,7 @@ import com.tcl.shenwk.aNote.entry.NoteEntry;
 import com.tcl.shenwk.aNote.entry.NoteTagEntry;
 import com.tcl.shenwk.aNote.entry.ResourceDataEntry;
 import com.tcl.shenwk.aNote.model.ANoteDBManager;
-import com.tcl.shenwk.aNote.util.Constants;
+import com.tcl.shenwk.aNote.model.DataProvider;
 import com.tcl.shenwk.aNote.view.fragment.AllNoteFragment;
 import com.tcl.shenwk.aNote.view.fragment.TagManagerFragment;
 
@@ -29,13 +30,12 @@ import java.util.List;
 public class HomePageActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener {
     private static String TAG = "HomePageActivity";
-    private RecyclerView recyclerView;
-    private List<NoteEntry> noteEntries;
-    private List<NoteTagEntry> noteTagEntries;
     private Menu mMenu;
     private int mCheckedMenuItemId;
     private DrawerLayout mDrawer;
     private FragmentManager mFragmentManager;
+    private Fragment currentFragment;
+    private OnKeyDownListener onKeyDownListener;
 
     private static final String ALL_NOTES_FRAGMENT_TAG = "all_notes";
     private static final String TAG_MANAGER_FRAGMENT_TAG = "tag_manager";
@@ -61,11 +61,10 @@ public class HomePageActivity extends AppCompatActivity
         mFragmentManager = getFragmentManager();
 
         Fragment fragment = new AllNoteFragment();
+        currentFragment = fragment;
         mFragmentManager.beginTransaction()
                 .add(R.id.content_main_frame, fragment, ALL_NOTES_FRAGMENT_TAG)
                 .commit();
-
-        noteEntries = ANoteDBManager.getInstance(HomePageActivity.this).queryAllNoteRecord();
     }
 
     @Override
@@ -113,14 +112,10 @@ public class HomePageActivity extends AppCompatActivity
         mCheckedMenuItemId = id;
         switch (id) {
             case R.id.all_note:
-                if(noteEntries == null)
-                    noteEntries = ANoteDBManager.getInstance(HomePageActivity.this).queryAllNoteRecord();
                 fragmentClass = AllNoteFragment.class;
                 tag = ALL_NOTES_FRAGMENT_TAG;
                 break;
             case R.id.tag:
-                if(noteTagEntries == null)
-                    noteTagEntries = ANoteDBManager.getInstance(HomePageActivity.this).queryAllTag();
                 fragmentClass = TagManagerFragment.class;
                 tag = TAG_MANAGER_FRAGMENT_TAG;
                 break;
@@ -141,9 +136,13 @@ public class HomePageActivity extends AppCompatActivity
         if(!isCheckedSameItem){
             if(fragmentClass != null) {
                 try {
+                    Fragment fragment = (Fragment) fragmentClass.newInstance();
+                    currentFragment = fragment;
                     mFragmentManager.beginTransaction()
-                            .replace(R.id.content_main_frame, ((Fragment) fragmentClass.newInstance()), tag)
+                            .replace(R.id.content_main_frame, fragment, tag)
                             .commit();
+                    if(fragment instanceof TagManagerFragment)
+                        onKeyDownListener = (TagManagerFragment)fragment;
                 } catch (InstantiationException | IllegalAccessException e) {
                     e.printStackTrace();
                 }
@@ -155,21 +154,12 @@ public class HomePageActivity extends AppCompatActivity
 
     @Override
     protected void onPostResume() {
-        Log.i(TAG, "onPostResume: running");
-        Intent intent = getIntent();
-        // ensure which is the result from
-        switch (intent.getIntExtra(Constants.RESULT_SOURCE_TO_HOME_PAGE, Constants.FROM_NO_WHERE)){
-            case Constants.FROM_EDIT_ACTIVITY:
-                AllNoteFragment allNoteFragment = (AllNoteFragment) mFragmentManager.findFragmentByTag("all_note");
-                if(allNoteFragment != null){
-                    OnEditActivityFinishedListener onEditActivityFinishedListener = allNoteFragment.getOnEditActivityFinishedListener();
-                    if(onEditActivityFinishedListener != null) {
-                        onEditActivityFinishedListener.onEditActivityFinished(intent);
-                    }
-                }
-                break;
-        }
         super.onPostResume();
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
     }
 
     @Override
@@ -178,12 +168,12 @@ public class HomePageActivity extends AppCompatActivity
         setIntent(intent);
     }
 
-    public List<NoteEntry> getNoteEntries() {
-        return noteEntries;
-    }
-
-    public List<NoteTagEntry> getNoteTagEntries() {
-        return noteTagEntries;
+    @Override
+    public boolean onKeyDown(int keyCode, KeyEvent event) {
+        if(onKeyDownListener != null)
+            if(onKeyDownListener.onKeyDown(keyCode, event))
+                return true;
+        return super.onKeyDown(keyCode, event);
     }
 
     public static class PreviewNoteEntry{
@@ -205,7 +195,7 @@ public class HomePageActivity extends AppCompatActivity
         mCheckedMenuItemId = mMenu.getItem(0).getItemId();
     }
 
-    public interface OnEditActivityFinishedListener {
-        void onEditActivityFinished(Intent intent);
+    public interface OnKeyDownListener{
+        boolean onKeyDown(int keyCode, KeyEvent keyEvent);
     }
 }

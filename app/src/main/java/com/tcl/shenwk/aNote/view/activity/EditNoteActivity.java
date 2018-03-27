@@ -142,7 +142,7 @@ public class EditNoteActivity extends AppCompatActivity{
         mTagEditor.setOnClickListener(tagEditorOnClickListener);
 
         int mode;
-        String action_edit = intent.getStringExtra(Constants.ACTION_EDIT_NOTE);
+        String action_edit = intent.getStringExtra(Constants.ACTION_TYPE_OF_EDIT_NOTE);
         // to know this activity is used to create a new note or modify a exist note
         if(StringUtil.equal(EDIT_TYPE_MODIFY, action_edit)) {
             mode = MODE_PREVIEW;
@@ -529,21 +529,15 @@ public class EditNoteActivity extends AppCompatActivity{
     private View.OnClickListener backButtonOnClickListener = new View.OnClickListener() {
         @Override
         public void onClick(View v) {
-            Intent nextIntent = new Intent(EditNoteActivity.this, HomePageActivity.class);
-            nextIntent.putExtra(Constants.RESULT_SOURCE_TO_HOME_PAGE, Constants.FROM_EDIT_ACTIVITY);
+            Intent nextIntent = new Intent();
             if(mIsModified) {
                 Intent intent = getIntent();
                 nextIntent.putExtra(Constants.ITEM_NOTE_ENTRY, mNoteEntry);
-                nextIntent.putExtra(Constants.ACTION_EDIT_NOTE, intent.getStringExtra(Constants.ACTION_EDIT_NOTE));
                 nextIntent.putExtra(Constants.ITEM_POSITION, intent.getIntExtra(
                         Constants.ITEM_POSITION, Constants.DEFAULT_ITEM_POSITION));
-                nextIntent.putExtra(Constants.EDIT_TO_HOME_PAGE_STATUS, Constants.HOME_PAGE_UPDATE_RESUME);
-                nextIntent.putExtra(Constants.ITEM_RESOURCE_ENTRY, getFirstResource());
             }
-            else{
-                nextIntent.putExtra(Constants.EDIT_TO_HOME_PAGE_STATUS, Constants.HOME_PAGE_NORMAL_RESUME);
-            }
-            EditNoteActivity.this.startActivity(nextIntent);
+            setResult(RESULT_OK, nextIntent);
+            finish();
         }
     };
 
