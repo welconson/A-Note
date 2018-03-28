@@ -9,11 +9,12 @@ import android.view.ViewGroup;
 import android.widget.TextView;
 
 import com.tcl.shenwk.aNote.R;
-import com.tcl.shenwk.aNote.entry.NoteEntry;
-import com.tcl.shenwk.aNote.entry.NoteTagEntry;
-import com.tcl.shenwk.aNote.entry.TagRecordEntry;
+import com.tcl.shenwk.aNote.entity.NoteEntity;
+import com.tcl.shenwk.aNote.entity.NoteTagEntity;
+import com.tcl.shenwk.aNote.entity.TagRecordEntity;
 import com.tcl.shenwk.aNote.model.ANoteDBManager;
 import com.tcl.shenwk.aNote.util.DateUtil;
+import com.tcl.shenwk.aNote.util.StringUtil;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -29,21 +30,19 @@ public class TagManagerAdapter extends RecyclerView.Adapter {
     private static final int TYPE_TAG = 1;
     private static final int TYPE_NOTE = 2;
     private List<DisplayItem> displayItems;
-    private List<NoteEntry> noteEntries;
+    private NoteTagEntity hierarchyTagentity = null;
+    private int tagNum = 0;
     private LayoutInflater inflater = null;
     private OnItemClickListener onItemClickListener = null;
 
-    public TagManagerAdapter(List<NoteTagEntry> primaryTagEntries, List<NoteEntry> noteEntries, LayoutInflater inflater) {
+    public TagManagerAdapter(List<NoteTagEntity> primaryTagEntries, List<NoteEntity> noteEntries, LayoutInflater inflater) {
         displayItems = new ArrayList<>();
-        for(NoteTagEntry noteTagEntry : primaryTagEntries){
-            TagItem displayItem = new TagItem();
-            displayItem.noteTagEntry = noteTagEntry;
-            displayItems.add(displayItem);
+        for(NoteTagEntity noteTagEntity : primaryTagEntries){
+            displayItems.add(wrapItem(noteTagEntity));
         }
-        for(NoteEntry noteEntry : noteEntries){
-            NoteItem noteItem = new NoteItem();
-            noteItem.noteEntry = noteEntry;
-            displayItems.add(noteItem);
+        tagNum = displayItems.size();
+        for(NoteEntity noteEntity : noteEntries){
+            displayItems.add(wrapItem(noteEntity));
         }
         this.inflater = inflater;
     }
@@ -64,20 +63,20 @@ public class TagManagerAdapter extends RecyclerView.Adapter {
         if(baseTagManagerViewHolder.type == TYPE_TAG){
             TagViewHolder tagViewHolder = (TagViewHolder) baseTagManagerViewHolder;
             TagItem tagItem = (TagItem) displayItems.get(position);
-            tagViewHolder.setTagName(tagItem.noteTagEntry.getTagName());
+            tagViewHolder.setTagName(tagItem.noteTagEntity.getTagName());
             if(tagItem.subTagEntries == null){
-                tagItem.subTagEntries = ANoteDBManager.getInstance(context).queryAllSubTagByTagId(tagItem.noteTagEntry.getTagId());
+                tagItem.subTagEntries = ANoteDBManager.getInstance(context).queryAllSubTagByRootTagId(tagItem.noteTagEntity.getTagId());
             }
             if(tagItem.tagRecordEntries == null){
-                tagItem.tagRecordEntries = ANoteDBManager.getInstance(context).queryTagRecordByTagId(tagItem.noteTagEntry.getTagId());
+                tagItem.tagRecordEntries = ANoteDBManager.getInstance(context).queryTagRecordByTagId(tagItem.noteTagEntity.getTagId());
             }
             tagViewHolder.setInsideTagInfo("subtags: " + tagItem.subTagEntries.size() + " , notes: " + tagItem.tagRecordEntries.size());
-            tagViewHolder.setTagCreatedTime(DateUtil.getInstance().getHumanReadableTimeString(context, tagItem.noteTagEntry.getCreateTime()));
+            tagViewHolder.setTagCreatedTime(DateUtil.getInstance().getHumanReadableTimeString(context, tagItem.noteTagEntity.getCreateTime()));
         } else {
             NoteViewHolder noteViewHolder = (NoteViewHolder) baseTagManagerViewHolder;
             NoteItem noteItem = (NoteItem) displayItems.get(position);
-            noteViewHolder.setNoteName(noteItem.noteEntry.getNoteTitle());
-            noteViewHolder.setNoteCreatedTime(DateUtil.getInstance().getHumanReadableTimeString(context, noteItem.noteEntry.getCreateTimestamp()));
+            noteViewHolder.setNoteName(noteItem.noteEntity.getNoteTitle());
+            noteViewHolder.setNoteCreatedTime(DateUtil.getInstance().getHumanReadableTimeString(context, noteItem.noteEntity.getCreateTimestamp()));
         }
     }
 
@@ -90,36 +89,57 @@ public class TagManagerAdapter extends RecyclerView.Adapter {
         this.onItemClickListener = onItemClickListener;
     }
 
-    private class DisplayItem {
+    public NoteTagEntity getHierarchyTagentity() {
+        return hierarchyTagentity;
+    }
+
+    public void setHierarchyTagentity(NoteTagEntity hierarchyTagentity) {
+        this.hierarchyTagentity = hierarchyTagentity;
+    }
+
+    private abstract class DisplayItem {
         protected int type;
+
+        public abstract void setNeedRebind();
     }
 
     public class NoteItem extends DisplayItem{
-        public NoteEntry noteEntry;
+        public NoteEntity noteEntity;
         NoteItem() {
             type = TYPE_NOTE;
+        }
+
+        @Override
+        public void setNeedRebind() {
+
         }
     }
 
     public class TagItem extends DisplayItem{
-        private NoteTagEntry noteTagEntry;
-        private List<NoteTagEntry> subTagEntries = null;
-        private List<TagRecordEntry> tagRecordEntries = null;
+        private NoteTagEntity noteTagEntity;
+        private List<NoteTagEntity> subTagEntries = null;
+        private List<TagRecordEntity> tagRecordEntries = null;
 
         TagItem() {
             type = TYPE_TAG;
         }
 
-        public NoteTagEntry getNoteTagEntry() {
-            return noteTagEntry;
+        public NoteTagEntity getNoteTagEntity() {
+            return noteTagEntity;
         }
 
-        public List<NoteTagEntry> getSubTagEntries() {
+        public List<NoteTagEntity> getSubTagEntries() {
             return subTagEntries;
         }
 
-        public List<TagRecordEntry> getTagRecordEntries() {
+        public List<TagRecordEntity> getTagRecordEntries() {
             return tagRecordEntries;
+        }
+
+        @Override
+        public void setNeedRebind(){
+            subTagEntries = null;
+            tagRecordEntries = null;
         }
     }
 
@@ -136,7 +156,7 @@ public class TagManagerAdapter extends RecyclerView.Adapter {
         }
     }
 
-    public class TagViewHolder extends BaseTagManagerViewHolder implements View.OnClickListener{
+    public class TagViewHolder extends BaseTagManagerViewHolder implements View.OnClickListener, View.OnLongClickListener{
         TextView tagName;
         TextView insideTagInfo;
         TextView tagCreatedTime;
@@ -144,6 +164,7 @@ public class TagManagerAdapter extends RecyclerView.Adapter {
         TagViewHolder(View itemView) {
             super(itemView);
             itemView.setOnClickListener(this);
+            itemView.setOnLongClickListener(this);
             tagName = itemView.findViewById(R.id.tag_name);
             insideTagInfo = itemView.findViewById(R.id.inside_item_info);
             tagCreatedTime = itemView.findViewById(R.id.tag_created_time);
@@ -168,6 +189,15 @@ public class TagManagerAdapter extends RecyclerView.Adapter {
             if(onItemClickListener != null){
                 onItemClickListener.onTagClick((TagItem) displayItems.get(getAdapterPosition()));
             }
+        }
+
+        @Override
+        public boolean onLongClick(View v) {
+            Log.i(TAG, "onLongClick: tag");
+            if(onItemClickListener != null){
+                onItemClickListener.onTagLongClick(v, getAdapterPosition(), ((TagItem) displayItems.get(getAdapterPosition())));
+            }
+            return true;
         }
     }
 
@@ -201,13 +231,64 @@ public class TagManagerAdapter extends RecyclerView.Adapter {
 
     public interface OnItemClickListener {
         void onTagClick(TagItem tagItem);
+        void onTagLongClick(View v, int position, TagItem tagItem);
         void onNoteClick(int position, NoteItem noteItem);
     }
 
-    public void refreshSingleItemByPosition(int position, NoteEntry noteEntry){
-        if(noteEntry != null && position >= 0) {
-            ((NoteItem) displayItems.get(position)).noteEntry = noteEntry;
+    public void refreshNoteItemByPosition(int position, NoteEntity noteEntity){
+        if(noteEntity != null && position >= 0) {
+            ((NoteItem) displayItems.get(position)).noteEntity = noteEntity;
             notifyItemChanged(position);
+        }
+    }
+
+    public int isTagInList(String tagName) {
+        int position = 0;
+        for (DisplayItem tagItem : displayItems) {
+            if (StringUtil.equal(tagName, ((TagItem) tagItem).noteTagEntity.getTagName()))
+                return position;
+            if(tagNum < ++position)
+                break;
+        }
+        return -1;
+    }
+
+    private DisplayItem wrapItem(NoteTagEntity noteTagEntity){
+        TagItem tagItem = new TagItem();
+        tagItem.noteTagEntity = noteTagEntity;
+        return tagItem;
+    }
+
+    private DisplayItem wrapItem(NoteEntity noteEntity){
+        NoteItem noteItem = new NoteItem();
+        noteItem.noteEntity = noteEntity;
+        return noteItem;
+    }
+
+    public void insertItem(NoteTagEntity noteTagEntity) {
+        if(noteTagEntity == null)
+            return;
+        displayItems.add(tagNum, wrapItem(noteTagEntity));
+        notifyItemInserted(tagNum++);
+    }
+
+    public void insertItem(NoteEntity noteEntity){
+        if(noteEntity == null)
+            return;
+        displayItems.add(tagNum, wrapItem(noteEntity));
+        notifyItemInserted(tagNum);
+    }
+
+    public void removeItem(int position){
+        if(displayItems.get(position).type == TYPE_TAG)
+            tagNum--;
+        displayItems.remove(position);
+        notifyItemRemoved(position);
+    }
+
+    public void setNeedUpdateData(){
+        for(DisplayItem tagItem : displayItems){
+            tagItem.setNeedRebind();
         }
     }
 }

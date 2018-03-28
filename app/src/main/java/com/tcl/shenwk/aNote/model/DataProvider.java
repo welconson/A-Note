@@ -1,10 +1,9 @@
 package com.tcl.shenwk.aNote.model;
 
 import android.content.Context;
-import android.widget.LinearLayout;
 
-import com.tcl.shenwk.aNote.entry.NoteEntry;
-import com.tcl.shenwk.aNote.entry.NoteTagEntry;
+import com.tcl.shenwk.aNote.entity.NoteEntity;
+import com.tcl.shenwk.aNote.entity.NoteTagEntity;
 
 import java.util.List;
 
@@ -17,8 +16,8 @@ import java.util.List;
 public class DataProvider {
     private static final String TAG = "DataProvider";
     private static DataProvider mInstance;
-    private List<NoteEntry> allNoteEntry;
-    private List<NoteTagEntry> allNoteTagEntry;
+    private List<NoteEntity> allNoteEntity;
+    private List<NoteTagEntity> allNoteTagEntity;
     private Context context;
 
     private DataProvider(Context context){
@@ -32,23 +31,23 @@ public class DataProvider {
         return mInstance;
     }
 
-    public List<NoteEntry> getAllNoteEntry(){
-        if(allNoteEntry == null)
-            updateNoteEntry();
-        return allNoteEntry;
+    public List<NoteEntity> getAllNoteEntity(){
+        if(allNoteEntity == null)
+            updateNoteentity();
+        return allNoteEntity;
     }
 
-    public List<NoteTagEntry> getAllNoteTagEntry() {
-        if(allNoteTagEntry == null)
-            updateNoteTagEntry();
-        return allNoteTagEntry;
+    public List<NoteTagEntity> getAllTopTagentity() {
+        if(allNoteTagEntity == null)
+            updateAllTopTagentity();
+        return allNoteTagEntity;
     }
 
-    public void updateNoteEntry(){
-        allNoteEntry = ANoteDBManager.getInstance(context).queryAllNoteRecord();
+    public void updateNoteentity(){
+        allNoteEntity = ANoteDBManager.getInstance(context).queryAllNoteRecord();
     }
 
-    public void updateNoteTagEntry(){
-        allNoteTagEntry = ANoteDBManager.getInstance(context).queryAllTag();
+    public void updateAllTopTagentity(){
+        allNoteTagEntity = ANoteDBManager.getInstance(context).queryAllTopTag();
     }
 }

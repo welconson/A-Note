@@ -28,21 +28,13 @@ public interface Constants {
 
     //Extra name and value start
     String ACTION_TYPE_OF_EDIT_NOTE = "com.tcl.shenwk.aNote.edit_type";
-    String EDIT_NOTE_ID = "note_id";
     String ITEM_POSITION = "position";
-    String ITEM_NOTE_ENTRY = "note";
-    String ITEM_RESOURCE_ENTRY = "res";
+    String ITEM_NOTE_entity = "note";
+    String WITH_TAG_ID = "with__tag_record";
+    String ITEM_RESOURCE_entity = "res";
     int DEFAULT_ITEM_POSITION = -1;
     int ITEM_BEGIN_POSITION = 0;
 
-
-    String EDIT_TO_HOME_PAGE_STATUS = "action_to_home_page";
-    int HOME_PAGE_NORMAL_RESUME = 0;
-    int HOME_PAGE_UPDATE_RESUME = 1;
-
-    String RESULT_SOURCE_TO_HOME_PAGE = "result_to_home_page";
-    int FROM_NO_WHERE = -1;
-    int FROM_EDIT_ACTIVITY = 0;
     //Extra name and values end
 
     //db constants start
@@ -86,4 +78,7 @@ public interface Constants {
     String TOAST_TEXT_WITHOUT_PERMISSION = "Permission Denial";
     String TOAST_NEW_NOTE_WITH_NOTHING = "do not save a empty note";
     String TOAST_TAG_NOT_EMPTY = "tag name can not be a empty value";
+    String TOAST_TAG_ADD_FAILED = "add tag failed";
+    String TOAST_TAG_DELETE_FAILED = "delete failed ,tag contains sub tags or notes";
+    String TOAST_TAG_RECORD_EDIT_ENTER_SUB_TAG = "this tag has no sub tags";
 }

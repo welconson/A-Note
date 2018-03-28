@@ -45,6 +45,12 @@
                     android:layout_margin="10dp"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:background="@drawable/ic_arrow_back"
+                    android:id="@+id/back"/>
+                <ImageButton
+                    android:layout_margin="10dp"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
                     android:background="@drawable/ic_done"
                     android:layout_alignParentEnd="true"
                     android:id="@+id/tag_done"/>

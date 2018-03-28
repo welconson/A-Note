@@ -4,7 +4,6 @@ import android.app.Fragment;
 import android.app.FragmentManager;
 import android.content.Intent;
 import android.os.Bundle;
-import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.Menu;
@@ -17,11 +16,8 @@ import android.support.v7.widget.Toolbar;
 import android.view.MenuItem;
 
 import com.tcl.shenwk.aNote.R;
-import com.tcl.shenwk.aNote.entry.NoteEntry;
-import com.tcl.shenwk.aNote.entry.NoteTagEntry;
-import com.tcl.shenwk.aNote.entry.ResourceDataEntry;
-import com.tcl.shenwk.aNote.model.ANoteDBManager;
-import com.tcl.shenwk.aNote.model.DataProvider;
+import com.tcl.shenwk.aNote.entity.NoteEntity;
+import com.tcl.shenwk.aNote.entity.ResourceDataEntity;
 import com.tcl.shenwk.aNote.view.fragment.AllNoteFragment;
 import com.tcl.shenwk.aNote.view.fragment.TagManagerFragment;
 
@@ -176,9 +172,9 @@ public class HomePageActivity extends AppCompatActivity
         return super.onKeyDown(keyCode, event);
     }
 
-    public static class PreviewNoteEntry{
-        public NoteEntry noteEntry;
-        public List<ResourceDataEntry> preResourceDataEntries;
+    public static class PreviewNoteentity{
+        public NoteEntity noteEntity;
+        public List<ResourceDataEntity> preResourceDataEntries;
     }
 
     private void setNavigationDrawer(Toolbar toolbar){

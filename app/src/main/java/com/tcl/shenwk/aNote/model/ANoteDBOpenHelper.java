@@ -8,7 +8,7 @@ import android.util.Log;
 import static com.tcl.shenwk.aNote.model.DBFieldsName.*;
 
 /**
- * Create, open, update database entry.
+ * Create, open, update database entity.
  * Created by shenwk on 2018/2/2.
  */
 

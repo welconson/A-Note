@@ -6,7 +6,6 @@ import android.content.res.AssetFileDescriptor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.drawable.BitmapDrawable;
-import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.util.Log;
 import android.view.MotionEvent;
@@ -14,7 +13,7 @@ import android.view.View;
 import android.widget.ImageView;
 
 import com.tcl.shenwk.aNote.R;
-import com.tcl.shenwk.aNote.entry.ResourceDataEntry;
+import com.tcl.shenwk.aNote.entity.ResourceDataEntity;
 import com.tcl.shenwk.aNote.util.Constants;
 import com.tcl.shenwk.aNote.util.FileUtil;
 
@@ -28,15 +27,15 @@ public class ImageViewSpan extends ViewSpan{
     private static final String TAG = "ImageViewSpan";
     private Bitmap bitmap;
 
-    public ImageViewSpan(View view, ResourceDataEntry resourceDataEntry) {
-        super(view, resourceDataEntry);
+    public ImageViewSpan(View view, ResourceDataEntity resourceDataEntity) {
+        super(view, resourceDataEntity);
         setViewReaction();
     }
 
-    public ImageViewSpan(View view, Uri uri, ResourceDataEntry resourceDataEntry) {
-        super(view, uri, resourceDataEntry);
-        resourceDataEntry.setFileName(FileUtil.getFileNameFromURI(view.getContext(),
-                uri, resourceDataEntry.getDataType()));
+    public ImageViewSpan(View view, Uri uri, ResourceDataEntity resourceDataEntity) {
+        super(view, uri, resourceDataEntity);
+        resourceDataEntity.setFileName(FileUtil.getFileNameFromURI(view.getContext(),
+                uri, resourceDataEntity.getDataType()));
         setViewReaction();
     }
 

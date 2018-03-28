@@ -10,9 +10,7 @@ import android.text.style.DynamicDrawableSpan;
 import android.view.MotionEvent;
 import android.view.View;
 
-import com.tcl.shenwk.aNote.entry.ResourceDataEntry;
-import com.tcl.shenwk.aNote.util.Constants;
-import com.tcl.shenwk.aNote.util.FileUtil;
+import com.tcl.shenwk.aNote.entity.ResourceDataEntity;
 
 /**
  * Replace default implementation Drawable with View, so we can custom
@@ -26,21 +24,21 @@ public abstract class ViewSpan extends DynamicDrawableSpan implements View.OnTou
     private float mCurrentX;
     private float mCurrentY;
     private Uri mResourceDataUri = null;
-    private ResourceDataEntry mResourceDataEntry;
+    private ResourceDataEntity mResourceDataEntity;
 
-     ViewSpan(View view, ResourceDataEntry resourceDataEntry){
+     ViewSpan(View view, ResourceDataEntity resourceDataEntity){
         super(DynamicDrawableSpan.ALIGN_BOTTOM);
         this.mView = view;
-        this.mResourceDataEntry = resourceDataEntry;
+        this.mResourceDataEntity = resourceDataEntity;
         measure();
     }
 
-    ViewSpan(View view, Uri uri, ResourceDataEntry resourceDataEntry) {
+    ViewSpan(View view, Uri uri, ResourceDataEntity resourceDataEntity) {
         super(DynamicDrawableSpan.ALIGN_BOTTOM);
         this.mView = view;
-        this.mResourceDataEntry = resourceDataEntry;
+        this.mResourceDataEntity = resourceDataEntity;
         this.mResourceDataUri = uri;
-        this.mResourceDataEntry.setDataType(getResourceDataType());
+        this.mResourceDataEntity.setDataType(getResourceDataType());
         measure();
     }
 
@@ -107,7 +105,7 @@ public abstract class ViewSpan extends DynamicDrawableSpan implements View.OnTou
      * @return Resource id inside database.
      */
     public long getResourceId(){
-        return mResourceDataEntry.getResourceId();
+        return mResourceDataEntity.getResourceId();
     }
 
     public View getView(){
@@ -119,14 +117,14 @@ public abstract class ViewSpan extends DynamicDrawableSpan implements View.OnTou
     }
 
     public String getFileName() {
-        return mResourceDataEntry.getFileName();
+        return mResourceDataEntity.getFileName();
     }
 
     public String getFilePath() {
-        return mResourceDataEntry.getPath();
+        return mResourceDataEntity.getPath();
     }
 
-    public ResourceDataEntry getResourceDataEntry() {
-        return mResourceDataEntry;
+    public ResourceDataEntity getResourceDataentity() {
+        return mResourceDataEntity;
     }
 }

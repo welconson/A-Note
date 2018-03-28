@@ -3,7 +3,7 @@ package com.tcl.shenwk.aNote.view.customSpan;
 import android.net.Uri;
 import android.view.View;
 
-import com.tcl.shenwk.aNote.entry.ResourceDataEntry;
+import com.tcl.shenwk.aNote.entity.ResourceDataEntity;
 import com.tcl.shenwk.aNote.util.Constants;
 import com.tcl.shenwk.aNote.util.FileUtil;
 
@@ -12,13 +12,13 @@ import com.tcl.shenwk.aNote.util.FileUtil;
  */
 
 public class FileViewSpan extends ViewSpan {
-    public FileViewSpan(View view, ResourceDataEntry resourceDataEntry) {
-        super(view, resourceDataEntry);
+    public FileViewSpan(View view, ResourceDataEntity resourceDataEntity) {
+        super(view, resourceDataEntity);
     }
 
-    public FileViewSpan(View view, Uri uri, ResourceDataEntry resourceDataEntry) {
-        super(view, uri, resourceDataEntry);
-        resourceDataEntry.setFileName(FileUtil.getFileNameFromURI(view.getContext(), uri, resourceDataEntry.getDataType()));
+    public FileViewSpan(View view, Uri uri, ResourceDataEntity resourceDataEntity) {
+        super(view, uri, resourceDataEntity);
+        resourceDataEntity.setFileName(FileUtil.getFileNameFromURI(view.getContext(), uri, resourceDataEntity.getDataType()));
     }
 
     @Override

@@ -5,9 +5,9 @@ import android.net.Uri;
 import android.text.Editable;
 import android.util.Log;
 
-import com.tcl.shenwk.aNote.entry.NoteEntry;
-import com.tcl.shenwk.aNote.entry.ResourceDataEntry;
-import com.tcl.shenwk.aNote.entry.TagRecordEntry;
+import com.tcl.shenwk.aNote.entity.NoteEntity;
+import com.tcl.shenwk.aNote.entity.ResourceDataEntity;
+import com.tcl.shenwk.aNote.entity.TagRecordEntity;
 import com.tcl.shenwk.aNote.util.Constants;
 import com.tcl.shenwk.aNote.util.FileUtil;
 import com.tcl.shenwk.aNote.util.RandomUtil;
@@ -29,16 +29,16 @@ public class NoteHandler {
     /**
      * The method handlers all note data, if there is no error all data writing successfully,
      * or nothing will be modified.
-     * @param noteEntry     note content entry holder, together with note record
+     * @param noteEntity     note content entity holder, together with note record
      *                  information content and attachments inside note.
      * @param context   context used to operate on files.
      * @param editable  content of note.
      * @param tagRecordEntries
      * @return  true if no error, or false and do nothing.
      */
-    public static boolean saveNote(NoteEntry noteEntry, Context context, Editable editable,
-                                   List<ViewSpan> viewSpans, List<TagRecordEntry> tagRecordEntries){
-        long noteId = noteEntry.getNoteId();
+    public static boolean saveNote(NoteEntity noteEntity, Context context, Editable editable,
+                                   List<ViewSpan> viewSpans, List<TagRecordEntity> tagRecordEntries){
+        long noteId = noteEntity.getNoteId();
         boolean ret = true;
         boolean isNewRecord = false;
         // if it is a new note, create a directory for it
@@ -50,49 +50,49 @@ public class NoteHandler {
             if(notePath == null){
                 ret = false;
             }
-            else noteEntry.setNotePath(notePath);
+            else noteEntity.setNotePath(notePath);
         }
         //if directory created error, ignore next step.
         if(ret) {
             if (FileUtil.writeFile(context, editable.toString(),
-                    noteEntry.getNotePath() + File.separator + Constants.CONTENT_FILE_NAME)) {
+                    noteEntity.getNotePath() + File.separator + Constants.CONTENT_FILE_NAME)) {
                 //if it is a new note, insert, or update it.
                 if (isNewRecord) {
-                    noteId = ANoteDBManager.getInstance(context).insertNoteRecord(noteEntry);
+                    noteId = ANoteDBManager.getInstance(context).insertNoteRecord(noteEntity);
                     // if insert note record error, delete note directory
                     if (noteId == Constants.NO_NOTE_ID) {
                         Log.i(TAG, "saveNote: insert note record to database error");
-                        FileUtil.deleteDirectoryAndFiles(noteEntry.getNotePath());
+                        FileUtil.deleteDirectoryAndFiles(noteEntity.getNotePath());
                         ret = false;
                     }
                 } else
-                    ANoteDBManager.getInstance(context).updateNoteRecord(noteEntry, ANoteDBManager.UpdateFlagTable.UPDATE_ALL);
+                    ANoteDBManager.getInstance(context).updateNoteRecord(noteEntity, ANoteDBManager.UpdateFlagTable.UPDATE_ALL);
 
                 // if note record does not exist, ignore next step
                 if (ret) {
-                    DataProvider.getInstance(context).updateNoteEntry();
-                    noteEntry.setNoteId(noteId);
-                    String resourceDir = createNoteResourceDirectory(noteEntry.getNotePath());
+                    DataProvider.getInstance(context).updateNoteentity();
+                    noteEntity.setNoteId(noteId);
+                    String resourceDir = createNoteResourceDirectory(noteEntity.getNotePath());
                     if(resourceDir == null)
                         ret = false;
                     // if resource directory does not exist, ignore next step
                     if (ret){
                         List<String> resourcePathList = new ArrayList<>();
                         for (ViewSpan viewSpan : viewSpans) {
-                            ResourceDataEntry resourceDataEntry = viewSpan.getResourceDataEntry();
+                            ResourceDataEntity resourceDataEntity = viewSpan.getResourceDataentity();
                             int spanStart = editable.getSpanStart(viewSpan);
                             // if the ViewSpan still remain in TextView
                             if(spanStart == -1) {
                                 // if the ViewSpan do not exist in TextView and saved before,
                                 // delete the formal unused resource data here.
                                 if(viewSpan.getFilePath() != null)
-                                    deleteResourceData(context, resourceDataEntry);
+                                    deleteResourceData(context, resourceDataEntity);
                             }else {
-                                resourceDataEntry.setSpanStart(spanStart);
-                                // set resource entry with the valid note id
-                                resourceDataEntry.setNoteId(noteId);
+                                resourceDataEntity.setSpanStart(spanStart);
+                                // set resource entity with the valid note id
+                                resourceDataEntity.setNoteId(noteId);
                                 String resourcePath = saveResourceData(context, resourceDir,
-                                        resourceDataEntry, viewSpan.getResourceDataUri());
+                                        resourceDataEntity, viewSpan.getResourceDataUri());
                                 if (resourcePath != null) {
                                     resourcePathList.add(resourcePath);
                                 }
@@ -113,7 +113,7 @@ public class NoteHandler {
             else {
                 Log.i(TAG, "saveNote: write note content error");
                 if(noteId != Constants.NO_NOTE_ID)
-                    FileUtil.deleteDirectoryAndFiles(noteEntry.getNotePath());
+                    FileUtil.deleteDirectoryAndFiles(noteEntity.getNotePath());
                 ret = false;
             }
         }
@@ -121,39 +121,39 @@ public class NoteHandler {
         return ret;
     }
 
-    public static List<HomePageActivity.PreviewNoteEntry> getAllPreviewNoteList(Context context){
-        List<HomePageActivity.PreviewNoteEntry> previewNoteEntries = new ArrayList<>();
-        List<NoteEntry> noteEntries = DataProvider.getInstance(context).getAllNoteEntry();
-        for (NoteEntry noteEntry : noteEntries) {
-            HomePageActivity.PreviewNoteEntry previewNoteEntry = new HomePageActivity.PreviewNoteEntry();
-            previewNoteEntry.noteEntry = noteEntry;
-            previewNoteEntry.preResourceDataEntries =
+    public static List<HomePageActivity.PreviewNoteentity> getAllPreviewNoteList(Context context){
+        List<HomePageActivity.PreviewNoteentity> previewNoteEntries = new ArrayList<>();
+        List<NoteEntity> noteEntries = DataProvider.getInstance(context).getAllNoteEntity();
+        for (NoteEntity noteEntity : noteEntries) {
+            HomePageActivity.PreviewNoteentity previewNoteentity = new HomePageActivity.PreviewNoteentity();
+            previewNoteentity.noteEntity = noteEntity;
+            previewNoteentity.preResourceDataEntries =
                     ANoteDBManager.getInstance(context).queryAllResourceDataByNoteId(
-                            previewNoteEntry.noteEntry.getNoteId());
-            previewNoteEntries.add(previewNoteEntry);
+                            previewNoteentity.noteEntity.getNoteId());
+            previewNoteEntries.add(previewNoteentity);
         }
         return previewNoteEntries;
     }
 
-    public static List<ResourceDataEntry> getResourceDataById(Context context, long noteId){
+    public static List<ResourceDataEntity> getResourceDataById(Context context, long noteId){
         return ANoteDBManager.getInstance(context).queryAllResourceDataByNoteId(noteId);
     }
 
-    public static NoteEntry getSingleNote(Context context, long noteId){
+    public static NoteEntity getSingleNote(Context context, long noteId){
         return ANoteDBManager.getInstance(context).querySingleNoteRecordById(noteId);
     }
 
-    public static void removeNote(Context context, NoteEntry noteEntry){
-        ANoteDBManager.getInstance(context).updateNoteRecord(noteEntry,
+    public static void removeNote(Context context, NoteEntity noteEntity){
+        ANoteDBManager.getInstance(context).updateNoteRecord(noteEntity,
                 ANoteDBManager.UpdateFlagTable.UPDATE_IS_LABELED_DISCARDED);
-        deleteNote(context, noteEntry);
+        deleteNote(context, noteEntity);
     }
 
-    public static void deleteNote(Context context, NoteEntry noteEntry){
-        ANoteDBManager.getInstance(context).deleteNoteRecord(noteEntry.getNoteId());
-        ANoteDBManager.getInstance(context).deleteTagRecordByNoteId(noteEntry.getNoteId());
-        ANoteDBManager.getInstance(context).deleteResourceDataByNoteId(noteEntry.getNoteId());
-        FileUtil.deleteDirectoryAndFiles(noteEntry.getNotePath());
+    public static void deleteNote(Context context, NoteEntity noteEntity){
+        ANoteDBManager.getInstance(context).deleteNoteRecord(noteEntity.getNoteId());
+        ANoteDBManager.getInstance(context).deleteTagRecordByNoteId(noteEntity.getNoteId());
+        ANoteDBManager.getInstance(context).deleteResourceDataByNoteId(noteEntity.getNoteId());
+        FileUtil.deleteDirectoryAndFiles(noteEntity.getNotePath());
     }
 
 
@@ -191,25 +191,25 @@ public class NoteHandler {
      * Save resource file, and render a random name for the resource file.
      * @param context       save uri file need context.
      * @param resourceDir   resource directory of the note.
-     * @param resourceDataEntry     resource data entry to be saved.
+     * @param resourceDataEntity     resource data entity to be saved.
      * @param resourceUri   if a new resource file, the uri will be a valid value.
      * @return  the resource file path if successfully, or null.
      */
     private static String saveResourceData(Context context, String resourceDir,
-                                           ResourceDataEntry resourceDataEntry, Uri resourceUri){
-        String resourcePath = resourceDataEntry.getPath();
+                                           ResourceDataEntity resourceDataEntity, Uri resourceUri){
+        String resourcePath = resourceDataEntity.getPath();
         // since ViewSpan's subclass have been restricted,
         // between filePath and there is and only one not null.
-        if(resourceDataEntry.getPath() == null) {
+        if(resourceDataEntity.getPath() == null) {
             // resource data is new
             // first get a path for it
             resourcePath = generateResourceDataPath(resourceDir);
-            resourceDataEntry.setPath(resourcePath);
+            resourceDataEntity.setPath(resourcePath);
 
             if (FileUtil.saveFileOfUri(context, resourceUri,
                     resourcePath)) {
                 Log.i(TAG, "saveNote: save resource data successfully");
-                if (ANoteDBManager.getInstance(context).insertResourceData(resourceDataEntry) == -1) {
+                if (ANoteDBManager.getInstance(context).insertResourceData(resourceDataEntity) == -1) {
                     FileUtil.deleteFile(resourcePath);
                     resourcePath = null;
                     Log.i(TAG, "saveNote: insert resource data record failed");
@@ -221,7 +221,7 @@ public class NoteHandler {
         }
         // resource data record exist, so we just update inside text position information
         else {
-            ANoteDBManager.getInstance(context).updateResourceData(resourceDataEntry);
+            ANoteDBManager.getInstance(context).updateResourceData(resourceDataEntity);
         }
         return resourcePath;
     }
@@ -241,53 +241,53 @@ public class NoteHandler {
         return resourcePath;
     }
 
-    private static void deleteResourceData(Context context, ResourceDataEntry resourceDataEntry){
-        if(resourceDataEntry != null && resourceDataEntry.getPath() != null){
-            ANoteDBManager.getInstance(context).deleteResourceData(resourceDataEntry.getResourceId());
-            if (FileUtil.deleteFile(resourceDataEntry.getPath())) {
+    private static void deleteResourceData(Context context, ResourceDataEntity resourceDataEntity){
+        if(resourceDataEntity != null && resourceDataEntity.getPath() != null){
+            ANoteDBManager.getInstance(context).deleteResourceData(resourceDataEntity.getResourceId());
+            if (FileUtil.deleteFile(resourceDataEntity.getPath())) {
                 Log.i(TAG, "deleteResourceData delete data file: successfully");
             }
             else Log.i(TAG, "deleteResourceData delete data file: failed");
         }
     }
 
-    public static void saveTagRecord(Context context, long noteId, List<TagRecordEntry>  tagRecordEntries){
+    public static void saveTagRecord(Context context, long noteId, List<TagRecordEntity>  tagRecordEntries){
         if(tagRecordEntries == null)
             return;
-        Iterator<TagRecordEntry> tagRecordEntryIterator= tagRecordEntries.iterator();
-        while(tagRecordEntryIterator.hasNext()){
-            TagRecordEntry tagRecordEntry = tagRecordEntryIterator.next();
-            switch (tagRecordEntry.status){
-                case TagRecordEntry.NEW_CREATE:
-                    tagRecordEntry.setNoteId(noteId);
-                    long ret = ANoteDBManager.getInstance(context).insertTagRecord(tagRecordEntry);
+        Iterator<TagRecordEntity> tagRecordentityIterator= tagRecordEntries.iterator();
+        while(tagRecordentityIterator.hasNext()){
+            TagRecordEntity tagRecordEntity = tagRecordentityIterator.next();
+            switch (tagRecordEntity.status){
+                case TagRecordEntity.NEW_CREATE:
+                    tagRecordEntity.setNoteId(noteId);
+                    long ret = ANoteDBManager.getInstance(context).insertTagRecord(tagRecordEntity);
                     if(ret != Constants.NO_TAG_RECORD_ID) {
-                        tagRecordEntry.setTagRecordId(ret);
-                        tagRecordEntry.status = TagRecordEntry.NORMAL;
+                        tagRecordEntity.setTagRecordId(ret);
+                        tagRecordEntity.status = TagRecordEntity.NORMAL;
                     }
                     break;
-                case TagRecordEntry.TO_DELETE:
-                    ANoteDBManager.getInstance(context).deleteTagRecord(tagRecordEntry.getTagRecordId());
-                    tagRecordEntryIterator.remove();
+                case TagRecordEntity.TO_DELETE:
+                    ANoteDBManager.getInstance(context).deleteTagRecord(tagRecordEntity.getTagRecordId());
+                    tagRecordentityIterator.remove();
                     break;
             }
-            tagRecordEntry.setNoteId(noteId);
+            tagRecordEntity.setNoteId(noteId);
 
         }
     }
 
-    public static List<HomePageActivity.PreviewNoteEntry> transformNoteEntryToPreviewList(
-            Context context, List<NoteEntry> noteEntries){
-        List<HomePageActivity.PreviewNoteEntry> previewNoteEntries = new ArrayList<>();
+    public static List<HomePageActivity.PreviewNoteentity> transformNoteentityToPreviewList(
+            Context context, List<NoteEntity> noteEntries){
+        List<HomePageActivity.PreviewNoteentity> previewNoteEntries = new ArrayList<>();
         if(noteEntries == null)
             return previewNoteEntries;
-        for (NoteEntry noteEntry : noteEntries) {
-            HomePageActivity.PreviewNoteEntry previewNoteEntry = new HomePageActivity.PreviewNoteEntry();
-            previewNoteEntry.noteEntry = noteEntry;
-            previewNoteEntry.preResourceDataEntries =
+        for (NoteEntity noteEntity : noteEntries) {
+            HomePageActivity.PreviewNoteentity previewNoteentity = new HomePageActivity.PreviewNoteentity();
+            previewNoteentity.noteEntity = noteEntity;
+            previewNoteentity.preResourceDataEntries =
                     ANoteDBManager.getInstance(context).queryAllResourceDataByNoteId(
-                            previewNoteEntry.noteEntry.getNoteId());
-            previewNoteEntries.add(previewNoteEntry);
+                            previewNoteentity.noteEntity.getNoteId());
+            previewNoteEntries.add(previewNoteentity);
         }
         return previewNoteEntries;
     }

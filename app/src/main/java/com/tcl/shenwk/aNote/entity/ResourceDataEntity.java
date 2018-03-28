@@ -1,4 +1,4 @@
-package com.tcl.shenwk.aNote.entry;
+package com.tcl.shenwk.aNote.entity;
 
 import com.tcl.shenwk.aNote.util.Constants;
 
@@ -9,7 +9,7 @@ import java.io.Serializable;
  * Created by shenwk on 2018/3/10.
  */
 
-public class ResourceDataEntry implements Serializable{
+public class ResourceDataEntity implements Serializable{
     private long resourceId = Constants.NO_RESOURCE_ID;
     private long noteId = Constants.NO_NOTE_ID;
     private String fileName;

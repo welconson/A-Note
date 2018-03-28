@@ -8,11 +8,9 @@ import android.view.MotionEvent;
 import android.view.View;
 
 import com.tcl.shenwk.aNote.R;
-import com.tcl.shenwk.aNote.entry.ResourceDataEntry;
+import com.tcl.shenwk.aNote.entity.ResourceDataEntity;
 import com.tcl.shenwk.aNote.util.Constants;
 import com.tcl.shenwk.aNote.util.FileUtil;
-
-import java.io.File;
 
 /**
  * Used for Audio as a span to replace the [audio] tag.
@@ -24,19 +22,19 @@ public class AudioViewSpan extends ViewSpan {
     private static final String TAG = "AudioViewSpan";
     private final int mDuration;
 
-    public AudioViewSpan(View view, Uri uri, ResourceDataEntry resourceDataEntry) {
-        super(view, uri, resourceDataEntry);
+    public AudioViewSpan(View view, Uri uri, ResourceDataEntity resourceDataEntity) {
+        super(view, uri, resourceDataEntity);
         mDuration = extractDurationByUri(view.getContext(), uri);
-        resourceDataEntry.setFileName(FileUtil.getFileNameFromURI(view.getContext(),
-                uri, resourceDataEntry.getDataType()));
+        resourceDataEntity.setFileName(FileUtil.getFileNameFromURI(view.getContext(),
+                uri, resourceDataEntity.getDataType()));
         Log.i(TAG, "AudioViewSpan: mDuration = " + mDuration);
 
         init();
     }
 
-    public AudioViewSpan(View view, ResourceDataEntry resourceDataEntry){
-        super(view, resourceDataEntry);
-        mDuration = extractDurationByFilePath(resourceDataEntry.getPath());
+    public AudioViewSpan(View view, ResourceDataEntity resourceDataEntity){
+        super(view, resourceDataEntity);
+        mDuration = extractDurationByFilePath(resourceDataEntity.getPath());
         Log.i(TAG, "AudioViewSpan: mDuration = " + mDuration);
 
         init();

@@ -1,29 +1,27 @@
-package com.tcl.shenwk.aNote.entry;
+package com.tcl.shenwk.aNote.entity;
 
 import com.tcl.shenwk.aNote.util.Constants;
 import com.tcl.shenwk.aNote.util.DateUtil;
 
-import java.util.Date;
-
 /**
- * Note tag entry class.
+ * Note tag entity class.
  * Created by shenwk on 2018/3/19.
  */
 
-public class NoteTagEntry {
+public class NoteTagEntity {
     private long tagId = Constants.NO_TAG_ID;
     private String tagName;
     private long createTime;
     private long rootTagId = Constants.NO_TAG_ID;
 
-    public NoteTagEntry() {
+    public NoteTagEntity() {
     }
 
     /**
      * Constructor used to create a new tag for adding.
      * @param tagName tag name.
      */
-    public NoteTagEntry(String tagName) {
+    public NoteTagEntity(String tagName) {
         this.tagName = tagName;
         this.createTime = DateUtil.getInstance().getTime();
     }

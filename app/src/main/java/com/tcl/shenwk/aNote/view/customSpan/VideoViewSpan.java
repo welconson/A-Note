@@ -5,7 +5,7 @@ import android.media.MediaMetadataRetriever;
 import android.net.Uri;
 import android.view.View;
 
-import com.tcl.shenwk.aNote.entry.ResourceDataEntry;
+import com.tcl.shenwk.aNote.entity.ResourceDataEntity;
 import com.tcl.shenwk.aNote.util.Constants;
 import com.tcl.shenwk.aNote.util.FileUtil;
 
@@ -16,14 +16,14 @@ import com.tcl.shenwk.aNote.util.FileUtil;
 public class VideoViewSpan extends ViewSpan {
     private final int mDuration;
 
-    public VideoViewSpan(View view, ResourceDataEntry resourceDataEntry) {
-        super(view, resourceDataEntry);
-        mDuration = extractDurationByFilePath(resourceDataEntry.getPath());
+    public VideoViewSpan(View view, ResourceDataEntity resourceDataEntity) {
+        super(view, resourceDataEntity);
+        mDuration = extractDurationByFilePath(resourceDataEntity.getPath());
     }
 
-    public VideoViewSpan(View view, Uri uri, ResourceDataEntry resourceDataEntry) {
-        super(view, uri, resourceDataEntry);
-        resourceDataEntry.setFileName(FileUtil.getFileNameFromURI(view.getContext(), uri, resourceDataEntry.getDataType()));
+    public VideoViewSpan(View view, Uri uri, ResourceDataEntity resourceDataEntity) {
+        super(view, uri, resourceDataEntity);
+        resourceDataEntity.setFileName(FileUtil.getFileNameFromURI(view.getContext(), uri, resourceDataEntity.getDataType()));
         mDuration = extractDurationByUri(view.getContext(), uri);
     }
 

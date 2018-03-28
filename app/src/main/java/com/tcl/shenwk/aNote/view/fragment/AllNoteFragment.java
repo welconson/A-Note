@@ -14,7 +14,7 @@ import android.view.View;
 import android.view.ViewGroup;
 
 import com.tcl.shenwk.aNote.R;
-import com.tcl.shenwk.aNote.entry.NoteEntry;
+import com.tcl.shenwk.aNote.entity.NoteEntity;
 import com.tcl.shenwk.aNote.model.ANoteDBManager;
 import com.tcl.shenwk.aNote.model.DataProvider;
 import com.tcl.shenwk.aNote.model.NoteHandler;
@@ -35,16 +35,16 @@ public class AllNoteFragment extends Fragment {
     private static final int REQUEST_CODE_NEW_NOTE_EDIT = 0;
     private static final int REQUEST_CODE_SAVED_NOTE_EDIT = 1;
     private RecyclerView recyclerView;
-    private List<NoteEntry> noteEntries;
+    private List<NoteEntity> noteEntries;
 
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.all_note_layout, container, false);
         recyclerView = view.findViewById(R.id.all_note_list);
         recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
-        noteEntries = DataProvider.getInstance(getContext()).getAllNoteEntry();
-        List<HomePageActivity.PreviewNoteEntry> previewNoteList =
-                NoteHandler.transformNoteEntryToPreviewList(getContext(), noteEntries);
+        noteEntries = DataProvider.getInstance(getContext()).getAllNoteEntity();
+        List<HomePageActivity.PreviewNoteentity> previewNoteList =
+                NoteHandler.transformNoteentityToPreviewList(getContext(), noteEntries);
         Log.i(TAG, "onCreate: size " + previewNoteList.size());
         AllNoteDisplayAdapter allNoteDisplayAdapter = new AllNoteDisplayAdapter(inflater,
                 previewNoteList);
@@ -70,36 +70,36 @@ public class AllNoteFragment extends Fragment {
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         if(requestCode == REQUEST_CODE_NEW_NOTE_EDIT){
             // Maybe have added a new note, we will check
-            if(resultCode == Activity.RESULT_OK && data.getSerializableExtra(Constants.ITEM_NOTE_ENTRY) != null){
+            if(resultCode == Activity.RESULT_OK && data.getSerializableExtra(Constants.ITEM_NOTE_entity) != null){
                 AllNoteDisplayAdapter adapter = (AllNoteDisplayAdapter) recyclerView.getAdapter();
-                HomePageActivity.PreviewNoteEntry previewNoteEntry = new HomePageActivity.PreviewNoteEntry();
-                previewNoteEntry.noteEntry = (NoteEntry) data.getSerializableExtra(Constants.ITEM_NOTE_ENTRY);
+                HomePageActivity.PreviewNoteentity previewNoteentity = new HomePageActivity.PreviewNoteentity();
+                previewNoteentity.noteEntity = (NoteEntity) data.getSerializableExtra(Constants.ITEM_NOTE_entity);
                 // Add the new note to homepage all note list
-                noteEntries.add(0, previewNoteEntry.noteEntry);
-                previewNoteEntry.preResourceDataEntries = ANoteDBManager.getInstance(
-                        getContext()).queryAllResourceDataByNoteId(previewNoteEntry.noteEntry.getNoteId());
-                adapter.addItem(previewNoteEntry);
+                noteEntries.add(0, previewNoteentity.noteEntity);
+                previewNoteentity.preResourceDataEntries = ANoteDBManager.getInstance(
+                        getContext()).queryAllResourceDataByNoteId(previewNoteentity.noteEntity.getNoteId());
+                adapter.addItem(previewNoteentity);
             }
         } else if(requestCode == REQUEST_CODE_SAVED_NOTE_EDIT){
             // After a modification, we refresh data set inside adapter.
-            if(resultCode == Activity.RESULT_OK && data.getSerializableExtra(Constants.ITEM_NOTE_ENTRY) != null){
+            if(resultCode == Activity.RESULT_OK && data.getSerializableExtra(Constants.ITEM_NOTE_entity) != null){
                 AllNoteDisplayAdapter adapter = (AllNoteDisplayAdapter) recyclerView.getAdapter();
-                HomePageActivity.PreviewNoteEntry previewNoteEntry = new HomePageActivity.PreviewNoteEntry();
-                previewNoteEntry.noteEntry = (NoteEntry) data.getSerializableExtra(Constants.ITEM_NOTE_ENTRY);
-                previewNoteEntry.preResourceDataEntries = ANoteDBManager.getInstance(
-                        getContext()).queryAllResourceDataByNoteId(previewNoteEntry.noteEntry.getNoteId());
+                HomePageActivity.PreviewNoteentity previewNoteentity = new HomePageActivity.PreviewNoteentity();
+                previewNoteentity.noteEntity = (NoteEntity) data.getSerializableExtra(Constants.ITEM_NOTE_entity);
+                previewNoteentity.preResourceDataEntries = ANoteDBManager.getInstance(
+                        getContext()).queryAllResourceDataByNoteId(previewNoteentity.noteEntity.getNoteId());
                 adapter.refreshSingleItemByPosition(data.getIntExtra(Constants.ITEM_POSITION, Constants.DEFAULT_ITEM_POSITION),
-                        previewNoteEntry);
+                        previewNoteentity);
             }
         }
     }
 
     AllNoteDisplayAdapter.OnItemClickListener onItemClickListener = new AllNoteDisplayAdapter.OnItemClickListener() {
         @Override
-        public void onItemClick(int position, NoteEntry noteEntry) {
+        public void onItemClick(int position, NoteEntity noteEntity) {
             Intent intent = new Intent(getContext(), EditNoteActivity.class);
             intent.putExtra(Constants.ACTION_TYPE_OF_EDIT_NOTE, EditNoteActivity.EDIT_TYPE_MODIFY);
-            intent.putExtra(Constants.ITEM_NOTE_ENTRY, noteEntry);
+            intent.putExtra(Constants.ITEM_NOTE_entity, noteEntity);
             intent.putExtra(Constants.ITEM_POSITION, position);
             startActivityForResult(intent, REQUEST_CODE_SAVED_NOTE_EDIT);
         }

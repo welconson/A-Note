@@ -1,17 +1,16 @@
-package com.tcl.shenwk.aNote.entry;
+package com.tcl.shenwk.aNote.entity;
 
 import com.tcl.shenwk.aNote.util.Constants;
 import com.tcl.shenwk.aNote.util.DateUtil;
 
 import java.io.Serializable;
-import java.util.Date;
 
 /**
- * Note entry class.
+ * Note entity class.
  * Created by shenwk on 2018/2/5.
  */
 
-public class NoteEntry implements Serializable{
+public class NoteEntity implements Serializable{
     private long noteId;
     private String noteTitle;
     private String notePath;
@@ -21,8 +20,8 @@ public class NoteEntry implements Serializable{
     private int hasArchived;
     private int isLabeledDiscarded;
 
-    public NoteEntry(String noteTitle, String notePath, long createTimestamp, long updateTimestamp,
-                     String locationInfo, int hasArchived, int isLabeledDiscarded) {
+    public NoteEntity(String noteTitle, String notePath, long createTimestamp, long updateTimestamp,
+                      String locationInfo, int hasArchived, int isLabeledDiscarded) {
         this.noteTitle = noteTitle;
         this.notePath = notePath;
         this.createTimestamp = createTimestamp;
@@ -32,7 +31,7 @@ public class NoteEntry implements Serializable{
         this.isLabeledDiscarded = isLabeledDiscarded;
     }
 
-    public NoteEntry() {
+    public NoteEntity() {
         noteId = Constants.NO_NOTE_ID;
         createTimestamp = DateUtil.getInstance().getTime();
         updateTimestamp = DateUtil.getInstance().getTime();

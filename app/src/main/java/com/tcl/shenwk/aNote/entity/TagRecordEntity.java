@@ -1,15 +1,14 @@
-package com.tcl.shenwk.aNote.entry;
+package com.tcl.shenwk.aNote.entity;
 
+import com.tcl.shenwk.aNote.util.Constants;
 import com.tcl.shenwk.aNote.util.DateUtil;
 
-import java.util.Date;
-
 /**
- * TagNoteRecord entry class.
+ * TagNoteRecord entity class.
  * Created by shenwk on 2018/3/19.
  */
 
-public class TagRecordEntry {
+public class TagRecordEntity {
     // Labelled the tag record which is a normal record,
     // there is no need of database operation.
     public final static int NORMAL = 0;
@@ -18,19 +17,19 @@ public class TagRecordEntry {
     // Labelled the tag record which is a new created record to store in database.
     public final static int NEW_CREATE = 2;
 
-    private long tagRecordId;
-    private long noteId;
-    private long tagId;
+    private long tagRecordId = Constants.NO_TAG_RECORD_ID;
+    private long noteId = Constants.NO_NOTE_ID;
+    private long tagId = Constants.NO_TAG_ID;
     private long createTimestamp;
 
     public int status = NORMAL;
 
-    public TagRecordEntry(long tagId) {
+    public TagRecordEntity(long tagId) {
         this.tagId = tagId;
         createTimestamp = DateUtil.getInstance().getTime();
     }
 
-    public TagRecordEntry() {
+    public TagRecordEntity() {
 
     }
 
