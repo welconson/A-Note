@@ -177,7 +177,7 @@ public class TagRecordEditFragment extends DialogFragment implements TagRecordEd
         @Override
         public void onClick(View v) {
             if(textView.getText().length() < 0){
-                Toast.makeText(getContext(), Constants.TOAST_TAG_NOT_EMPTY, Toast.LENGTH_SHORT).show();
+                Toast.makeText(getContext(), Constants.TOAST_TAG_NAME_NOT_EMPTY, Toast.LENGTH_SHORT).show();
             }
             else {
                 NoteTagEntity noteTagEntity = new NoteTagEntity(textView.getText().toString());
@@ -202,7 +202,7 @@ public class TagRecordEditFragment extends DialogFragment implements TagRecordEd
                         noteTagEntity.setTagId(tagId);
                         currentAdapter.addNewTag(noteTagEntity);
                         textView.setText("");
-                        DataProvider.getInstance(getContext()).updateAllTopTagentity();
+                        DataProvider.getInstance(getContext()).updateAllTopTagEntity();
                     }
                 }
             }

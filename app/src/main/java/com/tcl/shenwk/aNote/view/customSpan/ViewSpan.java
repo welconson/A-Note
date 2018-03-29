@@ -124,7 +124,7 @@ public abstract class ViewSpan extends DynamicDrawableSpan implements View.OnTou
         return mResourceDataEntity.getPath();
     }
 
-    public ResourceDataEntity getResourceDataentity() {
+    public ResourceDataEntity getResourceDataEntity() {
         return mResourceDataEntity;
     }
 }

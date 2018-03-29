@@ -29,7 +29,7 @@ public interface Constants {
     //Extra name and value start
     String ACTION_TYPE_OF_EDIT_NOTE = "com.tcl.shenwk.aNote.edit_type";
     String ITEM_POSITION = "position";
-    String ITEM_NOTE_entity = "note";
+    String ITEM_NOTE_ENTITY = "note";
     String WITH_TAG_ID = "with__tag_record";
     String ITEM_RESOURCE_entity = "res";
     int DEFAULT_ITEM_POSITION = -1;
@@ -77,8 +77,10 @@ public interface Constants {
     //Toast text
     String TOAST_TEXT_WITHOUT_PERMISSION = "Permission Denial";
     String TOAST_NEW_NOTE_WITH_NOTHING = "do not save a empty note";
-    String TOAST_TAG_NOT_EMPTY = "tag name can not be a empty value";
+    String TOAST_TAG_NAME_NOT_EMPTY = "tag name can not be empty";
     String TOAST_TAG_ADD_FAILED = "add tag failed";
+    String TOAST_TAG_ADD_REPEAT = "add a repeat name here";
     String TOAST_TAG_DELETE_FAILED = "delete failed ,tag contains sub tags or notes";
     String TOAST_TAG_RECORD_EDIT_ENTER_SUB_TAG = "this tag has no sub tags";
+    String TOAST_EXIT_HINT = "another press to exit";
 }

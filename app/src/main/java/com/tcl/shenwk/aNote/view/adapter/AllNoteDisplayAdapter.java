@@ -21,7 +21,6 @@ import com.tcl.shenwk.aNote.entity.ResourceDataEntity;
 import com.tcl.shenwk.aNote.model.NoteHandler;
 import com.tcl.shenwk.aNote.util.Constants;
 import com.tcl.shenwk.aNote.util.FileUtil;
-import com.tcl.shenwk.aNote.view.activity.HomePageActivity;
 
 import java.util.List;
 
@@ -33,49 +32,49 @@ import java.util.List;
 public class AllNoteDisplayAdapter extends RecyclerView.Adapter {
     private static String TAG = "AllNoteDisplayAdapter";
     private LayoutInflater mInflater = null;
-    private List<HomePageActivity.PreviewNoteentity> mPreviewNoteentityList;
+    private List<PreviewNoteItem> mPreviewNoteItemList;
     private OnItemClickListener onItemClickListener;
 
-    public AllNoteDisplayAdapter(LayoutInflater inflater, List<HomePageActivity.PreviewNoteentity> previewNoteEntries) {
+    public AllNoteDisplayAdapter(LayoutInflater inflater, List<PreviewNoteItem> previewNoteEntries) {
         super();
         mInflater = inflater;
-        mPreviewNoteentityList = previewNoteEntries;
+        mPreviewNoteItemList = previewNoteEntries;
     }
 
     @Override
-    public CustomViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+    public NoteDisplayViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
         View item = mInflater.inflate(R.layout.note_preview_item, parent, false);
-        return new CustomViewHolder(item);
+        return new NoteDisplayViewHolder(item);
     }
 
     @Override
     public void onBindViewHolder(RecyclerView.ViewHolder holder, int position) {
         View viewItem = holder.itemView;
-        HomePageActivity.PreviewNoteentity previewNoteentity = mPreviewNoteentityList.get(position);
-        setViewItemDisplay(previewNoteentity, viewItem);
+        PreviewNoteItem previewNoteItem = mPreviewNoteItemList.get(position);
+        setViewItemDisplay(previewNoteItem, viewItem);
     }
 
     @Override
     public int getItemCount() {
-        return mPreviewNoteentityList.size();
+        return mPreviewNoteItemList.size();
     }
 
-    public void refreshSingleItemByPosition(int position, HomePageActivity.PreviewNoteentity previewNoteentity){
-        if(position < 0 || previewNoteentity == null)
+    public void refreshSingleItemByPosition(int position, PreviewNoteItem previewNoteItem){
+        if(position < 0 || previewNoteItem == null)
             return;
-        mPreviewNoteentityList.set(position, previewNoteentity);
+        mPreviewNoteItemList.set(position, previewNoteItem);
         notifyItemChanged(position);
     }
 
-    public void addItem(HomePageActivity.PreviewNoteentity previewNoteentity){
-        if(previewNoteentity == null)
+    public void addItem(PreviewNoteItem previewNoteItem){
+        if(previewNoteItem == null)
             return;
-        mPreviewNoteentityList.add(Constants.ITEM_BEGIN_POSITION, previewNoteentity);
+        mPreviewNoteItemList.add(Constants.ITEM_BEGIN_POSITION, previewNoteItem);
         notifyItemInserted(Constants.ITEM_BEGIN_POSITION);
     }
 
-    private void setViewItemDisplay(HomePageActivity.PreviewNoteentity previewNoteentity, View viewItem){
-        NoteEntity noteEntity = previewNoteentity.noteEntity;
+    private void setViewItemDisplay(PreviewNoteItem previewNoteItem, View viewItem){
+        NoteEntity noteEntity = previewNoteItem.noteEntity;
         TextView textView = viewItem.findViewById(R.id.item_title);
         if(noteEntity.getNoteTitle() == null || noteEntity.getNoteTitle().equals("")){
             textView.setText(R.string.item_no_title);
@@ -85,15 +84,15 @@ public class AllNoteDisplayAdapter extends RecyclerView.Adapter {
         Context context = viewItem.getContext();
         textView.setText(generatePreviewText(FileUtil.readFile(
                 FileUtil.getContentFileName(noteEntity.getNotePath())),
-                previewNoteentity.preResourceDataEntries));
+                previewNoteItem.preResourceDataEntries));
 
-        if(previewNoteentity.preResourceDataEntries != null && previewNoteentity.preResourceDataEntries.size() != 0) {
+        if(previewNoteItem.preResourceDataEntries != null && previewNoteItem.preResourceDataEntries.size() != 0) {
             ImageView imageView = viewItem.findViewById(R.id.item_image);
             setItemInfoLayoutParameterWithResource(viewItem);
-            switch (previewNoteentity.preResourceDataEntries.get(0).getDataType()){
+            switch (previewNoteItem.preResourceDataEntries.get(0).getDataType()){
                 case Constants.RESOURCE_TYPE_IMAGE:
                     imageView.setImageBitmap(BitmapFactory.decodeFile(
-                            previewNoteentity.preResourceDataEntries.get(0).getPath()));
+                            previewNoteItem.preResourceDataEntries.get(0).getPath()));
                     break;
                 case Constants.RESOURCE_TYPE_AUDIO:
                     imageView.setBackground(context.getDrawable(R.color.primaryGrey));
@@ -192,32 +191,8 @@ public class AllNoteDisplayAdapter extends RecyclerView.Adapter {
         return previewText;
     }
 
-    /**
-     * Get the span tag string corresponding to the span type.
-     * @param type  span type.
-     * @return  span tag.
-     */
-    private String getResourceTag(int type) {
-        String tag = "";
-        switch (type) {
-            case Constants.RESOURCE_TYPE_IMAGE:
-                tag = Constants.IMAGE_SPAN_TAG;
-                break;
-            case Constants.RESOURCE_TYPE_AUDIO:
-                tag = Constants.AUDIO_SPAN_TAG;
-                break;
-            case Constants.RESOURCE_TYPE_VIDEO:
-                tag = Constants.VIDEO_SPAN_TAG;
-                break;
-            case Constants.RESOURCE_TYPE_FILE:
-                tag = Constants.FILE_SPAN_TAG;
-                break;
-        }
-        return tag;
-    }
-
-    public class CustomViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener, View.OnLongClickListener{
-        public CustomViewHolder(View itemView) {
+    public class NoteDisplayViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener, View.OnLongClickListener{
+        public NoteDisplayViewHolder(View itemView) {
             super(itemView);
             itemView.setOnClickListener(this);
             itemView.setOnLongClickListener(this);
@@ -225,41 +200,44 @@ public class AllNoteDisplayAdapter extends RecyclerView.Adapter {
 
         @Override
         public void onClick(View v) {
-            int position = getAdapterPosition();
             if(onItemClickListener != null){
-                onItemClickListener.onItemClick(position, mPreviewNoteentityList.get(position).noteEntity);
+                onItemClickListener.onItemClick(getAdapterPosition(), v);
             }
         }
 
         @Override
-        public boolean onLongClick(final View v) {
-            PopupMenu popupMenu = new PopupMenu(v.getContext(), v);
-            Menu menu = popupMenu.getMenu();
-            menu.add("delete");
-            menu.getItem(0).setOnMenuItemClickListener(new MenuItem.OnMenuItemClickListener() {
-                @Override
-                public boolean onMenuItemClick(MenuItem item) {
-                    int position = getAdapterPosition();
-                    NoteEntity noteEntity = mPreviewNoteentityList.get(position).noteEntity;
-                    Log.i(TAG, "onMenuItemClick: delete onClick");
-                    NoteHandler.removeNote(v.getContext(), noteEntity);
-                    mPreviewNoteentityList.remove(position);
-                    notifyItemRemoved(position);
-                    return true;
-                }
-            });
-            menu.add("detail");
-            popupMenu.setGravity(Gravity.END);
-            popupMenu.show();
+        public boolean onLongClick(View v) {
+            if(onItemClickListener != null){
+                onItemClickListener.onItemLongClick(getAdapterPosition(), v);
+            }
             return true;
         }
     }
 
     public interface OnItemClickListener {
-        void onItemClick(int position, NoteEntity noteEntity);
+        void onItemClick(int position, View v);
+        void onItemLongClick(int position, View v);
     }
 
     public void setOnItemClickListener(OnItemClickListener onItemClickListener) {
         this.onItemClickListener = onItemClickListener;
+    }
+
+    public static class PreviewNoteItem {
+        public NoteEntity noteEntity;
+        public List<ResourceDataEntity> preResourceDataEntries;
+    }
+    
+    public PreviewNoteItem getItemByPosition(int position){
+        if(position < 0 || position >= mPreviewNoteItemList.size())
+            return  null;
+        else return mPreviewNoteItemList.get(position);
+    }
+
+    public void removeItemByPosition(int position){
+        if(position < 0 || position >= mPreviewNoteItemList.size()){
+            return;
+        }
+        else mPreviewNoteItemList.remove(position);
     }
 }

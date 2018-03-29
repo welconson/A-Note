@@ -2,11 +2,10 @@
 <android.support.constraint.ConstraintLayout
     xmlns:android="http://schemas.android.com/apk/res/android" android:layout_width="match_parent"
     android:layout_height="match_parent">
-    <include layout="@layout/note_list_layout"/>
-
-    <include
-        layout="@layout/add_note_button"
+    <android.support.v7.widget.RecyclerView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        />
+        android:id="@+id/note_list">
+    </android.support.v7.widget.RecyclerView>
+
 </android.support.constraint.ConstraintLayout>

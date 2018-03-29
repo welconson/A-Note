@@ -12,16 +12,23 @@ import static android.content.Context.INPUT_METHOD_SERVICE;
  */
 
 public class ImeController {
-    private InputMethodManager imm;
+    private static ImeController mInstance = null;
+    private InputMethodManager inputMethodManager;
 
-    public ImeController(Context context) {
-        this.imm = (InputMethodManager)context.getSystemService(INPUT_METHOD_SERVICE);
+    private ImeController(Context context) {
+        this.inputMethodManager = (InputMethodManager) context.getSystemService(INPUT_METHOD_SERVICE);
+    }
+
+    public static ImeController getInstance(Context context){
+        if(mInstance == null)
+            mInstance = new ImeController(context.getApplicationContext());
+        return mInstance;
     }
 
     public boolean toggleSoftInput(){
         boolean ret = false;
-        if(imm != null){
-            imm.toggleSoftInput(InputMethodManager.SHOW_IMPLICIT, InputMethodManager.HIDE_NOT_ALWAYS);
+        if(inputMethodManager != null){
+            inputMethodManager.toggleSoftInput(InputMethodManager.SHOW_IMPLICIT, InputMethodManager.HIDE_NOT_ALWAYS);
             ret = true;
         }
         return ret;
@@ -29,8 +36,8 @@ public class ImeController {
 
     public boolean showSoftInput(View v){
         boolean ret = false;
-        if(imm != null) {
-            imm.showSoftInput(v, InputMethodManager.SHOW_IMPLICIT);
+        if(inputMethodManager != null) {
+            inputMethodManager.showSoftInput(v, InputMethodManager.HIDE_NOT_ALWAYS);
             ret = true;
         }
         return ret;
@@ -38,8 +45,8 @@ public class ImeController {
 
     public boolean hideSoftInput(View v){
         boolean ret = false;
-        if(imm != null) {
-            imm.hideSoftInputFromWindow(v.getWindowToken(), InputMethodManager.HIDE_NOT_ALWAYS);
+        if(inputMethodManager != null) {
+            inputMethodManager.hideSoftInputFromWindow(v.getWindowToken(), InputMethodManager.HIDE_NOT_ALWAYS);
             ret = true;
         }
         return ret;

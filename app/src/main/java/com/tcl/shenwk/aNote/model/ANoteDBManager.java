@@ -72,8 +72,8 @@ public class ANoteDBManager {
         if(noteEntity.getLocationInfo() == null)
             statement.bindNull(5);
         else statement.bindString(5, noteEntity.getLocationInfo());
-        statement.bindLong(6, noteEntity.getHasArchived());
-        statement.bindLong(7, noteEntity.getIsLabeledDiscarded());
+        statement.bindLong(6, noteEntity.hasArchived() ? Constants.ARCHIVED : Constants.NOT_ARCHIVED);
+        statement.bindLong(7, noteEntity.isLabeledDiscarded() ? Constants.LABELED_DISCARD : Constants.NOTE_LABELED_DISCARD);
 
         // return value is row id, used to search corresponding note record
         ret = statement.executeInsert();
@@ -99,9 +99,9 @@ public class ANoteDBManager {
         if((updateFlags & UpdateFlagTable.UPDATE_LOCATION_INFO) != 0 && noteEntity.getLocationInfo() != null)
             contentValues.put(LOCATION_INFO, noteEntity.getLocationInfo());
         if((updateFlags & UpdateFlagTable.UPDATE_HAS_ARCHIVED) != 0)
-            contentValues.put(HAS_ARCHIVED, noteEntity.getHasArchived());
+            contentValues.put(HAS_ARCHIVED, noteEntity.hasArchived() ? Constants.ARCHIVED : Constants.NOT_ARCHIVED);
         if((updateFlags & UpdateFlagTable.UPDATE_IS_LABELED_DISCARDED) != 0)
-            contentValues.put(IS_LABELED_DISCARDED, noteEntity.getIsLabeledDiscarded());
+            contentValues.put(IS_LABELED_DISCARDED, noteEntity.isLabeledDiscarded() ? Constants.LABELED_DISCARD : Constants.NOTE_LABELED_DISCARD);
         if (contentValues.size() != 0) {
             ret = database.update(NOTE_TABLE_NAME, contentValues,
                     NOTE_ID + " = " + noteEntity.getNoteId(), null);
@@ -129,8 +129,8 @@ public class ANoteDBManager {
             noteEntity.setCreateTimestamp(cursor.getLong(cursor.getColumnIndex(CREATE_TIMESTAMP)));
             noteEntity.setUpdateTimestamp(cursor.getLong(cursor.getColumnIndex(UPDATE_TIMESTAMP)));
             noteEntity.setLocationInfo(cursor.getString(cursor.getColumnIndex(LOCATION_INFO)));
-            noteEntity.setHasArchived(cursor.getInt(cursor.getColumnIndex(HAS_ARCHIVED)));
-            noteEntity.setIsLabeledDiscarded(cursor.getInt(cursor.getColumnIndex(IS_LABELED_DISCARDED)));
+            noteEntity.setHasArchived(cursor.getInt(cursor.getColumnIndex(HAS_ARCHIVED)) == Constants.ARCHIVED);
+            noteEntity.setIsLabeledDiscarded(cursor.getInt(cursor.getColumnIndex(IS_LABELED_DISCARDED)) == Constants.LABELED_DISCARD);
             noteEntries.add(noteEntity);
         }
         cursor.close();
@@ -151,8 +151,8 @@ public class ANoteDBManager {
             noteEntity.setCreateTimestamp(cursor.getLong(cursor.getColumnIndex(CREATE_TIMESTAMP)));
             noteEntity.setUpdateTimestamp(cursor.getLong(cursor.getColumnIndex(UPDATE_TIMESTAMP)));
             noteEntity.setLocationInfo(cursor.getString(cursor.getColumnIndex(LOCATION_INFO)));
-            noteEntity.setHasArchived(cursor.getInt(cursor.getColumnIndex(HAS_ARCHIVED)));
-            noteEntity.setIsLabeledDiscarded(cursor.getInt(cursor.getColumnIndex(IS_LABELED_DISCARDED)));
+            noteEntity.setHasArchived(cursor.getInt(cursor.getColumnIndex(HAS_ARCHIVED)) == Constants.ARCHIVED);
+            noteEntity.setIsLabeledDiscarded(cursor.getInt(cursor.getColumnIndex(IS_LABELED_DISCARDED)) == Constants.LABELED_DISCARD);
         }
         cursor.close();
         database.close();

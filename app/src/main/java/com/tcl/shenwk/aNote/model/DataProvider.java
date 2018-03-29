@@ -4,7 +4,9 @@ import android.content.Context;
 
 import com.tcl.shenwk.aNote.entity.NoteEntity;
 import com.tcl.shenwk.aNote.entity.NoteTagEntity;
+import com.tcl.shenwk.aNote.view.adapter.AllNoteDisplayAdapter.PreviewNoteItem;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -16,7 +18,7 @@ import java.util.List;
 public class DataProvider {
     private static final String TAG = "DataProvider";
     private static DataProvider mInstance;
-    private List<NoteEntity> allNoteEntity;
+    private List<NoteEntity> allNoteEntities;
     private List<NoteTagEntity> allNoteTagEntity;
     private Context context;
 
@@ -31,23 +33,66 @@ public class DataProvider {
         return mInstance;
     }
 
-    public List<NoteEntity> getAllNoteEntity(){
-        if(allNoteEntity == null)
-            updateNoteentity();
-        return allNoteEntity;
+    public List<NoteEntity> getAllNoteEntities(){
+        if(allNoteEntities == null)
+            updateNoteEntity();
+        return allNoteEntities;
     }
 
-    public List<NoteTagEntity> getAllTopTagentity() {
+    public List<NoteTagEntity> getAllTopTagEntity() {
         if(allNoteTagEntity == null)
-            updateAllTopTagentity();
+            updateAllTopTagEntity();
         return allNoteTagEntity;
     }
 
-    public void updateNoteentity(){
-        allNoteEntity = ANoteDBManager.getInstance(context).queryAllNoteRecord();
+    public void updateNoteEntity(){
+        allNoteEntities = ANoteDBManager.getInstance(context).queryAllNoteRecord();
     }
 
-    public void updateAllTopTagentity(){
+    public void updateAllTopTagEntity(){
         allNoteTagEntity = ANoteDBManager.getInstance(context).queryAllTopTag();
+    }
+
+    public List<PreviewNoteItem> transformNoteEntityToPreviewList(List<NoteEntity> noteEntities){
+        List<PreviewNoteItem> previewNoteEntries = new ArrayList<>();
+        for (NoteEntity noteEntity : noteEntities) {
+            PreviewNoteItem previewNoteItem = new PreviewNoteItem();
+            previewNoteItem.noteEntity = noteEntity;
+            previewNoteItem.preResourceDataEntries =
+                    ANoteDBManager.getInstance(context).queryAllResourceDataByNoteId(
+                            previewNoteItem.noteEntity.getNoteId());
+            previewNoteEntries.add(previewNoteItem);
+        }
+        return previewNoteEntries;
+    }
+
+    public List<NoteEntity> getArchivedNoteList(){
+        List<NoteEntity> noteEntities = new ArrayList<>();
+        allNoteEntities = getAllNoteEntities();
+        for(NoteEntity noteEntity : allNoteEntities){
+            if(noteEntity.hasArchived() && !noteEntity.isLabeledDiscarded())
+                noteEntities.add(noteEntity);
+        }
+        return noteEntities;
+    }
+
+    public List<NoteEntity> getUnarchivedNoteList(){
+        List<NoteEntity> noteEntities = new ArrayList<>();
+        allNoteEntities = getAllNoteEntities();
+        for(NoteEntity noteEntity : allNoteEntities){
+            if(!noteEntity.hasArchived() && !noteEntity.isLabeledDiscarded())
+                noteEntities.add(noteEntity);
+        }
+        return noteEntities;
+    }
+
+    public List<NoteEntity> getLabeledDiscardNoteList(){
+        List<NoteEntity> noteEntities = new ArrayList<>();
+        allNoteEntities = getAllNoteEntities();
+        for(NoteEntity noteEntity : allNoteEntities){
+            if(noteEntity.isLabeledDiscarded())
+                noteEntities.add(noteEntity);
+        }
+        return noteEntities;
     }
 }

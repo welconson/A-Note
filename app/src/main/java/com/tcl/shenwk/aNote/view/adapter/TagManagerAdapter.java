@@ -30,7 +30,7 @@ public class TagManagerAdapter extends RecyclerView.Adapter {
     private static final int TYPE_TAG = 1;
     private static final int TYPE_NOTE = 2;
     private List<DisplayItem> displayItems;
-    private NoteTagEntity hierarchyTagentity = null;
+    private NoteTagEntity hierarchyTagEntity = null;
     private int tagNum = 0;
     private LayoutInflater inflater = null;
     private OnItemClickListener onItemClickListener = null;
@@ -89,12 +89,12 @@ public class TagManagerAdapter extends RecyclerView.Adapter {
         this.onItemClickListener = onItemClickListener;
     }
 
-    public NoteTagEntity getHierarchyTagentity() {
-        return hierarchyTagentity;
+    public NoteTagEntity getHierarchyTagEntity() {
+        return hierarchyTagEntity;
     }
 
-    public void setHierarchyTagentity(NoteTagEntity hierarchyTagentity) {
-        this.hierarchyTagentity = hierarchyTagentity;
+    public void setHierarchyTagEntity(NoteTagEntity hierarchyTagEntity) {
+        this.hierarchyTagEntity = hierarchyTagEntity;
     }
 
     private abstract class DisplayItem {

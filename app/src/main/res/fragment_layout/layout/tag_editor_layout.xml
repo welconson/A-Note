@@ -11,23 +11,7 @@
             android:orientation="vertical"
             android:background="#ffffff">
 
-            <RelativeLayout
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal">
-                <EditText
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:hint="@string/add_tag_hint"
-                    android:id="@+id/edit_tag_name"/>
-                <ImageButton
-                    android:layout_margin="10dp"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_alignParentEnd="true"
-                    android:background="@drawable/ic_add"
-                    android:id="@+id/add_tag"/>
-            </RelativeLayout>
+            <include layout="@layout/tag_edit_header"/>
 
 
             <include layout="@layout/tag_edit_recycler_layout" />

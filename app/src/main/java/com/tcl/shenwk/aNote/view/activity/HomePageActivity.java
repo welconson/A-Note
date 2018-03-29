@@ -14,29 +14,36 @@ import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.MenuItem;
+import android.widget.Toast;
 
 import com.tcl.shenwk.aNote.R;
-import com.tcl.shenwk.aNote.entity.NoteEntity;
-import com.tcl.shenwk.aNote.entity.ResourceDataEntity;
+import com.tcl.shenwk.aNote.util.Constants;
+import com.tcl.shenwk.aNote.util.DateUtil;
 import com.tcl.shenwk.aNote.view.fragment.AllNoteFragment;
+import com.tcl.shenwk.aNote.view.fragment.ArchivedFragment;
+import com.tcl.shenwk.aNote.view.fragment.DiscardDrawerFragment;
 import com.tcl.shenwk.aNote.view.fragment.TagManagerFragment;
 
 import java.util.List;
+import java.util.Timer;
 
 public class HomePageActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener {
     private static String TAG = "HomePageActivity";
+    private static long EXIT_TIME_THRESHOLD = 4000;
     private Menu mMenu;
     private int mCheckedMenuItemId;
     private DrawerLayout mDrawer;
     private FragmentManager mFragmentManager;
     private Fragment currentFragment;
     private OnKeyDownListener onKeyDownListener;
+    private Toolbar toolbar;
+    private long lastTime = 0;
 
-    private static final String ALL_NOTES_FRAGMENT_TAG = "all_notes";
-    private static final String TAG_MANAGER_FRAGMENT_TAG = "tag_manager";
-    private static final String UNARCHIVED_FRAGMENT_TAG = "unarchived";
-    private static final String DISCARD_DRAWER_FRAGMENT_TAG = "discard_drawer";
+    private static final String ALL_NOTES_FRAGMENT_TAG = "all notes";
+    private static final String TAG_MANAGER_FRAGMENT_TAG = "tag manager";
+    private static final String ARCHIVED_FRAGMENT_TAG = "archived notes";
+    private static final String DISCARD_DRAWER_FRAGMENT_TAG = "discard drawer";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -45,7 +52,8 @@ public class HomePageActivity extends AppCompatActivity
         setContentView(R.layout.home_page);
 
         // Set toolbar
-        Toolbar toolbar = (Toolbar) findViewById(R.id.home_page_toolbar);
+        toolbar = (Toolbar) findViewById(R.id.home_page_toolbar);
+        toolbar.setTitle(ALL_NOTES_FRAGMENT_TAG);
         setSupportActionBar(toolbar);
 //        final LayoutInflater inflater = getLayoutInflater();
 //        View view =  inflater.inflate(R.layout.tool_bar_button, null);
@@ -116,10 +124,12 @@ public class HomePageActivity extends AppCompatActivity
                 tag = TAG_MANAGER_FRAGMENT_TAG;
                 break;
             case R.id.archive:
-
+                fragmentClass = ArchivedFragment.class;
+                tag = ARCHIVED_FRAGMENT_TAG;
                 break;
             case R.id.discard_drawer:
-
+                fragmentClass = DiscardDrawerFragment.class;
+                tag = DISCARD_DRAWER_FRAGMENT_TAG;
                 break;
             case R.id.nav_share:
 
@@ -139,6 +149,7 @@ public class HomePageActivity extends AppCompatActivity
                             .commit();
                     if(fragment instanceof TagManagerFragment)
                         onKeyDownListener = (TagManagerFragment)fragment;
+                    toolbar.setTitle(tag);
                 } catch (InstantiationException | IllegalAccessException e) {
                     e.printStackTrace();
                 }
@@ -169,12 +180,13 @@ public class HomePageActivity extends AppCompatActivity
         if(onKeyDownListener != null)
             if(onKeyDownListener.onKeyDown(keyCode, event))
                 return true;
+        long nowTime = DateUtil.getInstance().getTime();
+        if(nowTime - lastTime > EXIT_TIME_THRESHOLD){
+            lastTime = nowTime;
+            Toast.makeText(HomePageActivity.this, Constants.TOAST_EXIT_HINT, Toast.LENGTH_SHORT).show();
+            return true;
+        }
         return super.onKeyDown(keyCode, event);
-    }
-
-    public static class PreviewNoteentity{
-        public NoteEntity noteEntity;
-        public List<ResourceDataEntity> preResourceDataEntries;
     }
 
     private void setNavigationDrawer(Toolbar toolbar){

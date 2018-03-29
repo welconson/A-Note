@@ -5,7 +5,6 @@ import android.app.Fragment;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
-import android.support.design.widget.FloatingActionButton;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
@@ -30,12 +29,11 @@ import com.tcl.shenwk.aNote.view.adapter.AllNoteDisplayAdapter.PreviewNoteItem;
 import java.util.List;
 
 /**
- * All note display fragment.
- * Created by shenwk on 2018/3/23.
+ * Created by shenwk on 2018/3/29.
  */
 
-public class AllNoteFragment extends Fragment {
-    private static final String TAG = "AllNoteFragment";
+public class DiscardDrawerFragment extends Fragment {
+    private static final String TAG = "DiscardDrawerFragment";
     private static final int REQUEST_CODE_NEW_NOTE_EDIT = 0;
     private static final int REQUEST_CODE_SAVED_NOTE_EDIT = 1;
     private RecyclerView recyclerView;
@@ -43,33 +41,20 @@ public class AllNoteFragment extends Fragment {
 
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, Bundle savedInstanceState) {
-        View view = inflater.inflate(R.layout.all_note_layout, container, false);
+        View view = inflater.inflate(R.layout.note_list_layout, container, false);
         recyclerView = view.findViewById(R.id.note_list);
         recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
         List<PreviewNoteItem> previewNoteList =
                 DataProvider.getInstance(getContext()).transformNoteEntityToPreviewList(
-                        DataProvider.getInstance(getContext()).getUnarchivedNoteList()
-                );
+                        DataProvider.getInstance(getContext()).getLabeledDiscardNoteList());
         Log.i(TAG, "onCreate: size " + previewNoteList.size());
         allNoteDisplayAdapter = new AllNoteDisplayAdapter(inflater,
                 previewNoteList);
         allNoteDisplayAdapter.setOnItemClickListener(onItemClickListener);
         recyclerView.setAdapter(allNoteDisplayAdapter);
 
-        FloatingActionButton fab = view.findViewById(R.id.add_note_button);
-        fab.setOnClickListener(fabListener);
-
         return view;
     }
-
-    private FloatingActionButton.OnClickListener fabListener = new View.OnClickListener() {
-        @Override
-        public void onClick(View v) {
-            Intent intent = new Intent(getContext(), EditNoteActivity.class);
-            intent.putExtra(Constants.ACTION_TYPE_OF_EDIT_NOTE, EditNoteActivity.EDIT_TYPE_CREATE);
-            startActivityForResult(intent, REQUEST_CODE_NEW_NOTE_EDIT);
-        }
-    };
 
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
@@ -113,28 +98,15 @@ public class AllNoteFragment extends Fragment {
         public void onItemLongClick(final int position, final View v) {
             PopupMenu popupMenu = new PopupMenu(getContext(), v);
             Menu menu = popupMenu.getMenu();
-            menu.add("discard").setOnMenuItemClickListener(new MenuItem.OnMenuItemClickListener() {
+            menu.add("restore").setOnMenuItemClickListener(new MenuItem.OnMenuItemClickListener() {
                 @Override
                 public boolean onMenuItemClick(MenuItem item) {
                     AllNoteDisplayAdapter allNoteDisplayAdapter = getAllNoteDisplayAdapter();
                     NoteEntity noteEntity = allNoteDisplayAdapter.getItemByPosition(position).noteEntity;
                     Log.i(TAG, "onMenuItemClick: delete onClick");
-                    noteEntity.setIsLabeledDiscarded(true);
+                    noteEntity.setIsLabeledDiscarded(false);
                     NoteHandler.setNoteIsLabelDiscard(getContext(), noteEntity);
-                    DataProvider.getInstance(getContext()).updateNoteEntity();
-                    getAllNoteDisplayAdapter().removeItemByPosition(position);
-                    allNoteDisplayAdapter.notifyItemRemoved(position);
-                    return true;
-                }
-            });
-            menu.add("archived").setOnMenuItemClickListener(new MenuItem.OnMenuItemClickListener() {
-                @Override
-                public boolean onMenuItemClick(MenuItem item) {
-                    AllNoteDisplayAdapter allNoteDisplayAdapter = getAllNoteDisplayAdapter();
-                    NoteEntity noteEntity = allNoteDisplayAdapter.getItemByPosition(position).noteEntity;
-                    Log.i(TAG, "onMenuItemClick: archived onClick");
-                    noteEntity.setHasArchived(true);
-                    NoteHandler.setNoteHasArchived(getContext(), noteEntity);
+
                     DataProvider.getInstance(getContext()).updateNoteEntity();
                     getAllNoteDisplayAdapter().removeItemByPosition(position);
                     allNoteDisplayAdapter.notifyItemRemoved(position);
@@ -154,4 +126,5 @@ public class AllNoteFragment extends Fragment {
     public RecyclerView getRecyclerView(){
         return recyclerView;
     }
+
 }

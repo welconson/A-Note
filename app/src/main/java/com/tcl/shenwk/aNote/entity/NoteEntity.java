@@ -17,11 +17,11 @@ public class NoteEntity implements Serializable{
     private long createTimestamp;
     private long updateTimestamp;
     private String locationInfo;
-    private int hasArchived;
-    private int isLabeledDiscarded;
+    private boolean hasArchived;
+    private boolean isLabeledDiscarded;
 
     public NoteEntity(String noteTitle, String notePath, long createTimestamp, long updateTimestamp,
-                      String locationInfo, int hasArchived, int isLabeledDiscarded) {
+                      String locationInfo, boolean hasArchived, boolean isLabeledDiscarded) {
         this.noteTitle = noteTitle;
         this.notePath = notePath;
         this.createTimestamp = createTimestamp;
@@ -36,8 +36,8 @@ public class NoteEntity implements Serializable{
         createTimestamp = DateUtil.getInstance().getTime();
         updateTimestamp = DateUtil.getInstance().getTime();
         noteTitle = null;
-        hasArchived = Constants.NOT_ARCHIVED;
-        isLabeledDiscarded = Constants.NOTE_LABELED_DISCARD;
+        hasArchived = false;
+        isLabeledDiscarded = false;
     }
 
     public long getNoteId() {
@@ -88,19 +88,19 @@ public class NoteEntity implements Serializable{
         this.locationInfo = locationInfo;
     }
 
-    public int getHasArchived() {
+    public boolean hasArchived() {
         return hasArchived;
     }
 
-    public void setHasArchived(int hasArchived) {
+    public void setHasArchived(boolean hasArchived) {
         this.hasArchived = hasArchived;
     }
 
-    public int getIsLabeledDiscarded() {
+    public boolean isLabeledDiscarded() {
         return isLabeledDiscarded;
     }
 
-    public void setIsLabeledDiscarded(int isLabeledDiscarded) {
+    public void setIsLabeledDiscarded(boolean isLabeledDiscarded) {
         this.isLabeledDiscarded = isLabeledDiscarded;
     }
 }

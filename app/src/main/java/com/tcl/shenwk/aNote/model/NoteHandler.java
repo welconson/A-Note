@@ -11,8 +11,8 @@ import com.tcl.shenwk.aNote.entity.TagRecordEntity;
 import com.tcl.shenwk.aNote.util.Constants;
 import com.tcl.shenwk.aNote.util.FileUtil;
 import com.tcl.shenwk.aNote.util.RandomUtil;
-import com.tcl.shenwk.aNote.view.activity.HomePageActivity;
 import com.tcl.shenwk.aNote.view.customSpan.ViewSpan;
+import com.tcl.shenwk.aNote.view.adapter.AllNoteDisplayAdapter.PreviewNoteItem;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -33,11 +33,10 @@ public class NoteHandler {
      *                  information content and attachments inside note.
      * @param context   context used to operate on files.
      * @param editable  content of note.
-     * @param tagRecordEntries
      * @return  true if no error, or false and do nothing.
      */
     public static boolean saveNote(NoteEntity noteEntity, Context context, Editable editable,
-                                   List<ViewSpan> viewSpans, List<TagRecordEntity> tagRecordEntries){
+                                   List<ViewSpan> viewSpans){
         long noteId = noteEntity.getNoteId();
         boolean ret = true;
         boolean isNewRecord = false;
@@ -70,7 +69,7 @@ public class NoteHandler {
 
                 // if note record does not exist, ignore next step
                 if (ret) {
-                    DataProvider.getInstance(context).updateNoteentity();
+                    DataProvider.getInstance(context).updateNoteEntity();
                     noteEntity.setNoteId(noteId);
                     String resourceDir = createNoteResourceDirectory(noteEntity.getNotePath());
                     if(resourceDir == null)
@@ -79,7 +78,7 @@ public class NoteHandler {
                     if (ret){
                         List<String> resourcePathList = new ArrayList<>();
                         for (ViewSpan viewSpan : viewSpans) {
-                            ResourceDataEntity resourceDataEntity = viewSpan.getResourceDataentity();
+                            ResourceDataEntity resourceDataEntity = viewSpan.getResourceDataEntity();
                             int spanStart = editable.getSpanStart(viewSpan);
                             // if the ViewSpan still remain in TextView
                             if(spanStart == -1) {
@@ -119,20 +118,6 @@ public class NoteHandler {
         }
         Log.i(TAG, "saveNote: save content file, id = " + noteId);
         return ret;
-    }
-
-    public static List<HomePageActivity.PreviewNoteentity> getAllPreviewNoteList(Context context){
-        List<HomePageActivity.PreviewNoteentity> previewNoteEntries = new ArrayList<>();
-        List<NoteEntity> noteEntries = DataProvider.getInstance(context).getAllNoteEntity();
-        for (NoteEntity noteEntity : noteEntries) {
-            HomePageActivity.PreviewNoteentity previewNoteentity = new HomePageActivity.PreviewNoteentity();
-            previewNoteentity.noteEntity = noteEntity;
-            previewNoteentity.preResourceDataEntries =
-                    ANoteDBManager.getInstance(context).queryAllResourceDataByNoteId(
-                            previewNoteentity.noteEntity.getNoteId());
-            previewNoteEntries.add(previewNoteentity);
-        }
-        return previewNoteEntries;
     }
 
     public static List<ResourceDataEntity> getResourceDataById(Context context, long noteId){
@@ -254,9 +239,9 @@ public class NoteHandler {
     public static void saveTagRecord(Context context, long noteId, List<TagRecordEntity>  tagRecordEntries){
         if(tagRecordEntries == null)
             return;
-        Iterator<TagRecordEntity> tagRecordentityIterator= tagRecordEntries.iterator();
-        while(tagRecordentityIterator.hasNext()){
-            TagRecordEntity tagRecordEntity = tagRecordentityIterator.next();
+        Iterator<TagRecordEntity> tagRecordEntityIterator= tagRecordEntries.iterator();
+        while(tagRecordEntityIterator.hasNext()){
+            TagRecordEntity tagRecordEntity = tagRecordEntityIterator.next();
             switch (tagRecordEntity.status){
                 case TagRecordEntity.NEW_CREATE:
                     tagRecordEntity.setNoteId(noteId);
@@ -268,7 +253,7 @@ public class NoteHandler {
                     break;
                 case TagRecordEntity.TO_DELETE:
                     ANoteDBManager.getInstance(context).deleteTagRecord(tagRecordEntity.getTagRecordId());
-                    tagRecordentityIterator.remove();
+                    tagRecordEntityIterator.remove();
                     break;
             }
             tagRecordEntity.setNoteId(noteId);
@@ -276,19 +261,15 @@ public class NoteHandler {
         }
     }
 
-    public static List<HomePageActivity.PreviewNoteentity> transformNoteentityToPreviewList(
-            Context context, List<NoteEntity> noteEntries){
-        List<HomePageActivity.PreviewNoteentity> previewNoteEntries = new ArrayList<>();
-        if(noteEntries == null)
-            return previewNoteEntries;
-        for (NoteEntity noteEntity : noteEntries) {
-            HomePageActivity.PreviewNoteentity previewNoteentity = new HomePageActivity.PreviewNoteentity();
-            previewNoteentity.noteEntity = noteEntity;
-            previewNoteentity.preResourceDataEntries =
-                    ANoteDBManager.getInstance(context).queryAllResourceDataByNoteId(
-                            previewNoteentity.noteEntity.getNoteId());
-            previewNoteEntries.add(previewNoteentity);
-        }
-        return previewNoteEntries;
+    public static void setNoteHasArchived(Context context, NoteEntity noteEntity){
+        if(noteEntity == null)
+            return;
+        ANoteDBManager.getInstance(context).updateNoteRecord(noteEntity, ANoteDBManager.UpdateFlagTable.UPDATE_HAS_ARCHIVED);
+    }
+
+    public static void setNoteIsLabelDiscard(Context context, NoteEntity noteEntity){
+        if(noteEntity == null)
+            return;
+        ANoteDBManager.getInstance(context).updateNoteRecord(noteEntity, ANoteDBManager.UpdateFlagTable.UPDATE_IS_LABELED_DISCARDED);
     }
 }

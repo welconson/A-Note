@@ -21,6 +21,7 @@ import com.tcl.shenwk.aNote.util.FileUtil;
 public class AudioViewSpan extends ViewSpan {
     private static final String TAG = "AudioViewSpan";
     private final int mDuration;
+    private OnClickListener onClickListener = null;
 
     public AudioViewSpan(View view, Uri uri, ResourceDataEntity resourceDataEntity) {
         super(view, uri, resourceDataEntity);
@@ -64,7 +65,9 @@ public class AudioViewSpan extends ViewSpan {
             play.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    Log.i(TAG, "onClick: AudioViewSpan");
+                    if(onClickListener != null){
+                        onClickListener.onPlayClick(v);
+                    }
                 }
             });
             play.setOnTouchListener(new View.OnTouchListener() {
@@ -109,4 +112,7 @@ public class AudioViewSpan extends ViewSpan {
         return durationString == null ? 0 : Integer.valueOf(durationString);
     }
 
+    public interface OnClickListener{
+        void onPlayClick(View v);
+    }
 }

@@ -32,6 +32,7 @@ import com.tcl.shenwk.aNote.entity.NoteEntity;
 import com.tcl.shenwk.aNote.entity.ResourceDataEntity;
 import com.tcl.shenwk.aNote.entity.TagRecordEntity;
 import com.tcl.shenwk.aNote.model.ANoteDBManager;
+import com.tcl.shenwk.aNote.model.DataProvider;
 import com.tcl.shenwk.aNote.model.NoteHandler;
 import com.tcl.shenwk.aNote.multiMediaInputSupport.CustomScrollingMovementMethod;
 import com.tcl.shenwk.aNote.util.FileUtil;
@@ -89,7 +90,7 @@ public class EditNoteActivity extends AppCompatActivity{
         super.onCreate(savedInstanceState);
         setContentView(R.layout.edit_note);
         final Intent intent = getIntent();
-        mImeController = new ImeController(this);
+        mImeController = ImeController.getInstance(getApplicationContext());
         mIsModified = false;
         mViewSpans = new ArrayList<>();
 
@@ -146,11 +147,11 @@ public class EditNoteActivity extends AppCompatActivity{
         // to know this activity is used to create a new note or modify a exist note
         if(StringUtil.equal(EDIT_TYPE_MODIFY, action_edit)) {
             mode = MODE_PREVIEW;
-            mNoteEntity = (NoteEntity) intent.getSerializableExtra(Constants.ITEM_NOTE_entity);
+            mNoteEntity = (NoteEntity) intent.getSerializableExtra(Constants.ITEM_NOTE_ENTITY);
             mNoteTitle.setText(mNoteEntity.getNoteTitle());
             mNoteContentText.setText(FileUtil.readFile(
                     FileUtil.getContentFileName(mNoteEntity.getNotePath())));
-            inflateViewSpanWithResourceentity(NoteHandler.getResourceDataById(
+            inflateViewSpanWithResourceEntity(NoteHandler.getResourceDataById(
                     EditNoteActivity.this, mNoteEntity.getNoteId()));
             mIsNewNote = false;
             mTagRecordEntries = ANoteDBManager.getInstance(EditNoteActivity.this).
@@ -187,7 +188,7 @@ public class EditNoteActivity extends AppCompatActivity{
                 int spanStart = editable.getSpanStart(viewSpan);
                 if(firstSpanStart > spanStart){
                     firstSpanStart = spanStart;
-                    resourceDataEntity = viewSpan.getResourceDataentity();
+                    resourceDataEntity = viewSpan.getResourceDataEntity();
                 }
             }
         }
@@ -285,7 +286,7 @@ public class EditNoteActivity extends AppCompatActivity{
         }
     }
 
-    public void inflateViewSpanWithResourceentity(List<ResourceDataEntity> resourceDataEntries){
+    public void inflateViewSpanWithResourceEntity(List<ResourceDataEntity> resourceDataEntries){
         if(resourceDataEntries == null)
             return;
         SpannableStringBuilder spannableStringBuilder = new SpannableStringBuilder(mNoteContentText.getText());
@@ -468,7 +469,8 @@ public class EditNoteActivity extends AppCompatActivity{
             else if(mIsModified) {
                 mNoteEntity.setNoteTitle(mNoteTitle.getText().toString());
                 if (NoteHandler.saveNote(mNoteEntity, EditNoteActivity.this,
-                        mNoteContentText.getText(), mViewSpans, mTagRecordEntries)){
+                        mNoteContentText.getText(), mViewSpans)){
+                    DataProvider.getInstance(EditNoteActivity.this).updateNoteEntity();
                     // Only when it is a new note, we will save tag records there, or
                     // we will do it when choosing tags is just done.
                     if(mIsNewNote){
@@ -540,7 +542,7 @@ public class EditNoteActivity extends AppCompatActivity{
             Intent nextIntent = new Intent();
             if(mIsModified) {
                 Intent intent = getIntent();
-                nextIntent.putExtra(Constants.ITEM_NOTE_entity, mNoteEntity);
+                nextIntent.putExtra(Constants.ITEM_NOTE_ENTITY, mNoteEntity);
                 nextIntent.putExtra(Constants.ITEM_POSITION, intent.getIntExtra(
                         Constants.ITEM_POSITION, Constants.DEFAULT_ITEM_POSITION));
             }

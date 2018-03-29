@@ -2,6 +2,7 @@ package com.tcl.shenwk.aNote.view.fragment;
 
 import android.app.Activity;
 import android.app.Fragment;
+import android.app.FragmentManager;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
@@ -28,7 +29,6 @@ import com.tcl.shenwk.aNote.entity.TagRecordEntity;
 import com.tcl.shenwk.aNote.model.ANoteDBManager;
 import com.tcl.shenwk.aNote.model.DataProvider;
 import com.tcl.shenwk.aNote.util.Constants;
-import com.tcl.shenwk.aNote.util.DateUtil;
 import com.tcl.shenwk.aNote.view.activity.EditNoteActivity;
 import com.tcl.shenwk.aNote.view.activity.HomePageActivity;
 import com.tcl.shenwk.aNote.view.adapter.TagManagerAdapter;
@@ -43,13 +43,14 @@ import java.util.Stack;
  * Created by shenwk on 2018/3/23.
  */
 
-public class TagManagerFragment extends Fragment implements HomePageActivity.OnKeyDownListener{
+public class TagManagerFragment extends Fragment implements HomePageActivity.OnKeyDownListener, AddTagFragment.OnDoneListener{
     private static final String TAG = "TagManagerFragment";
     private static final int REQUEST_CODE_NEW_NOTE_EDIT = 0;
     private static final int REQUEST_CODE_OLD_NOTE_EDIT = 1;
     private RecyclerView recyclerView;
     private List<NoteTagEntity> noteTagEntries;
     private List<NoteEntity> allNoteEntries;
+    private FragmentManager fragmentManager;
 
     private Stack<TagManagerAdapter> tagManagerAdapterStack;
     private TagManagerAdapter currentAdapter;
@@ -64,7 +65,7 @@ public class TagManagerFragment extends Fragment implements HomePageActivity.OnK
         hierarchyDisplayView = view.findViewById(R.id.tag_hierarchy_hint);
         addHierarchyTitle(getResources().getString(R.string.root_tag_hierarchy));
 
-        noteTagEntries = DataProvider.getInstance(getContext()).getAllTopTagentity();
+        noteTagEntries = DataProvider.getInstance(getContext()).getAllTopTagEntity();
         recyclerView = view.findViewById(R.id.recycler_view);
 
         TagManagerAdapter tagManagerAdapter = new TagManagerAdapter(noteTagEntries, new ArrayList<NoteEntity>(), getActivity().getLayoutInflater());
@@ -75,10 +76,12 @@ public class TagManagerFragment extends Fragment implements HomePageActivity.OnK
         tagManagerAdapterStack = new Stack<>();
         currentAdapter = tagManagerAdapter;
 
-        allNoteEntries = DataProvider.getInstance(getContext()).getAllNoteEntity();
+        allNoteEntries = DataProvider.getInstance(getContext()).getAllNoteEntities();
 
         FloatingActionButton fab = view.findViewById(R.id.add);
         fab.setOnClickListener(fabOnClickListener);
+
+        fragmentManager = getChildFragmentManager();
 
         Log.i(TAG, "onCreateView: ");
         return view;
@@ -87,7 +90,7 @@ public class TagManagerFragment extends Fragment implements HomePageActivity.OnK
     @Override
     public void onResume() {
         super.onResume();
-        allNoteEntries = DataProvider.getInstance(getContext()).getAllNoteEntity();
+        allNoteEntries = DataProvider.getInstance(getContext()).getAllNoteEntities();
     }
 
     @Override
@@ -96,10 +99,10 @@ public class TagManagerFragment extends Fragment implements HomePageActivity.OnK
             switch (requestCode) {
                 // Check whether note edition influence the adapter binding data, and update it 
                 case REQUEST_CODE_OLD_NOTE_EDIT: {
-                    NoteEntity noteEntity = (NoteEntity) data.getSerializableExtra(Constants.ITEM_NOTE_entity);
+                    NoteEntity noteEntity = (NoteEntity) data.getSerializableExtra(Constants.ITEM_NOTE_ENTITY);
                     if(noteEntity == null)
                         break;
-                    NoteTagEntity noteTagEntity = currentAdapter.getHierarchyTagentity();
+                    NoteTagEntity noteTagEntity = currentAdapter.getHierarchyTagEntity();
                     if (noteTagEntity != null && ANoteDBManager.getInstance(getContext()).
                             queryTagRecordByDoubleId(noteTagEntity.getTagId(), noteEntity.getNoteId()) == null) {
                         currentAdapter.removeItem(data.getIntExtra(Constants.ITEM_POSITION, Constants.DEFAULT_ITEM_POSITION));
@@ -110,15 +113,15 @@ public class TagManagerFragment extends Fragment implements HomePageActivity.OnK
                     break;
                 }
                 case REQUEST_CODE_NEW_NOTE_EDIT: {
-                    NoteEntity noteEntity = (NoteEntity) data.getSerializableExtra(Constants.ITEM_NOTE_entity);
+                    NoteEntity noteEntity = (NoteEntity) data.getSerializableExtra(Constants.ITEM_NOTE_ENTITY);
                     if(noteEntity == null)
                         break;
-                    NoteTagEntity noteTagEntity = currentAdapter.getHierarchyTagentity();
+                    NoteTagEntity noteTagEntity = currentAdapter.getHierarchyTagEntity();
                     if (noteTagEntity != null && ANoteDBManager.getInstance(getContext()).
                             queryTagRecordByDoubleId(noteTagEntity.getTagId(), noteEntity.getNoteId()) != null) {
                         currentAdapter.insertItem(noteEntity);
                     }
-                    DataProvider.getInstance(getContext()).updateNoteentity();
+                    DataProvider.getInstance(getContext()).updateNoteEntity();
                     break;
                 }
             }
@@ -143,10 +146,10 @@ public class TagManagerFragment extends Fragment implements HomePageActivity.OnK
                     if (tagItem.getSubTagEntries() != null && tagItem.getTagRecordEntries() != null &&
                             tagItem.getSubTagEntries().size() == 0 && tagItem.getTagRecordEntries().size() == 0) {
                         NoteTagEntity noteTagEntity = tagItem.getNoteTagEntity();
-                        boolean needUpdateTopentity = noteTagEntity.getRootTagId() == Constants.NO_TAG_ID;
+                        boolean needUpdateTopEntity = noteTagEntity.getRootTagId() == Constants.NO_TAG_ID;
                         ANoteDBManager.getInstance(getContext()).deleteTag(noteTagEntity.getTagId());
-                        if(needUpdateTopentity)
-                            DataProvider.getInstance(getContext()).updateAllTopTagentity();
+                        if(needUpdateTopEntity)
+                            DataProvider.getInstance(getContext()).updateAllTopTagEntity();
                         currentAdapter.removeItem(position);
                     } else {
                         Toast.makeText(getContext(), Constants.TOAST_TAG_DELETE_FAILED, Toast.LENGTH_LONG).show();
@@ -167,7 +170,7 @@ public class TagManagerFragment extends Fragment implements HomePageActivity.OnK
             Intent intent = new Intent(getContext(), EditNoteActivity.class);
             intent.putExtra(Constants.ACTION_TYPE_OF_EDIT_NOTE, EditNoteActivity.EDIT_TYPE_MODIFY);
             intent.putExtra(Constants.ITEM_POSITION, position);
-            intent.putExtra(Constants.ITEM_NOTE_entity, noteEntity);
+            intent.putExtra(Constants.ITEM_NOTE_ENTITY, noteEntity);
             startActivityForResult(intent, REQUEST_CODE_OLD_NOTE_EDIT);
         }
     };
@@ -187,8 +190,8 @@ public class TagManagerFragment extends Fragment implements HomePageActivity.OnK
 
     private void switchToChildHierarchy(TagManagerAdapter.TagItem tagItem){
         TagManagerAdapter tagManagerAdapter = new TagManagerAdapter(tagItem.getSubTagEntries(),
-                getNoteentityByNoteTagRecord(tagItem.getTagRecordEntries()), getActivity().getLayoutInflater());
-        tagManagerAdapter.setHierarchyTagentity(tagItem.getNoteTagEntity());
+                getNoteEntityByNoteTagRecord(tagItem.getTagRecordEntries()), getActivity().getLayoutInflater());
+        tagManagerAdapter.setHierarchyTagEntity(tagItem.getNoteTagEntity());
         currentAdapter.setNeedUpdateData();
         tagManagerAdapterStack.push(currentAdapter);
         currentAdapter = tagManagerAdapter;
@@ -206,7 +209,7 @@ public class TagManagerFragment extends Fragment implements HomePageActivity.OnK
         removeHierarchyTitle();
     }
 
-    private List<NoteEntity> getNoteentityByNoteTagRecord(List<TagRecordEntity> tagRecordEntries){
+    private List<NoteEntity> getNoteEntityByNoteTagRecord(List<TagRecordEntity> tagRecordEntries){
         List<NoteEntity> noteEntries = new ArrayList<>();
         Iterator<TagRecordEntity> iterator = tagRecordEntries.iterator();
         if(iterator.hasNext()){
@@ -248,31 +251,20 @@ public class TagManagerFragment extends Fragment implements HomePageActivity.OnK
             menuItem.setOnMenuItemClickListener(new MenuItem.OnMenuItemClickListener() {
                 @Override
                 public boolean onMenuItemClick(MenuItem item) {
-                    NoteTagEntity noteTagEntity = new NoteTagEntity(String.valueOf(DateUtil.getInstance().getTime()).substring(10));
-                    boolean needUpdateTopTag = false;
-                    if(currentAdapter.getHierarchyTagentity() != null){
-                        noteTagEntity.setRootTagId(currentAdapter.getHierarchyTagentity().getTagId());
-                        needUpdateTopTag = true;
-                    }
-                    long tagId = ANoteDBManager.getInstance(getContext()).insertTag(noteTagEntity);
-                    if(tagId != Constants.NO_TAG_ID){
-                        noteTagEntity.setTagId(tagId);
-                        currentAdapter.insertItem(noteTagEntity);
-                        if(needUpdateTopTag)
-                            DataProvider.getInstance(getContext()).updateAllTopTagentity();
-                    }
-                    else Toast.makeText(getContext(),Constants.TOAST_TAG_ADD_FAILED, Toast.LENGTH_SHORT).show();
+                    AddTagFragment addTagFragment = new AddTagFragment();
+                    addTagFragment.setOnDoneListener(TagManagerFragment.this);
+                    fragmentManager.beginTransaction().add(addTagFragment,"add_tag").commit();
                     return true;
                 }
             });
-            if(currentAdapter.getHierarchyTagentity() != null) {
+            if(currentAdapter.getHierarchyTagEntity() != null) {
                 menuItem = menu.add("add note here");
                 menuItem.setOnMenuItemClickListener(new MenuItem.OnMenuItemClickListener() {
                     @Override
                     public boolean onMenuItemClick(MenuItem item) {
                         Intent intent = new Intent(getContext(), EditNoteActivity.class);
                         intent.putExtra(Constants.ACTION_TYPE_OF_EDIT_NOTE, EditNoteActivity.EDIT_TYPE_CREATE);
-                        intent.putExtra(Constants.WITH_TAG_ID, currentAdapter.getHierarchyTagentity().getTagId());
+                        intent.putExtra(Constants.WITH_TAG_ID, currentAdapter.getHierarchyTagEntity().getTagId());
                         startActivityForResult(intent, REQUEST_CODE_NEW_NOTE_EDIT);
                         return true;
                     }
@@ -282,4 +274,31 @@ public class TagManagerFragment extends Fragment implements HomePageActivity.OnK
             popupMenu.show();
         }
     };
+
+    @Override
+    public boolean onDone(String tagName) {
+        boolean isDone = false;
+        if(tagName.length() != 0){
+            if(currentAdapter.isTagInList(tagName) != -1){
+                Toast.makeText(getContext(), Constants.TOAST_TAG_ADD_REPEAT, Toast.LENGTH_SHORT).show();
+            } else {
+                NoteTagEntity noteTagEntity = new NoteTagEntity(tagName);
+                boolean needUpdateTopTag = false;
+                if(currentAdapter.getHierarchyTagEntity() != null){
+                    noteTagEntity.setRootTagId(currentAdapter.getHierarchyTagEntity().getTagId());
+                    needUpdateTopTag = true;
+                }
+                long tagId = ANoteDBManager.getInstance(getContext()).insertTag(noteTagEntity);
+                if(tagId != Constants.NO_TAG_ID){
+                    noteTagEntity.setTagId(tagId);
+                    currentAdapter.insertItem(noteTagEntity);
+                    if(needUpdateTopTag)
+                        DataProvider.getInstance(getContext()).updateAllTopTagEntity();
+                }
+                isDone = true;
+            }
+        }
+        else Toast.makeText(getContext(), Constants.TOAST_TAG_NAME_NOT_EMPTY, Toast.LENGTH_SHORT).show();
+        return isDone;
+    }
 }
