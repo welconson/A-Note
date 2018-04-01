@@ -66,7 +66,10 @@ public class AudioViewSpan extends ViewSpan {
                 @Override
                 public void onClick(View v) {
                     if(onClickListener != null){
-                        onClickListener.onPlayClick(v);
+                        Uri uri = getResourceDataUri();
+                        if(uri == null)
+                            uri = FileUtil.generateUriFromFilePath(getFilePath());
+                        onClickListener.onPlayClick(v, uri);
                     }
                 }
             });
@@ -113,6 +116,10 @@ public class AudioViewSpan extends ViewSpan {
     }
 
     public interface OnClickListener{
-        void onPlayClick(View v);
+        void onPlayClick(View v, Uri uri);
+    }
+
+    public void setOnClickListener(OnClickListener onClickListener) {
+        this.onClickListener = onClickListener;
     }
 }

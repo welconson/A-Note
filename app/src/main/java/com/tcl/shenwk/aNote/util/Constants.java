@@ -48,23 +48,12 @@ public interface Constants {
     int RESOURCE_FILE_NAME_LENGTH = 12;
     String RESOURCE_DIR = "resourceData";
     int PREVIEW_CONTENT_TEXT_LENGTH = 220;
+    String TEMP_FILE_DIR = "temp";
     //file constants end
-
-    //Intent request code
-    int SELECT_IMAGE = 0;
-    int SELECT_AUDIO = 1;
-    int SELECT_VIDEO = 2;
-    int SELECT_FILE = 3;
-    //Intent request code
-
-    //message what start
-    int MESSAGE_ON_ACTIVITY_RESULT = 0;
-    //message what end
-
 
     //View span size constant(dp)
     int VIEW_SPAN_HEIGHT = 72;
-    int VIEW_SPAN_WIDTH = 288;
+    int VIEW_SPAN_WIDTH = 324;
     //View span size constant(dp)
 
     //Resource data type

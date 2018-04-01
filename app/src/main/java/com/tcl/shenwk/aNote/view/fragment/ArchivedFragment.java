@@ -100,16 +100,16 @@ public class ArchivedFragment extends Fragment{
         public void onItemLongClick(final int position, final View v) {
             PopupMenu popupMenu = new PopupMenu(getContext(), v);
             Menu menu = popupMenu.getMenu();
-            menu.add("delete").setOnMenuItemClickListener(new MenuItem.OnMenuItemClickListener() {
+            menu.add("discard").setOnMenuItemClickListener(new MenuItem.OnMenuItemClickListener() {
                 @Override
                 public boolean onMenuItemClick(MenuItem item) {
                     AllNoteDisplayAdapter allNoteDisplayAdapter = getAllNoteDisplayAdapter();
                     NoteEntity noteEntity = allNoteDisplayAdapter.getItemByPosition(position).noteEntity;
-                    Log.i(TAG, "onMenuItemClick: delete onClick");
-                    NoteHandler.removeNote(v.getContext(), noteEntity);
-                    getAllNoteDisplayAdapter().removeItemByPosition(position);
-
+                    Log.i(TAG, "onMenuItemClick: discard onClick");
+                    noteEntity.setIsLabeledDiscarded(true);
+                    NoteHandler.setNoteIsLabelDiscard(getContext(), noteEntity);
                     DataProvider.getInstance(getContext()).updateNoteEntity();
+                    getAllNoteDisplayAdapter().removeItemByPosition(position);
                     allNoteDisplayAdapter.notifyItemRemoved(position);
                     return true;
                 }

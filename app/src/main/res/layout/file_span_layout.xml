@@ -33,7 +33,7 @@
             android:hint="@string/title_hint"
             android:singleLine="true"
             android:ellipsize="end"
-            android:id="@+id/duration"/>
+            android:id="@+id/size"/>
     </LinearLayout>
     <ImageView
         android:layout_width="@dimen/span_view_image_dimen"

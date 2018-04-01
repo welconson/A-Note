@@ -35,13 +35,14 @@
             android:ellipsize="end"
             android:id="@+id/duration"/>
     </LinearLayout>
+
     <ImageView
+        android:id="@+id/open_button"
         android:layout_width="@dimen/span_view_image_dimen"
         android:layout_height="@dimen/span_view_image_dimen"
-        android:layout_marginTop="@dimen/span_view_image_height_margin"
         android:layout_marginBottom="@dimen/span_view_image_height_margin"
-        android:background="@drawable/ic_play_circle_outline"
-        android:id="@+id/open_button"/>
+        android:layout_marginTop="@dimen/span_view_image_height_margin"
+        android:background="@drawable/ic_play_circle_outline"/>
     <ImageView
         android:layout_width="@dimen/span_view_image_dimen"
         android:layout_height="@dimen/span_view_image_dimen"

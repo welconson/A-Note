@@ -242,6 +242,8 @@ public class FileUtil {
         if(contentUri == null){
             return null;
         }
+        if(StringUtil.equal(contentUri.getScheme(), "file"))
+            return contentUri.getPath().substring(contentUri.getPath().lastIndexOf(File.separator) + 1);
         Cursor cursor;
         String ret = null;
         String[] proj;
@@ -277,11 +279,6 @@ public class FileUtil {
         return ret;
     }
 
-    public static Uri getUriFromFile(String filePath){
-        if(filePath == null)
-            return null;
-        return Uri.fromFile(new File(filePath));
-    }
 
     public static boolean isUriPointToExternalStorage(Context context,Uri uri){
         boolean ret = false;
@@ -300,5 +297,95 @@ public class FileUtil {
 
     public static String getContentFileName(String notePath){
         return notePath + File.separator + Constants.CONTENT_FILE_NAME;
+    }
+
+    public static Uri generateUriFromFilePath(String path){
+        if(path == null)
+            return null;
+        File file = new File(path);
+        if(file.exists())
+            return Uri.fromFile(file);
+        else return null;
+    }
+
+    public static String getTempDir(Context context){
+        return context.getFilesDir() + File.separator + Constants.TEMP_FILE_DIR;
+    }
+
+    public static void cleanTempDirectory(Context context){
+        File tempDir = new File(getTempDir(context));
+        if(tempDir.exists() && tempDir.isDirectory()){
+            File[] fileList = tempDir.listFiles();
+            for(File file : fileList){
+                if (file.delete())
+                    Log.i(TAG, "cleanTempDirectory: delete file " + file.getName());
+                else Log.i(TAG, "cleanTempDirectory: delete failed on file" + file.getName());
+            }
+        }
+    }
+
+    public static String getFileSize(String path){
+        if(path == null)
+            return "0B";
+        File file = new File(path);
+        if(!file.exists())
+            return "0B";
+        long size = file.length();
+        int times = 0;
+        while(size >= 1024){
+            times++;
+            size = size >> 10;
+        }
+        String postFix = "B";
+        switch (times){
+            case 1:
+                postFix = "K";
+                break;
+            case 2:
+                postFix = "M";
+                break;
+            case 3:
+                postFix = "G";
+                break;
+        }
+        return size + postFix;
+    }
+
+    public static String getFileSize(Context context, Uri uri){
+        if(uri == null)
+            return "0B";
+        long size = getAssetFileDescriptorFromUri(context, uri).getLength();
+        int times = 0;
+        while(size >= 1024){
+            times++;
+            size = size >> 10;
+        }
+        String postFix = "B";
+        switch (times){
+            case 1:
+                postFix = "K";
+                break;
+            case 2:
+                postFix = "M";
+                break;
+            case 3:
+                postFix = "G";
+                break;
+        }
+        return size + postFix;
+    }
+
+    public static AssetFileDescriptor getAssetFileDescriptorFromUri(Context context, Uri uri){
+        if(uri == null)
+            return null;
+        try {
+            AssetFileDescriptor assetFileDescriptor = context.getContentResolver().openAssetFileDescriptor(uri, "r");
+            if(assetFileDescriptor == null)
+                return  null;
+            return assetFileDescriptor;
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
+        return null;
     }
 }

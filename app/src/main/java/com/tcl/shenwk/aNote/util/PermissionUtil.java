@@ -1,5 +1,6 @@
 package com.tcl.shenwk.aNote.util;
 
+import android.Manifest;
 import android.app.Activity;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
@@ -43,22 +44,12 @@ public class PermissionUtil {private static final String TAG = "PermissionUtils"
         return isGranted;
     }
 
-    public static void requirePermission(Activity activity, String permission){
-        ActivityCompat.requestPermissions(activity, new String[]{permission}, getPermissionRequestCode(permission));
-    }
-
-    private static int getPermissionRequestCode(String permission){
-        int requestCode;
-        switch (permission){
-            case android.Manifest.permission.READ_EXTERNAL_STORAGE:
-                requestCode = PermissionRequestCode.REQUEST_STORAGE;
-                break;
-                default:requestCode = -1;
-        }
-        return requestCode;
+    public static void requestPermission(Activity activity, String permission, int requestCode){
+        ActivityCompat.requestPermissions(activity, new String[]{permission}, requestCode);
     }
 
     public interface PermissionRequestCode{
-        int REQUEST_STORAGE = 0;
+        int REQUEST_STORAGE_AT_RUNTIME = 0;
+        int REQUEST_RECORD_AUDIO_AT_RUNTIME = 1;
     }
 }

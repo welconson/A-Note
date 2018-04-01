@@ -3,11 +3,16 @@ package com.tcl.shenwk.aNote.view.activity;
 import android.Manifest;
 import android.annotation.SuppressLint;
 import android.app.FragmentManager;
+import android.content.ComponentName;
 import android.content.Intent;
+import android.content.ServiceConnection;
 import android.content.pm.PackageManager;
+import android.media.MediaPlayer;
+import android.media.MediaRecorder;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.IBinder;
 import android.os.Looper;
 import android.os.Message;
 import android.support.annotation.Nullable;
@@ -24,6 +29,7 @@ import android.view.ViewGroup;
 import android.view.WindowManager;
 import android.widget.EditText;
 import android.widget.ImageButton;
+import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -35,6 +41,10 @@ import com.tcl.shenwk.aNote.model.ANoteDBManager;
 import com.tcl.shenwk.aNote.model.DataProvider;
 import com.tcl.shenwk.aNote.model.NoteHandler;
 import com.tcl.shenwk.aNote.multiMediaInputSupport.CustomScrollingMovementMethod;
+import com.tcl.shenwk.aNote.service.ANoteService;
+import com.tcl.shenwk.aNote.task.AudioPlayTask;
+import com.tcl.shenwk.aNote.task.AudioRecorder;
+import com.tcl.shenwk.aNote.util.DateUtil;
 import com.tcl.shenwk.aNote.util.FileUtil;
 import com.tcl.shenwk.aNote.util.ImeController;
 import com.tcl.shenwk.aNote.util.Constants;
@@ -47,43 +57,66 @@ import com.tcl.shenwk.aNote.view.customSpan.VideoViewSpan;
 import com.tcl.shenwk.aNote.view.customSpan.ViewSpan;
 import com.tcl.shenwk.aNote.view.fragment.TagRecordEditFragment;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Timer;
+import java.util.TimerTask;
 
 /**
  * Activity for edit view to display, get input events from user.
  * Created by shenwk on 2018/1/25.
  */
 
-public class EditNoteActivity extends AppCompatActivity{
+public class EditNoteActivity extends AppCompatActivity implements MediaPlayer.OnCompletionListener{
     private static String TAG = "EditNoteActivity";
     //Action from calling, indicate the activity is started as adding note or modifying note
     public static String EDIT_TYPE_CREATE = "create";
     public static String EDIT_TYPE_MODIFY = "modify";
+    public static final int REQUEST_SELECT_IMAGE = 0;
+    public static final int REQUEST_SELECT_AUDIO = 1;
+    public static final int REQUEST_SELECT_VIDEO = 2;
+    public static final int REQUEST_SELECT_FILE = 3;
+
+    //handler message
+    private static final int MESSAGE_ON_ACTIVITY_RESULT = 0;
+    private static final int RECORD_AUDIO= 4;
+    private static final int UPDATE_RECORD_TIME_TEXT = 10;
+    private static final int AUDIO_PLAY_END = 12;
+
     //mode value
     public static int MODE_EDIT = 0;
     public static int MODE_PREVIEW = 1;
     private int mMode = MODE_PREVIEW;
+
+    private static final String INIT_TIME = "00:00";
+
+
     private View mEditLayout;
     private EditText mNoteContentText;
     private EditText mNoteTitle;
     private ImeController mImeController;
     private ImageButton mBackButton;
     private ImageButton mSaveButton;
-    private ImageButton mAddImageButton;
-    private ImageButton mAddAudioButton;
-    private ImageButton mAddVideoButton;
-    private ImageButton mAddFileButton;
-    private ImageButton mTagEditor;
     private FloatingActionButton mEditNoteButton;
     private View mEditToolBar;
+    private SeekBar seekBar;
+    private ImageButton playStop;
+    private ImageButton recordStop;
+    private TextView playedTime;
+    private TextView totalTime;
+    private TextView recordTime;
+
     private NoteEntity mNoteEntity;
     private boolean mIsModified;
     private boolean mIsNewNote;
     private List<ViewSpan> mViewSpans;
     private List<TagRecordEntity> mTagRecordEntries;
+    private AudioPlayTask audioPlayTask;
 
     private List<ActivityResult> unhandledActivityResults = new ArrayList<>();
+    private AudioRecorder audioRecorder;
+
     @SuppressLint("ClickableViewAccessibility")
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -93,6 +126,14 @@ public class EditNoteActivity extends AppCompatActivity{
         mImeController = ImeController.getInstance(getApplicationContext());
         mIsModified = false;
         mViewSpans = new ArrayList<>();
+        seekBar = findViewById(R.id.progress_bar);
+        playStop = findViewById(R.id.play_stop);
+        playStop.setOnClickListener(stopListener);
+        recordStop = findViewById(R.id.record_stop);
+        recordStop.setOnClickListener(stopListener);
+        playedTime = findViewById(R.id.played_time);
+        totalTime = findViewById(R.id.total_time);
+        recordTime = findViewById(R.id.record_time);
 
         mEditLayout = findViewById(R.id.linearLayout);
         mEditToolBar = findViewById(R.id.edit_tool_bar);
@@ -129,18 +170,21 @@ public class EditNoteActivity extends AppCompatActivity{
             }
         });
         //add buttons onClick listener settings
-        mAddImageButton = findViewById(R.id.add_image_button);
-        mAddImageButton.setOnClickListener(addImageButtonOnClickListener);
-        mAddAudioButton = findViewById(R.id.add_audio_button);
-        mAddAudioButton.setOnClickListener(addAudioButtonOnClickListener);
-        mAddVideoButton = findViewById(R.id.add_video_button);
-        mAddVideoButton.setOnClickListener(addVideoButtonOnClickListener);
-        mAddFileButton = findViewById(R.id.add_file_button);
-        mAddFileButton.setOnClickListener(addFileButtonOnClickListener);
+        ImageButton imageButton = findViewById(R.id.add_image_button);
+        imageButton.setOnClickListener(addImageButtonOnClickListener);
+        imageButton = findViewById(R.id.add_audio_button);
+        imageButton.setOnClickListener(addAudioButtonOnClickListener);
+        imageButton = findViewById(R.id.add_video_button);
+        imageButton.setOnClickListener(addVideoButtonOnClickListener);
+        imageButton = findViewById(R.id.add_file_button);
+        imageButton.setOnClickListener(addFileButtonOnClickListener);
+        imageButton = findViewById(R.id.record_audio_button);
+        imageButton.setOnClickListener(recordAudioButtonClickListener);
+
         mEditNoteButton = findViewById(R.id.edit_note_button);
         mEditNoteButton.setOnClickListener(editNoteButtonOnClickListener);
-        mTagEditor = findViewById(R.id.tag_editor);
-        mTagEditor.setOnClickListener(tagEditorOnClickListener);
+        imageButton = findViewById(R.id.tag_editor);
+        imageButton.setOnClickListener(tagEditorOnClickListener);
 
         int mode;
         String action_edit = intent.getStringExtra(Constants.ACTION_TYPE_OF_EDIT_NOTE);
@@ -161,8 +205,8 @@ public class EditNoteActivity extends AppCompatActivity{
             mode = MODE_EDIT;
             mNoteEntity = new NoteEntity();
             long withTagId = intent.getLongExtra(Constants.WITH_TAG_ID, Constants.NO_TAG_ID);
+            mTagRecordEntries = new ArrayList<>();
             if( withTagId != Constants.NO_TAG_ID) {
-                mTagRecordEntries = new ArrayList<>();
                 TagRecordEntity tagRecordEntity = new TagRecordEntity();
                 tagRecordEntity.status = TagRecordEntity.NEW_CREATE;
                 tagRecordEntity.setTagId(withTagId);
@@ -177,22 +221,8 @@ public class EditNoteActivity extends AppCompatActivity{
 //            There is no use to show or hide soft input in onCreate method
 //            mImeController.showSoftInput(mNoteTitle);
         }
-    }
 
-    private ResourceDataEntity getFirstResource() {
-        ResourceDataEntity resourceDataEntity = null;
-        if(mViewSpans.size() > 0){
-            Editable editable = mNoteContentText.getText();
-            int firstSpanStart = editable.length();
-            for(ViewSpan viewSpan : mViewSpans){
-                int spanStart = editable.getSpanStart(viewSpan);
-                if(firstSpanStart > spanStart){
-                    firstSpanStart = spanStart;
-                    resourceDataEntity = viewSpan.getResourceDataEntity();
-                }
-            }
-        }
-        return resourceDataEntity;
+        bindService(new Intent(getApplicationContext(), ANoteService.class), conn, BIND_AUTO_CREATE);
     }
 
     @Override
@@ -208,22 +238,52 @@ public class EditNoteActivity extends AppCompatActivity{
                 // need to require permission, data will be handled
                 // in permission requiring callback method.
                 Log.i(TAG, "onActivityResult: requiring permission");
-                PermissionUtil.requirePermission(EditNoteActivity.this, requiredPermission);
+                Log.i(TAG, "onActivityResult: " + Thread.currentThread());
+                PermissionUtil.requestPermission(EditNoteActivity.this, requiredPermission,
+                        PermissionUtil.PermissionRequestCode.REQUEST_STORAGE_AT_RUNTIME);
                 isRequiringPermission = true;
             }
         }
         if(!isRequiringPermission) {
             // no permission requiring needed operation here
             Log.d(TAG, "onActivityResult: no need to require permission");
-            mHandler.sendMessage(mHandler.obtainMessage(Constants.MESSAGE_ON_ACTIVITY_RESULT));
+            mHandler.sendMessage(mHandler.obtainMessage(MESSAGE_ON_ACTIVITY_RESULT));
         }
+    }
+
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        if(audioRecorder != null){
+            audioRecorder.stop();
+        }
+        if(audioPlayTask != null)
+            audioPlayTask.release();
+        FileUtil.cleanTempDirectory(getApplicationContext());
     }
 
     private String getRequiredPermission(int requestCode) {
         String requiredPermission;
         switch (requestCode){
-            case Constants.SELECT_AUDIO:
+            case REQUEST_SELECT_AUDIO:
                 requiredPermission = Manifest.permission.READ_EXTERNAL_STORAGE;
+                break;
+            case REQUEST_SELECT_IMAGE:
+                requiredPermission = Manifest.permission.READ_EXTERNAL_STORAGE;
+                break;
+            case REQUEST_SELECT_VIDEO:
+                requiredPermission = Manifest.permission.READ_EXTERNAL_STORAGE;
+                break;
+            case REQUEST_SELECT_FILE:
+                requiredPermission = Manifest.permission.READ_EXTERNAL_STORAGE;
+                break;
+            case RECORD_AUDIO:
+                requiredPermission = Manifest.permission.RECORD_AUDIO;
                 break;
             default:requiredPermission = null;
         }
@@ -294,36 +354,47 @@ public class EditNoteActivity extends AppCompatActivity{
             LayoutInflater layoutInflater = getLayoutInflater();
             ViewSpan viewSpan;
             View view;
-            int duration = -1;
             switch (resourceDataEntity.getDataType()){
                 case Constants.RESOURCE_TYPE_IMAGE:
                     view = layoutInflater.inflate(R.layout.image_span_layout, (ViewGroup) mNoteContentText.getParent(), false);
                     viewSpan = new ImageViewSpan(view, resourceDataEntity);
                     break;
-                case Constants.RESOURCE_TYPE_AUDIO:
-                    view = layoutInflater.inflate(R.layout.audio_span_layout, null, false);
+                case Constants.RESOURCE_TYPE_AUDIO: {
+                    view = layoutInflater.inflate(R.layout.audio_span_layout, (ViewGroup) mNoteContentText.getParent(), false);
                     viewSpan = new AudioViewSpan(view, resourceDataEntity);
-                    duration = ((AudioViewSpan)viewSpan).getDuration();
+                    ((AudioViewSpan) viewSpan).setOnClickListener(audioOnClickListener);
+
+                    int duration = ((AudioViewSpan) viewSpan).getDuration();
+                    TextView textView = view.findViewById(R.id.duration);
+                    textView.setText(StringUtil.DurationFormat(duration));
+                    textView = view.findViewById(R.id.resource_name);
+                    textView.setText(viewSpan.getFileName());
                     break;
-                case Constants.RESOURCE_TYPE_VIDEO:
+                }
+                case Constants.RESOURCE_TYPE_VIDEO: {
                     view = layoutInflater.inflate(R.layout.video_span_layout, (ViewGroup) mNoteContentText.getParent(), false);
                     viewSpan = new VideoViewSpan(view, resourceDataEntity);
+                    int duration = ((VideoViewSpan) viewSpan).getDuration();
+                    TextView textView = view.findViewById(R.id.duration);
+                    textView.setText(StringUtil.DurationFormat(duration));
+                    textView = view.findViewById(R.id.resource_name);
+                    textView.setText(viewSpan.getFileName());
                     break;
-                case Constants.RESOURCE_TYPE_FILE:
+                }
+                case Constants.RESOURCE_TYPE_FILE: {
                     view = layoutInflater.inflate(R.layout.file_span_layout, (ViewGroup) mNoteContentText.getParent(), false);
                     viewSpan = new FileViewSpan(view, resourceDataEntity);
+                    TextView textView = view.findViewById(R.id.size);
+                    textView.setText(FileUtil.getFileSize(viewSpan.getFilePath()));
+                    textView = view.findViewById(R.id.resource_name);
+                    textView.setText(viewSpan.getFileName());
                     break;
+                }
                     default:continue;
             }
             int editPosition = resourceDataEntity.getSpanStart() + Constants.AUDIO_SPAN_TAG.length();
             spannableStringBuilder.setSpan(viewSpan, resourceDataEntity.getSpanStart(),
                     editPosition, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
-            if(duration != -1) {
-                TextView textView = view.findViewById(R.id.duration);
-                textView.setText(StringUtil.DurationFormat(duration));
-                textView = view.findViewById(R.id.resource_name);
-                textView.setText(viewSpan.getFileName());
-            }
             addSpan(viewSpan);
         }
         mNoteContentText.setText(spannableStringBuilder);
@@ -332,22 +403,49 @@ public class EditNoteActivity extends AppCompatActivity{
 
     @Override
     public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+        Log.i(TAG, "onRequestPermissionsResult: ");
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         switch (requestCode){
-            case PermissionUtil.PermissionRequestCode.REQUEST_STORAGE:
-                if(grantResults[0]== PackageManager.PERMISSION_GRANTED){
+            case PermissionUtil.PermissionRequestCode.REQUEST_STORAGE_AT_RUNTIME:
+                if(grantResults.length > 0 && grantResults[0]== PackageManager.PERMISSION_GRANTED){
                     Log.i(TAG, "onRequestPermissionsResult: storage permission granted");
-                    mHandler.sendMessage(mHandler.obtainMessage(unhandledActivityResults.get(0).requestCode));
+                    mHandler.sendMessage(mHandler.obtainMessage(MESSAGE_ON_ACTIVITY_RESULT));
                 }
                 else {
                     Log.i(TAG, "onRequestPermissionsResult: storage permission not granted");
                     Toast.makeText(EditNoteActivity.this, Constants.TOAST_TEXT_WITHOUT_PERMISSION, Toast.LENGTH_SHORT).show();
-                    unhandledActivityResults.remove(0);
+                    if(unhandledActivityResults.size() > 0)
+                        unhandledActivityResults.remove(0);
                 }
                 break;
+            case  PermissionUtil.PermissionRequestCode.REQUEST_RECORD_AUDIO_AT_RUNTIME:
+                if(grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED){
+                    Log.d(TAG, "onRequestPermissionsResult: record audio permission granted");
+                    mHandler.sendMessage(mHandler.obtainMessage(RECORD_AUDIO));
+                }
+                else {
+                    Log.d(TAG, "onRequestPermissionsResult: record audio permission granted");
+                    Toast.makeText(EditNoteActivity.this, Constants.TOAST_TEXT_WITHOUT_PERMISSION, Toast.LENGTH_SHORT).show();
+                }
                 default:
         }
     }
+
+    @Override
+    public void onCompletion(MediaPlayer mp) {
+        Log.i(TAG, "onCompletion: play done");
+        new Timer().schedule(new PlayingCompletionTask(), 1000);
+    }
+
+    private class PlayingCompletionTask extends TimerTask{
+        @Override
+        public void run() {
+            if(mHandler != null)
+                mHandler.sendMessage(mHandler.obtainMessage(AUDIO_PLAY_END));
+            else Log.i(TAG, "run: no handler for playingCompletionTask");
+        }
+    };
+
 
     public class ActivityResult{
         public int requestCode;
@@ -365,23 +463,70 @@ public class EditNoteActivity extends AppCompatActivity{
         @Override
         public void handleMessage(Message msg) {
             switch (msg.what) {
-                case Constants.MESSAGE_ON_ACTIVITY_RESULT:
-                    handleActivityResult();
+                case MESSAGE_ON_ACTIVITY_RESULT:
+                    handleActivityResultForResource();
                     break;
+                case RECORD_AUDIO:
+                    recordAudio();
+                    break;
+                case AUDIO_PLAY_END:
+                    playStop.performClick();
             }
             mImeController.showSoftInput(mNoteContentText);
         }
     };
 
-    private void handleActivityResult(){
+    private void initAudioPlayTask(){
+        if(audioPlayTask == null){
+            audioPlayTask = new AudioPlayTask(playedTime, totalTime,
+                    seekBar, getApplicationContext(), this);
+        }
+    }
+
+    private void initRecorderTask(){
+        if(audioRecorder == null){
+            audioRecorder = new AudioRecorder(getApplicationContext(), ((TextView) findViewById(R.id.record_time)));
+        }
+    }
+
+    private void recordAudio(){
+        if(audioRecorder == null)
+            initRecorderTask();
+        mEditToolBar.setVisibility(View.INVISIBLE);
+        recordStop.setVisibility(View.VISIBLE);
+        recordTime.setVisibility(View.VISIBLE);
+        audioRecorder.prepare(FileUtil.getTempDir(getApplicationContext()) + File.separator + DateUtil.getInstance().generateFileNameFromNowTime() + ".amr");
+        audioRecorder.start();
+    }
+
+    private void handleActivityResultForResource(){
         ActivityResult activityResult = unhandledActivityResults.remove(0);
         Intent data = activityResult.data;
         if (data != null) {
             Uri uri = data.getData();
             if (uri != null) {
-                createViewSpanForUriResource(activityResult.requestCode, uri);
+                createViewSpanForUriResource(getResourceTypeByRequestCode(activityResult.requestCode), uri);
             }
         }
+    }
+
+    private int getResourceTypeByRequestCode(int requestCode){
+        int type = -1;
+        switch (requestCode){
+            case REQUEST_SELECT_IMAGE:
+                type = Constants.RESOURCE_TYPE_IMAGE;
+                break;
+            case REQUEST_SELECT_AUDIO:
+                type = Constants.RESOURCE_TYPE_AUDIO;
+                break;
+            case REQUEST_SELECT_VIDEO:
+                type = Constants.RESOURCE_TYPE_VIDEO;
+                break;
+            case REQUEST_SELECT_FILE:
+                type = Constants.RESOURCE_TYPE_FILE;
+                break;
+        }
+        return type;
     }
 
     private void createViewSpanForUriResource(int type, Uri uri){
@@ -403,6 +548,7 @@ public class EditNoteActivity extends AppCompatActivity{
                 ResourceDataEntity resourceDataEntity = new ResourceDataEntity();
 
                 viewSpan = new AudioViewSpan(view, uri, resourceDataEntity);
+                ((AudioViewSpan) viewSpan).setOnClickListener(audioOnClickListener);
                 TextView textView = view.findViewById(R.id.duration);
                 textView.setText(StringUtil.DurationFormat(((AudioViewSpan)viewSpan).getDuration()));
                 textView = view.findViewById(R.id.resource_name);
@@ -429,8 +575,8 @@ public class EditNoteActivity extends AppCompatActivity{
                 ResourceDataEntity resourceDataEntity = new ResourceDataEntity();
 
                 viewSpan = new FileViewSpan(view, uri, resourceDataEntity);
-                TextView textView = view.findViewById(R.id.duration);
-                textView.setText("File");
+                TextView textView = view.findViewById(R.id.size);
+                textView.setText(FileUtil.getFileSize(getApplicationContext(), uri));
                 textView = view.findViewById(R.id.resource_name);
                 textView.setText(viewSpan.getFileName());
 
@@ -492,7 +638,7 @@ public class EditNoteActivity extends AppCompatActivity{
             intent.setType("image/*");
             intent.setAction(Intent.ACTION_GET_CONTENT);
             intent.addCategory(Intent.CATEGORY_OPENABLE);
-            startActivityForResult(Intent.createChooser(intent, null), Constants.SELECT_IMAGE);
+            startActivityForResult(Intent.createChooser(intent, null), REQUEST_SELECT_IMAGE);
         }
     };
 
@@ -503,7 +649,7 @@ public class EditNoteActivity extends AppCompatActivity{
             intent.setType("audio/*");
             intent.setAction(Intent.ACTION_GET_CONTENT);
             intent.addCategory(Intent.CATEGORY_OPENABLE);
-            startActivityForResult(Intent.createChooser(intent, null), Constants.SELECT_AUDIO);
+            startActivityForResult(Intent.createChooser(intent, null), REQUEST_SELECT_AUDIO);
         }
     };
 
@@ -514,7 +660,7 @@ public class EditNoteActivity extends AppCompatActivity{
             intent.setType("video/*");
             intent.setAction(Intent.ACTION_GET_CONTENT);
             intent.addCategory(Intent.CATEGORY_OPENABLE);
-            startActivityForResult(Intent.createChooser(intent, null), Constants.SELECT_VIDEO);
+            startActivityForResult(Intent.createChooser(intent, null), REQUEST_SELECT_VIDEO);
         }
     };
 
@@ -525,7 +671,21 @@ public class EditNoteActivity extends AppCompatActivity{
             intent.setType("*/*");
             intent.setAction(Intent.ACTION_GET_CONTENT);
             intent.addCategory(Intent.CATEGORY_OPENABLE);
-            startActivityForResult(Intent.createChooser(intent, null), Constants.SELECT_FILE);
+            startActivityForResult(Intent.createChooser(intent, null), REQUEST_SELECT_FILE);
+        }
+    };
+
+    private View.OnClickListener recordAudioButtonClickListener = new View.OnClickListener() {
+        @Override
+        public void onClick(View v) {
+            String requiredPermission = getRequiredPermission(RECORD_AUDIO);
+            if(requiredPermission != null) {
+                if (!PermissionUtil.checkPermission(EditNoteActivity.this, requiredPermission)) {
+                    PermissionUtil.requestPermission(EditNoteActivity.this, requiredPermission,
+                            PermissionUtil.PermissionRequestCode.REQUEST_RECORD_AUDIO_AT_RUNTIME);
+                }
+                else recordAudio();
+            }
         }
     };
 
@@ -596,6 +756,67 @@ public class EditNoteActivity extends AppCompatActivity{
                 NoteHandler.saveTagRecord(EditNoteActivity.this,
                         mNoteEntity.getNoteId(), tagRecordEntries);
             }
+        }
+    };
+
+    private AudioViewSpan.OnClickListener audioOnClickListener = new AudioViewSpan.OnClickListener(){
+        @Override
+        public void onPlayClick(View v, Uri uri) {
+            if(audioPlayTask == null)
+                initAudioPlayTask();
+            if(audioPlayTask.getUri() == uri){
+                if(audioPlayTask.isPlaying()){
+                    audioPlayTask.pause();
+                }else {
+                    audioPlayTask.start();
+                }
+            }else {
+                audioPlayTask.stop();
+                audioPlayTask.playNewUriAudio(uri);
+                totalTime.setVisibility(View.VISIBLE);
+                playedTime.setVisibility(View.VISIBLE);
+                seekBar.setVisibility(View.VISIBLE);
+                playStop.setVisibility(View.VISIBLE);
+            }
+        }
+    };
+
+    private View.OnClickListener stopListener = new View.OnClickListener() {
+        @Override
+        public void onClick(View v) {
+            switch (v.getId()){
+                case R.id.play_stop:
+                    if(audioPlayTask != null)
+                        audioPlayTask.stop();
+                    totalTime.setVisibility(View.INVISIBLE);
+                    playedTime.setVisibility(View.INVISIBLE);
+                    v.setVisibility(View.INVISIBLE);
+                    seekBar.setVisibility(View.INVISIBLE);
+                    break;
+                case R.id.record_stop:
+                    if(audioRecorder != null) {
+                        audioRecorder.stop();
+                        createViewSpanForUriResource(Constants.RESOURCE_TYPE_AUDIO, FileUtil.generateUriFromFilePath(audioRecorder.getFileName()));
+                    }
+                    mEditToolBar.setVisibility(View.VISIBLE);
+                    recordTime.setVisibility(View.INVISIBLE);
+                    v.setVisibility(View.INVISIBLE);
+            }
+        }
+    };
+
+    ANoteService.ANoteBinder aNoteService;
+
+    ServiceConnection conn = new ServiceConnection() {
+        @Override
+        public void onServiceConnected(ComponentName name, IBinder service) {
+            Log.d(TAG, "onServiceConnected: connected");
+            aNoteService = (ANoteService.ANoteBinder) service;
+        }
+
+        @Override
+        public void onServiceDisconnected(ComponentName name) {
+            Log.i(TAG, "onServiceDisconnected: disconnected");
         }
     };
 }

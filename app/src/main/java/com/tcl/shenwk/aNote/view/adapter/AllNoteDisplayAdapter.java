@@ -51,7 +51,7 @@ public class AllNoteDisplayAdapter extends RecyclerView.Adapter {
     public void onBindViewHolder(RecyclerView.ViewHolder holder, int position) {
         View viewItem = holder.itemView;
         PreviewNoteItem previewNoteItem = mPreviewNoteItemList.get(position);
-        setViewItemDisplay(previewNoteItem, viewItem);
+        setViewItemDisplay(previewNoteItem, (NoteDisplayViewHolder) holder);
     }
 
     @Override
@@ -73,22 +73,22 @@ public class AllNoteDisplayAdapter extends RecyclerView.Adapter {
         notifyItemInserted(Constants.ITEM_BEGIN_POSITION);
     }
 
-    private void setViewItemDisplay(PreviewNoteItem previewNoteItem, View viewItem){
+    private void setViewItemDisplay(PreviewNoteItem previewNoteItem, NoteDisplayViewHolder noteDisplayViewHolder){
         NoteEntity noteEntity = previewNoteItem.noteEntity;
-        TextView textView = viewItem.findViewById(R.id.item_title);
+        TextView textView = noteDisplayViewHolder.itemTitle;
         if(noteEntity.getNoteTitle() == null || noteEntity.getNoteTitle().equals("")){
             textView.setText(R.string.item_no_title);
         }
         else textView.setText(noteEntity.getNoteTitle());
-        textView = viewItem.findViewById(R.id.item_text);
-        Context context = viewItem.getContext();
+        textView = noteDisplayViewHolder.itemText;
+        Context context = noteDisplayViewHolder.itemImage.getContext();
         textView.setText(generatePreviewText(FileUtil.readFile(
                 FileUtil.getContentFileName(noteEntity.getNotePath())),
                 previewNoteItem.preResourceDataEntries));
 
         if(previewNoteItem.preResourceDataEntries != null && previewNoteItem.preResourceDataEntries.size() != 0) {
-            ImageView imageView = viewItem.findViewById(R.id.item_image);
-            setItemInfoLayoutParameterWithResource(viewItem);
+            ImageView imageView = noteDisplayViewHolder.itemImage;
+            setItemInfoLayoutParameterWithResource(noteDisplayViewHolder.itemInfo);
             switch (previewNoteItem.preResourceDataEntries.get(0).getDataType()){
                 case Constants.RESOURCE_TYPE_IMAGE:
                     imageView.setImageBitmap(BitmapFactory.decodeFile(
@@ -112,10 +112,10 @@ public class AllNoteDisplayAdapter extends RecyclerView.Adapter {
             }
         }
         else{
-            ImageView imageView = viewItem.findViewById(R.id.item_image);
+            ImageView imageView = noteDisplayViewHolder.itemImage;
             imageView.setBackground(null);
             imageView.setImageDrawable(null);
-            setItemInfoLayoutParameterToNoResource(viewItem);
+            setItemInfoLayoutParameterToNoResource(noteDisplayViewHolder.itemInfo);
         }
     }
 
@@ -124,24 +124,23 @@ public class AllNoteDisplayAdapter extends RecyclerView.Adapter {
      * ItemInfo contains the title and preview content and its displaying will corresponding to
      * resource data's thumbnail Once there is a resource data inside the note,
      * we will display the first resource data's thumbnail, and adjust the ItemInfo's position.
-     * @param viewItem  viewItem to be adjusted.
+     * @param itemInfoView  viewItem to be adjusted.
      */
-    private void setItemInfoLayoutParameterToNoResource(View viewItem){
-        View view = viewItem.findViewById(R.id.item_info);
-        RelativeLayout.LayoutParams layoutParams = (RelativeLayout.LayoutParams)view.getLayoutParams();
+    private void setItemInfoLayoutParameterToNoResource(View itemInfoView){
+        RelativeLayout.LayoutParams layoutParams = (RelativeLayout.LayoutParams)itemInfoView.getLayoutParams();
         layoutParams.addRule(RelativeLayout.ALIGN_PARENT_END, RelativeLayout.TRUE);
-        view.setLayoutParams(layoutParams);
+        itemInfoView.setLayoutParams(layoutParams);
     }
 
     /**
      * Adjust the ItemInfo with Resource data's thumbnail displaying,cutting down the itemInfo view.
      * See comment above.
-     * @param viewItem  viewItem to be adjusted.
+     * @param itemInfoView  viewItem to be adjusted.
      */
-    private void setItemInfoLayoutParameterWithResource(View viewItem){
-        View view = viewItem.findViewById(R.id.item_info);
-        RelativeLayout.LayoutParams layoutParams = (RelativeLayout.LayoutParams)view.getLayoutParams();
+    private void setItemInfoLayoutParameterWithResource(View itemInfoView){
+        RelativeLayout.LayoutParams layoutParams = (RelativeLayout.LayoutParams)itemInfoView.getLayoutParams();
         layoutParams.addRule(RelativeLayout.ALIGN_PARENT_END, 0);
+        itemInfoView.setLayoutParams(layoutParams);
     }
 
     /**
@@ -192,8 +191,16 @@ public class AllNoteDisplayAdapter extends RecyclerView.Adapter {
     }
 
     public class NoteDisplayViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener, View.OnLongClickListener{
+        TextView itemTitle;
+        TextView itemText;
+        ImageView itemImage;
+        View itemInfo;
         public NoteDisplayViewHolder(View itemView) {
             super(itemView);
+            itemTitle = itemView.findViewById(R.id.item_title);
+            itemText = itemView.findViewById(R.id.item_text);
+            itemImage = itemView.findViewById(R.id.item_image);
+            itemInfo = itemView.findViewById(R.id.item_info);
             itemView.setOnClickListener(this);
             itemView.setOnLongClickListener(this);
         }

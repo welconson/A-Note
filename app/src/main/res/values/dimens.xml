@@ -10,7 +10,7 @@
     <dimen name="preview_image_margin">10dp</dimen>
     <dimen name="preview_top_margin">10dp</dimen>
     <dimen name="span_view_height">72dp</dimen>
-    <dimen name="span_view_text_width">144dp</dimen>
+    <dimen name="span_view_text_width">180dp</dimen>
     <dimen name="span_view_text_height">30dp</dimen>
     <dimen name="span_view_text_margin">3dp</dimen>
     <dimen name="span_view_image_height_margin">18dp</dimen>

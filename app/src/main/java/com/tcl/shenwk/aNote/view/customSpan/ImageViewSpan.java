@@ -1,10 +1,12 @@
 package com.tcl.shenwk.aNote.view.customSpan;
 
+import android.app.Activity;
 import android.content.ContentResolver;
 import android.content.Context;
 import android.content.res.AssetFileDescriptor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Matrix;
 import android.graphics.drawable.BitmapDrawable;
 import android.net.Uri;
 import android.util.Log;
@@ -25,6 +27,9 @@ import java.io.FileNotFoundException;
 
 public class ImageViewSpan extends ViewSpan{
     private static final String TAG = "ImageViewSpan";
+    private static float TEXT_VIEW_HEIGHT = -1;
+    private static float TEXT_VIEW_WIDTH = -1;
+    private static int MAX_IMAGE_LENGTH = 8192;
     private Bitmap bitmap;
 
     public ImageViewSpan(View view, ResourceDataEntity resourceDataEntity) {
@@ -42,18 +47,23 @@ public class ImageViewSpan extends ViewSpan{
     @Override
     public void measure() {
         BitmapFactory.Options options = new BitmapFactory.Options();
+        options.inMutable = true;
         //options.inJustDecodeBounds = true;
         if(getResourceDataUri() == null) {
             bitmap = BitmapFactory.decodeFile(getFilePath(), options);
         }
         else bitmap = getOptionsByUri(getView().getContext(), getResourceDataUri(), options);
+        if(TEXT_VIEW_HEIGHT == -1){
+            View view = ((Activity) getView().getContext()).getWindow().getDecorView().findViewById(R.id.linearLayout);
+            TEXT_VIEW_HEIGHT = view.getHeight();
+            TEXT_VIEW_WIDTH = view.getWidth();
+            Log.i(TAG, "measure: text view height: " + TEXT_VIEW_HEIGHT + " , " + TEXT_VIEW_WIDTH);
+        }
+        bitmap = scaleToProperImage(options);
         final int widthSpec = View.MeasureSpec.makeMeasureSpec(options.outWidth, View.MeasureSpec.EXACTLY);
         final int heightSpec = View.MeasureSpec.makeMeasureSpec(options.outHeight, View.MeasureSpec.EXACTLY);
-        BitmapDrawable bitmapDrawable = new BitmapDrawable(getView().getContext().getResources(), bitmap);
-        bitmapDrawable.setBounds(0, 0, bitmap.getWidth(), bitmap.getHeight());
         ImageView imageView = getView().findViewById(R.id.image_span_image);
         imageView.setImageBitmap(bitmap);
-        imageView.setBackground(bitmapDrawable);
         getView().measure(widthSpec, heightSpec);
     }
 
@@ -105,5 +115,28 @@ public class ImageViewSpan extends ViewSpan{
             e.printStackTrace();
         }
         return bitmap;
+    }
+
+    private Bitmap scaleToProperImage(BitmapFactory.Options options){
+        float h = options.outHeight;
+        float w = options.outWidth;
+        float scale = 1;
+        if(((int) w) > TEXT_VIEW_WIDTH){
+            scale = TEXT_VIEW_WIDTH / w;
+            options.outWidth = (int) (w * scale);
+            options.outHeight = (int) (h * scale);
+        } else if(((int) h) > MAX_IMAGE_LENGTH){
+            scale = MAX_IMAGE_LENGTH / h;
+            options.outWidth = (int) (w * scale);
+            options.outHeight = (int) (h * scale);
+        }
+        if(scale == 1){
+            return bitmap;
+        }
+        Matrix matrix = new Matrix();
+        matrix.postScale(scale, scale);
+        Bitmap resizedBitmap = Bitmap.createBitmap(bitmap,0, 0, bitmap.getWidth(), bitmap.getHeight(), matrix, false);
+        bitmap.recycle();
+        return resizedBitmap;
     }
 }

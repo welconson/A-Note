@@ -103,9 +103,24 @@ public class DiscardDrawerFragment extends Fragment {
                 public boolean onMenuItemClick(MenuItem item) {
                     AllNoteDisplayAdapter allNoteDisplayAdapter = getAllNoteDisplayAdapter();
                     NoteEntity noteEntity = allNoteDisplayAdapter.getItemByPosition(position).noteEntity;
-                    Log.i(TAG, "onMenuItemClick: delete onClick");
+                    Log.i(TAG, "onMenuItemClick: restore onClick");
                     noteEntity.setIsLabeledDiscarded(false);
                     NoteHandler.setNoteIsLabelDiscard(getContext(), noteEntity);
+
+                    DataProvider.getInstance(getContext()).updateNoteEntity();
+                    getAllNoteDisplayAdapter().removeItemByPosition(position);
+                    allNoteDisplayAdapter.notifyItemRemoved(position);
+                    return true;
+                }
+            });
+            menu.add("delete").setOnMenuItemClickListener(new MenuItem.OnMenuItemClickListener() {
+                @Override
+                public boolean onMenuItemClick(MenuItem item) {
+                    AllNoteDisplayAdapter allNoteDisplayAdapter = getAllNoteDisplayAdapter();
+                    NoteEntity noteEntity = allNoteDisplayAdapter.getItemByPosition(position).noteEntity;
+                    Log.i(TAG, "onMenuItemClick: delete onClick");
+
+                    NoteHandler.deleteNote(getContext(), noteEntity);
 
                     DataProvider.getInstance(getContext()).updateNoteEntity();
                     getAllNoteDisplayAdapter().removeItemByPosition(position);

@@ -176,7 +176,7 @@ public class TagRecordEditFragment extends DialogFragment implements TagRecordEd
     private View.OnClickListener addTagListener = new View.OnClickListener() {
         @Override
         public void onClick(View v) {
-            if(textView.getText().length() < 0){
+            if(textView.getText().length() <= 0){
                 Toast.makeText(getContext(), Constants.TOAST_TAG_NAME_NOT_EMPTY, Toast.LENGTH_SHORT).show();
             }
             else {
@@ -195,9 +195,10 @@ public class TagRecordEditFragment extends DialogFragment implements TagRecordEd
                     if (tagId == Constants.NO_TAG_ID)
                         Toast.makeText(getContext(), "add tag error", Toast.LENGTH_SHORT).show();
                     else {
+                        long rootTagId = currentNode.noteTagEntity != null ? currentNode.noteTagEntity.getTagId() : Constants.NO_TAG_ID;
                         currentNode.subTagNodes = constructTagTree(
                                 ANoteDBManager.getInstance(getContext())
-                                        .queryAllSubTagByRootTagId(currentNode.noteTagEntity.getTagId()),
+                                        .queryAllSubTagByRootTagId(rootTagId),
                                 currentNode, new ArrayList<TagRecordEntity>());
                         noteTagEntity.setTagId(tagId);
                         currentAdapter.addNewTag(noteTagEntity);
@@ -224,19 +225,21 @@ public class TagRecordEditFragment extends DialogFragment implements TagRecordEd
             }
             List<TagRecordEntity> rootTagRecords = currentAdapter.getCheckedList();
             List<TagRecordEntity> tagRecordEntries = new ArrayList<>();
-            for(TagTreeNode tagTreeNode : currentNode.subTagNodes){
-                for(TagRecordEntity tagRecordEntity : rootTagRecords){
-                    if(tagTreeNode.noteTagEntity.getTagId() == tagRecordEntity.getTagId() && tagRecordEntity.status == TagRecordEntity.NEW_CREATE){
-                        tagTreeNode.hierarchyRecord = tagRecordEntity;
-                    }
-                }
-                if(tagTreeNode.hierarchyRecord != null) {
-                    tagRecordEntries.add(tagTreeNode.hierarchyRecord);
-                    if (tagTreeNode.originHierarchyRecord != null && tagTreeNode.hierarchyRecord.getTagId() != tagTreeNode.originHierarchyRecord.getTagId()) {
-                        tagTreeNode.originHierarchyRecord.status = TagRecordEntity.TO_DELETE;
-                        tagRecordEntries.add(tagTreeNode.originHierarchyRecord);
-                    }
-                }
+            if(currentNode.subTagNodes != null) {
+                for(TagTreeNode tagTreeNode : currentNode.subTagNodes){
+                                    for(TagRecordEntity tagRecordEntity : rootTagRecords){
+                                        if(tagTreeNode.noteTagEntity.getTagId() == tagRecordEntity.getTagId() && tagRecordEntity.status == TagRecordEntity.NEW_CREATE){
+                                            tagTreeNode.hierarchyRecord = tagRecordEntity;
+                                        }
+                                    }
+                                    if(tagTreeNode.hierarchyRecord != null) {
+                                        tagRecordEntries.add(tagTreeNode.hierarchyRecord);
+                                        if (tagTreeNode.originHierarchyRecord != null && tagTreeNode.hierarchyRecord.getTagId() != tagTreeNode.originHierarchyRecord.getTagId()) {
+                                            tagTreeNode.originHierarchyRecord.status = TagRecordEntity.TO_DELETE;
+                                            tagRecordEntries.add(tagTreeNode.originHierarchyRecord);
+                                        }
+                                    }
+                                }
             }
             if(exitCallback != null)
                 exitCallback.onTagSelectDone(tagRecordEntries);

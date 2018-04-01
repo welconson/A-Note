@@ -17,8 +17,10 @@ import android.view.MenuItem;
 import android.widget.Toast;
 
 import com.tcl.shenwk.aNote.R;
+import com.tcl.shenwk.aNote.service.ANoteService;
 import com.tcl.shenwk.aNote.util.Constants;
 import com.tcl.shenwk.aNote.util.DateUtil;
+import com.tcl.shenwk.aNote.util.FileUtil;
 import com.tcl.shenwk.aNote.view.fragment.AllNoteFragment;
 import com.tcl.shenwk.aNote.view.fragment.ArchivedFragment;
 import com.tcl.shenwk.aNote.view.fragment.DiscardDrawerFragment;
@@ -69,6 +71,12 @@ public class HomePageActivity extends AppCompatActivity
         mFragmentManager.beginTransaction()
                 .add(R.id.content_main_frame, fragment, ALL_NOTES_FRAGMENT_TAG)
                 .commit();
+
+        startService(new Intent(getApplicationContext(), ANoteService.class));
+
+        if (!FileUtil.isFileOrDirectoryExist(FileUtil.getTempDir(getApplicationContext()))) {
+            FileUtil.createDir(FileUtil.getTempDir(getApplicationContext()));
+        }
     }
 
     @Override

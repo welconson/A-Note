@@ -43,6 +43,27 @@
             android:layout_marginStart="@dimen/fab_margin"
             android:background="@drawable/ic_redo"
             android:contentDescription="@string/back" />
+
+        <ImageButton
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@drawable/ic_stop_black"
+            android:id="@+id/play_stop"
+            android:visibility="invisible"
+            android:layout_centerVertical="true"
+            android:layout_marginEnd="@dimen/fab_margin"
+            android:layout_toStartOf="@id/tag_editor"/>
+
+        <ImageButton
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@drawable/ic_stop_black"
+            android:id="@+id/record_stop"
+            android:visibility="invisible"
+            android:layout_centerVertical="true"
+            android:layout_marginEnd="@dimen/fab_margin"
+            android:layout_toStartOf="@id/tag_editor"/>
+
         <ImageButton
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"

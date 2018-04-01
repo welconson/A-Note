@@ -42,10 +42,10 @@ public class CustomScrollingMovementMethod extends ScrollingMovementMethod {
             if(links.length != 0){
                 links[0].onTouch(widget, event);
 //                Selection.setSelection(buffer, off);
+                return true;
             }
         }
-        Touch.onTouchEvent(widget, buffer, event);
-        return false;
+        return Touch.onTouchEvent(widget, buffer, event);
     }
 
     public static MovementMethod getInstance() {

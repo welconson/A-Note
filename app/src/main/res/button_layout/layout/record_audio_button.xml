@@ -3,6 +3,6 @@
     xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="wrap_content"
     android:layout_height="wrap_content"
-    android:background="@drawable/ic_library_music"
-    android:id="@+id/add_audio_button"
+    android:background="@drawable/ic_mic"
+    android:id="@+id/record_audio_button"
     android:layout_marginStart="@dimen/fab_margin"/>

@@ -18,6 +18,43 @@
             android:layout_width="match_parent"
             android:layout_height="?attr/actionBarSize" />
 
+        <RelativeLayout
+            android:layout_height="wrap_content"
+            android:layout_width="wrap_content">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:id="@+id/played_time"
+                android:visibility="invisible"/>
+
+            <SeekBar
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:id="@+id/progress_bar"
+                style="?android:attr/progressBarStyleHorizontal"
+                android:layout_toEndOf="@+id/played_time"
+                android:layout_toStartOf="@+id/total_time"
+                android:indeterminate="false"
+                android:progress="0"
+                android:visibility="invisible" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:id="@+id/total_time"
+                android:layout_alignParentEnd="true"
+                android:visibility="invisible"/>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:visibility="invisible"
+                android:id="@+id/record_time"/>
+
+        </RelativeLayout>
+
+
         <EditText
             android:id="@+id/note_title"
             android:layout_width="match_parent"
@@ -42,6 +79,8 @@
             <include layout="@layout/video_button"/>
 
             <include layout="@layout/file_button"/>
+
+            <include layout="@layout/record_audio_button"/>
         </LinearLayout>
 
         <ScrollView
