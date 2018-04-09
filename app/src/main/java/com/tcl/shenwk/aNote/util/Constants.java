@@ -72,4 +72,12 @@ public interface Constants {
     String TOAST_TAG_DELETE_FAILED = "delete failed ,tag contains sub tags or notes";
     String TOAST_TAG_RECORD_EDIT_ENTER_SUB_TAG = "this tag has no sub tags";
     String TOAST_EXIT_HINT = "another press to exit";
+
+    //SharePreference
+    String USER_INFO = "user_info";
+    String USER_EMAIL = "email";
+    String USER_NAME = "name";
+    String ACCOUNT_CREATE_TIME = "create_time";
+
+    String LOGIN_STATUS = "login_status";
 }

@@ -22,4 +22,8 @@
     <string name="unarchived">Unarchived</string>
     <string name="discard_drawer">Discard Drawer</string>
     <string name="root_tag_hierarchy">all tags</string>
+    <string name="sign_up_hint">No account yet? Create now</string>
+    <string name="sign_in_hint">Signed up user? Login now</string>
+    <string name="email_address_not_valid">Email address is not valid</string>
+    <string name="confirm_password_not_match">Password does not match the confirm password</string>
 </resources>
