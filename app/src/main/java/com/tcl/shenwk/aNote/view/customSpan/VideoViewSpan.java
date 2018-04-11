@@ -18,7 +18,7 @@ public class VideoViewSpan extends ViewSpan {
 
     public VideoViewSpan(View view, ResourceDataEntity resourceDataEntity) {
         super(view, resourceDataEntity);
-        mDuration = extractDurationByFilePath(resourceDataEntity.getPath());
+        mDuration = extractDurationByFilePath(FileUtil.getResourcePath(view.getContext(), resourceDataEntity.getResourceRelativePath()));
     }
 
     public VideoViewSpan(View view, Uri uri, ResourceDataEntity resourceDataEntity) {

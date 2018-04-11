@@ -15,6 +15,7 @@
     <string name="add_tag_hint">add a new tag</string>
     <string name="ok">OK</string>
     <string name="cancel">Cancel</string>
+    <string name="nav_exit">log out</string>
 
     <string name="all_note">All Notes</string>
     <string name="tag">Tags</string>
@@ -26,4 +27,24 @@
     <string name="sign_in_hint">Signed up user? Login now</string>
     <string name="email_address_not_valid">Email address is not valid</string>
     <string name="confirm_password_not_match">Password does not match the confirm password</string>
+
+    <!--Toast String-->
+    <string name="toast_without_permission">Permission Denial</string>
+    <string name="toast_new_note_with_nothing">can not save a empty note</string>
+    <string name="toast_tag_name_not_empty">tag name can not be empty</string>
+    <string name="toast_tag_add_repeat">adding a repeat tag here</string>
+    <string name="toast_tag_delete_failed">delete failed, tag contains sub tags or notes</string>
+    <string name="toast_tag_record_edit_enter_sub_tag">this tag has no sub tags</string>
+    <string name="toast_exit_hint">another press to exit</string>
+    <string name="toast_password_empty">password can not be empty</string>
+    <string name="toast_server_response_error">response error from server</string>
+    <string name="toast_add_tag_error">add tag error</string>
+    <string name="toast_sign_up_email_send_successfully">activating email has been sent to your email</string>
+    <string name="toast_sign_up_not_activated">email has not been activating</string>
+    <string name="toast_sign_up_email_already_signed_up">the email already has been signed up</string>
+    <string name="toast_sign_up_email_send_error">error on sending activating email, please try again</string>
+    <string name="toast_sign_up_server_database_error">server error, please try again</string>
+    <string name="toast_login_server_database_error">server error, please try again</string>
+    <string name="toast_login_email_or_password_wrong">email or password wrong</string>
+    <string name="toast_login_email_not_activated">email has not been activating</string>
 </resources>

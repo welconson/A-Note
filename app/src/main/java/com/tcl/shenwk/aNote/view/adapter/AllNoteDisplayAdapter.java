@@ -4,21 +4,16 @@ import android.content.Context;
 import android.graphics.BitmapFactory;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
-import android.view.Gravity;
 import android.view.LayoutInflater;
-import android.view.Menu;
-import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
-import android.widget.PopupMenu;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import com.tcl.shenwk.aNote.R;
 import com.tcl.shenwk.aNote.entity.NoteEntity;
 import com.tcl.shenwk.aNote.entity.ResourceDataEntity;
-import com.tcl.shenwk.aNote.model.NoteHandler;
 import com.tcl.shenwk.aNote.util.Constants;
 import com.tcl.shenwk.aNote.util.FileUtil;
 
@@ -83,7 +78,7 @@ public class AllNoteDisplayAdapter extends RecyclerView.Adapter {
         textView = noteDisplayViewHolder.itemText;
         Context context = noteDisplayViewHolder.itemImage.getContext();
         textView.setText(generatePreviewText(FileUtil.readFile(
-                FileUtil.getContentFileName(noteEntity.getNotePath())),
+                FileUtil.getNoteContentPath(context, noteEntity.getNoteDirName())),
                 previewNoteItem.preResourceDataEntries));
 
         if(previewNoteItem.preResourceDataEntries != null && previewNoteItem.preResourceDataEntries.size() != 0) {
@@ -92,7 +87,7 @@ public class AllNoteDisplayAdapter extends RecyclerView.Adapter {
             switch (previewNoteItem.preResourceDataEntries.get(0).getDataType()){
                 case Constants.RESOURCE_TYPE_IMAGE:
                     imageView.setImageBitmap(BitmapFactory.decodeFile(
-                            previewNoteItem.preResourceDataEntries.get(0).getPath()));
+                            FileUtil.getResourcePath(context, previewNoteItem.preResourceDataEntries.get(0).getResourceRelativePath())));
                     break;
                 case Constants.RESOURCE_TYPE_AUDIO:
                     imageView.setBackground(context.getDrawable(R.color.primaryGrey));

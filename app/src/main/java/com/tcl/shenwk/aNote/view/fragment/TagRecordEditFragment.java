@@ -116,7 +116,7 @@ public class TagRecordEditFragment extends DialogFragment implements TagRecordEd
             recyclerView.setAdapter(tagRecordEditAdapter);
             back.setVisibility(View.VISIBLE);
             cancel.setVisibility(View.INVISIBLE);
-        } else Toast.makeText(getContext(), Constants.TOAST_TAG_RECORD_EDIT_ENTER_SUB_TAG, Toast.LENGTH_SHORT).show();
+        } else Toast.makeText(getContext(), R.string.toast_tag_record_edit_enter_sub_tag, Toast.LENGTH_SHORT).show();
     }
 
     private void backToParentTagHierarchy(){
@@ -177,7 +177,7 @@ public class TagRecordEditFragment extends DialogFragment implements TagRecordEd
         @Override
         public void onClick(View v) {
             if(textView.getText().length() <= 0){
-                Toast.makeText(getContext(), Constants.TOAST_TAG_NAME_NOT_EMPTY, Toast.LENGTH_SHORT).show();
+                Toast.makeText(getContext(), R.string.toast_tag_name_not_empty, Toast.LENGTH_SHORT).show();
             }
             else {
                 NoteTagEntity noteTagEntity = new NoteTagEntity(textView.getText().toString());
@@ -193,7 +193,7 @@ public class TagRecordEditFragment extends DialogFragment implements TagRecordEd
                 else {
                     long tagId = ANoteDBManager.getInstance(getContext()).insertTag(noteTagEntity);
                     if (tagId == Constants.NO_TAG_ID)
-                        Toast.makeText(getContext(), "add tag error", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(getContext(), R.string.toast_add_tag_error, Toast.LENGTH_SHORT).show();
                     else {
                         long rootTagId = currentNode.noteTagEntity != null ? currentNode.noteTagEntity.getTagId() : Constants.NO_TAG_ID;
                         currentNode.subTagNodes = constructTagTree(

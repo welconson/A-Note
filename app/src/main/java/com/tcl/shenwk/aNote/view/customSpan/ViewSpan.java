@@ -12,6 +12,8 @@ import android.view.View;
 
 import com.tcl.shenwk.aNote.entity.ResourceDataEntity;
 
+import java.io.File;
+
 /**
  * Replace default implementation Drawable with View, so we can custom
  * all interactions we want of any subclass span of this.
@@ -25,11 +27,13 @@ public abstract class ViewSpan extends DynamicDrawableSpan implements View.OnTou
     private float mCurrentY;
     private Uri mResourceDataUri = null;
     private ResourceDataEntity mResourceDataEntity;
+    private String filePath;
 
      ViewSpan(View view, ResourceDataEntity resourceDataEntity){
         super(DynamicDrawableSpan.ALIGN_BOTTOM);
         this.mView = view;
         this.mResourceDataEntity = resourceDataEntity;
+        this.filePath = view.getContext().getFilesDir() + File.separator + mResourceDataEntity.getResourceRelativePath();
         measure();
     }
 
@@ -121,7 +125,7 @@ public abstract class ViewSpan extends DynamicDrawableSpan implements View.OnTou
     }
 
     public String getFilePath() {
-        return mResourceDataEntity.getPath();
+        return filePath;
     }
 
     public ResourceDataEntity getResourceDataEntity() {

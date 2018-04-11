@@ -3,16 +3,12 @@ package com.tcl.shenwk.aNote.view.activity;
 import android.Manifest;
 import android.annotation.SuppressLint;
 import android.app.FragmentManager;
-import android.content.ComponentName;
 import android.content.Intent;
-import android.content.ServiceConnection;
 import android.content.pm.PackageManager;
 import android.media.MediaPlayer;
-import android.media.MediaRecorder;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
-import android.os.IBinder;
 import android.os.Looper;
 import android.os.Message;
 import android.support.annotation.Nullable;
@@ -194,7 +190,7 @@ public class EditNoteActivity extends AppCompatActivity implements MediaPlayer.O
             mNoteEntity = (NoteEntity) intent.getSerializableExtra(Constants.ITEM_NOTE_ENTITY);
             mNoteTitle.setText(mNoteEntity.getNoteTitle());
             mNoteContentText.setText(FileUtil.readFile(
-                    FileUtil.getContentFileName(mNoteEntity.getNotePath())));
+                    FileUtil.getNoteContentPath(getApplicationContext(), mNoteEntity.getNoteDirName())));
             inflateViewSpanWithResourceEntity(NoteHandler.getResourceDataById(
                     EditNoteActivity.this, mNoteEntity.getNoteId()));
             mIsNewNote = false;
@@ -221,8 +217,6 @@ public class EditNoteActivity extends AppCompatActivity implements MediaPlayer.O
 //            There is no use to show or hide soft input in onCreate method
 //            mImeController.showSoftInput(mNoteTitle);
         }
-
-        bindService(new Intent(getApplicationContext(), ANoteService.class), conn, BIND_AUTO_CREATE);
     }
 
     @Override
@@ -413,7 +407,7 @@ public class EditNoteActivity extends AppCompatActivity implements MediaPlayer.O
                 }
                 else {
                     Log.i(TAG, "onRequestPermissionsResult: storage permission not granted");
-                    Toast.makeText(EditNoteActivity.this, Constants.TOAST_TEXT_WITHOUT_PERMISSION, Toast.LENGTH_SHORT).show();
+                    Toast.makeText(EditNoteActivity.this, R.string.toast_without_permission, Toast.LENGTH_SHORT).show();
                     if(unhandledActivityResults.size() > 0)
                         unhandledActivityResults.remove(0);
                 }
@@ -425,7 +419,7 @@ public class EditNoteActivity extends AppCompatActivity implements MediaPlayer.O
                 }
                 else {
                     Log.d(TAG, "onRequestPermissionsResult: record audio permission granted");
-                    Toast.makeText(EditNoteActivity.this, Constants.TOAST_TEXT_WITHOUT_PERMISSION, Toast.LENGTH_SHORT).show();
+                    Toast.makeText(EditNoteActivity.this, R.string.toast_without_permission, Toast.LENGTH_SHORT).show();
                 }
                 default:
         }
@@ -610,7 +604,7 @@ public class EditNoteActivity extends AppCompatActivity implements MediaPlayer.O
         public void onClick(View v) {
             if(mIsNewNote && mNoteContentText.getEditableText().length() == 0 &&
                     mNoteTitle.getEditableText().length() == 0){
-                Toast.makeText(EditNoteActivity.this, Constants.TOAST_NEW_NOTE_WITH_NOTHING, Toast.LENGTH_SHORT).show();
+                Toast.makeText(EditNoteActivity.this, R.string.toast_new_note_with_nothing, Toast.LENGTH_SHORT).show();
             }
             else if(mIsModified) {
                 mNoteEntity.setNoteTitle(mNoteTitle.getText().toString());
@@ -806,17 +800,4 @@ public class EditNoteActivity extends AppCompatActivity implements MediaPlayer.O
     };
 
     ANoteService.ANoteBinder aNoteService;
-
-    ServiceConnection conn = new ServiceConnection() {
-        @Override
-        public void onServiceConnected(ComponentName name, IBinder service) {
-            Log.d(TAG, "onServiceConnected: connected");
-            aNoteService = (ANoteService.ANoteBinder) service;
-        }
-
-        @Override
-        public void onServiceDisconnected(ComponentName name) {
-            Log.i(TAG, "onServiceDisconnected: disconnected");
-        }
-    };
 }

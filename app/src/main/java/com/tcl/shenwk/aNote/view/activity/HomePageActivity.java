@@ -17,17 +17,15 @@ import android.view.MenuItem;
 import android.widget.Toast;
 
 import com.tcl.shenwk.aNote.R;
+import com.tcl.shenwk.aNote.data.Test;
+import com.tcl.shenwk.aNote.manager.LoginManager;
 import com.tcl.shenwk.aNote.service.ANoteService;
-import com.tcl.shenwk.aNote.util.Constants;
 import com.tcl.shenwk.aNote.util.DateUtil;
 import com.tcl.shenwk.aNote.util.FileUtil;
 import com.tcl.shenwk.aNote.view.fragment.AllNoteFragment;
 import com.tcl.shenwk.aNote.view.fragment.ArchivedFragment;
 import com.tcl.shenwk.aNote.view.fragment.DiscardDrawerFragment;
 import com.tcl.shenwk.aNote.view.fragment.TagManagerFragment;
-
-import java.util.List;
-import java.util.Timer;
 
 public class HomePageActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener {
@@ -77,6 +75,9 @@ public class HomePageActivity extends AppCompatActivity
         if (!FileUtil.isFileOrDirectoryExist(FileUtil.getTempDir(getApplicationContext()))) {
             FileUtil.createDir(FileUtil.getTempDir(getApplicationContext()));
         }
+
+        Test test = new Test();
+        test.query(getContentResolver());
     }
 
     @Override
@@ -142,8 +143,9 @@ public class HomePageActivity extends AppCompatActivity
             case R.id.nav_share:
 
                 break;
-            case R.id.nav_send:
-
+            case R.id.exit:
+                LoginManager.getInstance(getApplicationContext()).logOut(getApplicationContext());
+                finish();
                 break;
         }
         mDrawer.closeDrawer(GravityCompat.START);
@@ -191,7 +193,7 @@ public class HomePageActivity extends AppCompatActivity
         long nowTime = DateUtil.getInstance().getTime();
         if(nowTime - lastTime > EXIT_TIME_THRESHOLD){
             lastTime = nowTime;
-            Toast.makeText(HomePageActivity.this, Constants.TOAST_EXIT_HINT, Toast.LENGTH_SHORT).show();
+            Toast.makeText(HomePageActivity.this, R.string.toast_exit_hint, Toast.LENGTH_SHORT).show();
             return true;
         }
         return super.onKeyDown(keyCode, event);

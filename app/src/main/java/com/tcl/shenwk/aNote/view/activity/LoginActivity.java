@@ -8,8 +8,11 @@ import android.view.View;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.android.volley.Request;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
+import com.android.volley.toolbox.JsonObjectRequest;
+import com.android.volley.toolbox.JsonRequest;
 import com.tcl.shenwk.aNote.R;
 import com.tcl.shenwk.aNote.manager.LoginManager;
 import com.tcl.shenwk.aNote.network.NetworkBase;
@@ -49,14 +52,14 @@ public class LoginActivity extends Activity {
         emailText = findViewById(R.id.input_email);
         passwordText = findViewById(R.id.input_password);
 
-        loginManager = new LoginManager();
+        loginManager = LoginManager.getInstance(getApplicationContext());
     }
 
     private View.OnClickListener signInOnClickListener = new View.OnClickListener() {
         @Override
         public void onClick(View v) {
             if(isInputValid()) {
-                NetworkBase networkBase = new NetworkBase(getApplicationContext());
+                NetworkBase networkBase = NetworkBase.getInstance(getApplicationContext());
                 JSONObject jsonObject = new JSONObject();
                 try {
                     jsonObject.put("email", emailText.getText().toString());
@@ -64,7 +67,8 @@ public class LoginActivity extends Activity {
                 } catch (JSONException e) {
                     e.printStackTrace();
                 }
-                networkBase.sendRequest(UrlSource.URL_SIGN_IN, jsonObject, signInResponseListener, signInErrorListener);
+                JsonRequest jsonRequest = new JsonObjectRequest(Request.Method.POST, UrlSource.URL_SIGN_IN, jsonObject, signInResponseListener, signInErrorListener);
+                networkBase.addRequest(jsonRequest);
             }else{
                 Log.i(TAG, "onClick: input invalid");
             }
@@ -77,7 +81,7 @@ public class LoginActivity extends Activity {
             return false;
         }
         if(passwordText.getText().length() < 1){
-            Toast.makeText(getApplicationContext(), "password can't not be empty", Toast.LENGTH_SHORT).show();
+            Toast.makeText(getApplicationContext(), R.string.toast_password_empty, Toast.LENGTH_SHORT).show();
             return false;
         }
         return true;
@@ -96,11 +100,8 @@ public class LoginActivity extends Activity {
 
     @Override
     public void onBackPressed() {
-        super.onBackPressed();
-    }
-
-    interface OnBackPressedListener{
-        public void onBackPressed();
+        if(!getFragmentManager().popBackStackImmediate())
+            super.onBackPressed();
     }
 
     Response.Listener<JSONObject> signInResponseListener = new Response.Listener<JSONObject>() {
@@ -118,17 +119,21 @@ public class LoginActivity extends Activity {
                         }
                         case LOGIN_RESULT_LOGIN_INFO_WRONG:{
                             Log.i(TAG, "onResponse: user info error");
+                            Toast.makeText(getApplicationContext(), R.string.toast_login_email_or_password_wrong, Toast.LENGTH_SHORT).show();
                             break;
                         }
                         case LOGIN_RESULT_SERVER_DATABASE_ERROR:{
                             Log.i(TAG, "onResponse: server database error");
+                            Toast.makeText(getApplicationContext(), R.string.toast_login_server_database_error, Toast.LENGTH_SHORT).show();
                             break;
                         }
                         case LOGIN_RESULT_PASSWORD_WRONG:{
                             Log.i(TAG, "onResponse: password error");
+                            Toast.makeText(getApplicationContext(), R.string.toast_login_email_or_password_wrong, Toast.LENGTH_SHORT).show();
                             break;
                         }
                         case LOGIN_RESULT_EMAIL_NOT_ACTIVATED:{
+                            Toast.makeText(getApplicationContext(), R.string.toast_login_email_not_activated, Toast.LENGTH_SHORT).show();
                             Log.i(TAG, "onResponse: user email is not activated now");
                             break;
                         }
@@ -144,7 +149,7 @@ public class LoginActivity extends Activity {
         @Override
         public void onErrorResponse(VolleyError error) {
             Log.i(TAG, "onErrorResponse: sign in error " + error);
-            Toast.makeText(getApplicationContext(), "response error from server", Toast.LENGTH_SHORT).show();
+            Toast.makeText(getApplicationContext(), R.string.toast_server_response_error, Toast.LENGTH_SHORT).show();
         }
     };
 }

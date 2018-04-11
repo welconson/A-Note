@@ -16,20 +16,22 @@ import org.json.JSONObject;
  */
 
 public class NetworkBase {
+    private static NetworkBase mInstance;
     private RequestQueue requestQueue;
 
-    public NetworkBase(Context context){
-        // Instantiate the RequestQueue.
-        requestQueue = Volley.newRequestQueue(context);
-
-
+    public static NetworkBase getInstance(Context context){
+        if(mInstance == null){
+            mInstance = new NetworkBase(context.getApplicationContext());
+        }
+        return mInstance;
     }
 
-    public void sendRequest(String url, JSONObject json, Response.Listener<JSONObject> listener, Response.ErrorListener errorListener){
-        // Request a string response from the provided URL.
-        JsonRequest jsonRequest = new JsonObjectRequest(Request.Method.POST, url, json, listener, errorListener);
-//        StringRequest stringRequest = new StringRequest(Request.Method.GET, url, listener, errorListener);
+    private NetworkBase(Context context){
+        // Instantiate the RequestQueue.
+        requestQueue = Volley.newRequestQueue(context);
+    }
 
+    public void addRequest(JsonRequest jsonRequest){
         // Add the request to the RequestQueue.
         requestQueue.add(jsonRequest);
     }

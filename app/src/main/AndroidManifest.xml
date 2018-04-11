@@ -8,6 +8,7 @@
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
 
     <application
+        android:name=".BaseApplication"
         android:allowBackup="true"
         android:icon="@mipmap/icon"
         android:label="@string/app_name"
@@ -40,6 +41,10 @@
             android:launchMode="singleTask"/>
 
         <service android:name=".service.ANoteService"/>
+
+        <provider
+            android:authorities="com.tcl.shenwk.aNote.data.aNoteContentProvider"
+            android:name=".data.ANoteContentProvider"/>
     </application>
 
 </manifest>

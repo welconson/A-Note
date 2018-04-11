@@ -21,7 +21,7 @@ public class ANoteDBOpenHelper extends SQLiteOpenHelper {
     @Override
     public void onCreate(SQLiteDatabase db) {
         String sql = "CREATE TABLE " + NOTE_TABLE_NAME + " ( " + NOTE_ID + " INTEGER PRIMARY KEY AUTOINCREMENT, "
-                + NOTE_TITLE + " TEXT NOT NULL, " + NOTE_CONTENT_PATH + " TEXT NOT NULL, " + CREATE_TIMESTAMP + " INTEGER, "
+                + NOTE_TITLE + " TEXT NOT NULL, " + NOTE_DIR_NAME + " TEXT NOT NULL, " + CREATE_TIMESTAMP + " INTEGER, "
                 + UPDATE_TIMESTAMP + " INTEGER, " + LOCATION_INFO + " TEXT, " + HAS_ARCHIVED + " INTEGER, "
                 + IS_LABELED_DISCARDED + " INTEGER " + " )";
         db.execSQL(sql);

@@ -10,8 +10,11 @@ import android.view.ViewGroup;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.android.volley.Request;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
+import com.android.volley.toolbox.JsonObjectRequest;
+import com.android.volley.toolbox.JsonRequest;
 import com.tcl.shenwk.aNote.R;
 import com.tcl.shenwk.aNote.network.NetworkBase;
 import com.tcl.shenwk.aNote.util.TextUtil;
@@ -57,7 +60,7 @@ public class SignUpFragment extends Fragment{
     private View.OnClickListener hintOnClickListener = new View.OnClickListener() {
         @Override
         public void onClick(View v) {
-
+            getFragmentManager().beginTransaction().remove(SignUpFragment.this).commit();
         }
     };
 
@@ -72,8 +75,9 @@ public class SignUpFragment extends Fragment{
                 } catch (JSONException e) {
                     e.printStackTrace();
                 }
-                NetworkBase networkBase = new NetworkBase(getContext());
-                networkBase.sendRequest(UrlSource.URL_SIGN_UP, jsonObject, resListener, resErrListener);
+                NetworkBase networkBase = NetworkBase.getInstance(getContext());
+                JsonRequest jsonRequest = new JsonObjectRequest(Request.Method.POST, UrlSource.URL_SIGN_UP, jsonObject, resListener, resErrListener);
+                networkBase.addRequest(jsonRequest);
                 Log.i(TAG, "onClick: url " + UrlSource.URL_SIGN_UP);
             }
         }
@@ -102,17 +106,22 @@ public class SignUpFragment extends Fragment{
                 switch (((int) response.get("result"))){
                     case SIGN_UP_RESULT_SUCCESS:
                         Log.i(TAG, "onResponse: new sign up email and activating email is sent");
+                        Toast.makeText(getContext(), R.string.toast_sign_up_email_send_successfully, Toast.LENGTH_SHORT).show();
                         break;
                     case SIGN_UP_RESULT_HAVE_NOT_ACTIVATED:
                         Log.i(TAG, "onResponse: the email has been signed up before, need a new activating email?");
+                        Toast.makeText(getContext(), R.string.toast_sign_up_not_activated, Toast.LENGTH_SHORT).show();
                         break;
                     case SIGN_UP_RESULT_ALREADY_SIGN_UP:
                         Log.i(TAG, "onResponse: the email has been signed up and activated, login in now");
+                        Toast.makeText(getContext(), R.string.toast_sign_up_email_already_signed_up, Toast.LENGTH_SHORT).show();
                         break;
                     case SIGN_UP_RESULT_SEND_EMAIL_ERROR:
                         Log.i(TAG, "onResponse: server sends activating email error ");
+                        Toast.makeText(getContext(), R.string.toast_sign_up_email_send_error, Toast.LENGTH_SHORT).show();
                         break;
                     case SIGN_UP_RESULT_SERVER_DATABASE_ERROR:
+                        Toast.makeText(getContext(), R.string.toast_sign_up_server_database_error, Toast.LENGTH_SHORT).show();
                         Log.i(TAG, "onResponse: server database error");
                         break;
                 }
@@ -126,7 +135,7 @@ public class SignUpFragment extends Fragment{
         @Override
         public void onErrorResponse(VolleyError error) {
             Log.i(TAG, "onErrorResponse: " + error);
-            Toast.makeText(getContext(), "response error from server", Toast.LENGTH_SHORT).show();
+            Toast.makeText(getContext(), R.string.toast_server_response_error, Toast.LENGTH_SHORT).show();
         }
     };
 }

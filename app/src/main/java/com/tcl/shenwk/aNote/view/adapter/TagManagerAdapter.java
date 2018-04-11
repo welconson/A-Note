@@ -245,10 +245,11 @@ public class TagManagerAdapter extends RecyclerView.Adapter {
     public int isTagInList(String tagName) {
         int position = 0;
         for (DisplayItem tagItem : displayItems) {
+            if(tagNum <= position)
+                break;
             if (StringUtil.equal(tagName, ((TagItem) tagItem).noteTagEntity.getTagName()))
                 return position;
-            if(tagNum < ++position)
-                break;
+            position++;
         }
         return -1;
     }

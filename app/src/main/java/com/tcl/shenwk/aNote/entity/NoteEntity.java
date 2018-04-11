@@ -13,17 +13,17 @@ import java.io.Serializable;
 public class NoteEntity implements Serializable{
     private long noteId;
     private String noteTitle;
-    private String notePath;
+    private String noteDirName;
     private long createTimestamp;
     private long updateTimestamp;
     private String locationInfo;
     private boolean hasArchived;
     private boolean isLabeledDiscarded;
 
-    public NoteEntity(String noteTitle, String notePath, long createTimestamp, long updateTimestamp,
+    public NoteEntity(String noteTitle, String noteDirName, long createTimestamp, long updateTimestamp,
                       String locationInfo, boolean hasArchived, boolean isLabeledDiscarded) {
         this.noteTitle = noteTitle;
-        this.notePath = notePath;
+        this.noteDirName = noteDirName;
         this.createTimestamp = createTimestamp;
         this.updateTimestamp = updateTimestamp;
         this.locationInfo = locationInfo;
@@ -56,12 +56,12 @@ public class NoteEntity implements Serializable{
         this.noteTitle = noteTitle;
     }
 
-    public String getNotePath() {
-        return notePath;
+    public String getNoteDirName() {
+        return noteDirName;
     }
 
-    public void setNotePath(String notePath) {
-        this.notePath = notePath;
+    public void setNoteDirName(String noteDirName) {
+        this.noteDirName = noteDirName;
     }
 
     public long getCreateTimestamp() {

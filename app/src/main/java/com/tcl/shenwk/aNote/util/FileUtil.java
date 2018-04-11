@@ -11,19 +11,17 @@ import android.provider.OpenableColumns;
 import android.util.Log;
 import android.widget.Toast;
 
+import com.tcl.shenwk.aNote.R;
+import com.tcl.shenwk.aNote.manager.LoginManager;
+
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
-import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileDescriptor;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.OutputStream;
-import java.util.Arrays;
 
 /**
  * File utility.
@@ -61,19 +59,19 @@ public class FileUtil {
 
     /**
      *
-     * @param dirName directory name to create.
+     * @param dirPath directory name to create.
      * @return  return whether operate successfully.
      */
-    public static boolean createDir(String dirName){
-        if(dirName == null)
+    public static boolean createDir(String dirPath){
+        if(dirPath == null)
             return false;
-        File dir = new File(dirName);
+        File dir = new File(dirPath);
         if(!dir.exists()) {
             if (!dir.mkdir()) {
-                Log.i(TAG, "createDir: create directory " + dirName + " failed");
+                Log.i(TAG, "createDir: create directory " + dirPath + " failed");
                 return false;
             }
-            Log.i(TAG, "createDir: " + dirName + " success");
+            Log.i(TAG, "createDir: " + dirPath + " success");
             return true;
         }
         else {
@@ -194,7 +192,7 @@ public class FileUtil {
     }
 
     public static boolean saveFileOfUri(Context context, Uri sourceUri, String filePath){
-        Log.i(TAG, "saveFileOfUri: sava file path = " + filePath);
+        Log.i(TAG, "saveFileOfUri: save file path = " + filePath);
 
         // TODO: 2018/3/11 Judge whether the file had exist
         //open the file referred by the uri
@@ -271,7 +269,7 @@ public class FileUtil {
             }
         } catch (SecurityException e) {
             e.printStackTrace();
-            Toast.makeText(context, Constants.TOAST_TEXT_WITHOUT_PERMISSION, Toast.LENGTH_SHORT).show();
+            Toast.makeText(context, R.string.toast_without_permission, Toast.LENGTH_SHORT).show();
             ret = null;
         } catch (FileNotFoundException e) {
             e.printStackTrace();
@@ -280,6 +278,7 @@ public class FileUtil {
     }
 
 
+    // check whether the file uri represented need external storage permission
     public static boolean isUriPointToExternalStorage(Context context,Uri uri){
         boolean ret = false;
         if(uri == null)
@@ -295,10 +294,7 @@ public class FileUtil {
         return ret;
     }
 
-    public static String getContentFileName(String notePath){
-        return notePath + File.separator + Constants.CONTENT_FILE_NAME;
-    }
-
+    // generate Uri of a file pointed by the path.
     public static Uri generateUriFromFilePath(String path){
         if(path == null)
             return null;
@@ -308,10 +304,13 @@ public class FileUtil {
         else return null;
     }
 
+    // get temporary directory path.
     public static String getTempDir(Context context){
         return context.getFilesDir() + File.separator + Constants.TEMP_FILE_DIR;
     }
 
+
+    // clean temp files.
     public static void cleanTempDirectory(Context context){
         File tempDir = new File(getTempDir(context));
         if(tempDir.exists() && tempDir.isDirectory()){
@@ -375,6 +374,7 @@ public class FileUtil {
         return size + postFix;
     }
 
+    // get AssetFileDescriptor of uri.
     public static AssetFileDescriptor getAssetFileDescriptorFromUri(Context context, Uri uri){
         if(uri == null)
             return null;
@@ -387,5 +387,21 @@ public class FileUtil {
             e.printStackTrace();
         }
         return null;
+    }
+
+    public static String getUserDirPath(Context context){
+        return context.getFilesDir() + File.separator + LoginManager.userFolder;
+    }
+
+    public static String getNoteDirPath(Context context, String noteDirName){
+        return getUserDirPath(context) + File.separator + noteDirName;
+    }
+
+    public static String getNoteContentPath(Context context, String noteDirName){
+        return getNoteDirPath(context, noteDirName) + File.separator + Constants.CONTENT_FILE_NAME;
+    }
+
+    public static String getResourcePath(Context context, String resourceSavedName){
+        return getUserDirPath(context) + File.separator + resourceSavedName;
     }
 }

@@ -27,7 +27,7 @@ public class SplashActivity extends Activity {
         new Handler().postDelayed(new Runnable() {
             @Override
             public void run() {
-                LoginManager loginManager = new LoginManager();
+                LoginManager loginManager = LoginManager.getInstance(getApplicationContext());
                 if(loginManager.hasLoggedIn(getApplicationContext())) {
                     Intent intent = new Intent(getApplicationContext(), HomePageActivity.class);
                     SplashActivity.this.startActivity(intent);

@@ -152,7 +152,7 @@ public class TagManagerFragment extends Fragment implements HomePageActivity.OnK
                             DataProvider.getInstance(getContext()).updateAllTopTagEntity();
                         currentAdapter.removeItem(position);
                     } else {
-                        Toast.makeText(getContext(), Constants.TOAST_TAG_DELETE_FAILED, Toast.LENGTH_LONG).show();
+                        Toast.makeText(getContext(), R.string.toast_tag_delete_failed, Toast.LENGTH_LONG).show();
                     }
                     Log.i(TAG, "onMenuItemClick: delete onClick");
                     return true;
@@ -280,7 +280,7 @@ public class TagManagerFragment extends Fragment implements HomePageActivity.OnK
         boolean isDone = false;
         if(tagName.length() != 0){
             if(currentAdapter.isTagInList(tagName) != -1){
-                Toast.makeText(getContext(), Constants.TOAST_TAG_ADD_REPEAT, Toast.LENGTH_SHORT).show();
+                Toast.makeText(getContext(), R.string.toast_tag_add_repeat, Toast.LENGTH_SHORT).show();
             } else {
                 NoteTagEntity noteTagEntity = new NoteTagEntity(tagName);
                 boolean needUpdateTopTag = false;
@@ -298,7 +298,7 @@ public class TagManagerFragment extends Fragment implements HomePageActivity.OnK
                 isDone = true;
             }
         }
-        else Toast.makeText(getContext(), Constants.TOAST_TAG_NAME_NOT_EMPTY, Toast.LENGTH_SHORT).show();
+        else Toast.makeText(getContext(), R.string.toast_tag_name_not_empty, Toast.LENGTH_SHORT).show();
         return isDone;
     }
 }

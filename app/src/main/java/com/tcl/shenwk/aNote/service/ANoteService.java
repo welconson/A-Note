@@ -39,7 +39,7 @@ public class ANoteService extends Service {
     @Override
     public IBinder onBind(Intent intent) {
         Log.i(TAG, "onBind: ");
-        return aNoteBinder;
+        return null;
     }
 
     @Override

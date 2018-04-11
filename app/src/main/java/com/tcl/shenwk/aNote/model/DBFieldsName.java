@@ -14,7 +14,7 @@ public interface DBFieldsName {
     String NOTE_TABLE_NAME = "note";
     String NOTE_ID = "note_id";
     String NOTE_TITLE = "note_title";
-    String NOTE_CONTENT_PATH = "note_content_path";
+    String NOTE_DIR_NAME = "note_content_path";
     String CREATE_TIMESTAMP = "create_timestamp";
     String UPDATE_TIMESTAMP = "update_timestamp";
     String LOCATION_INFO = "location_info";

@@ -48,7 +48,7 @@ public interface Constants {
     int RESOURCE_FILE_NAME_LENGTH = 12;
     String RESOURCE_DIR = "resourceData";
     int PREVIEW_CONTENT_TEXT_LENGTH = 220;
-    String TEMP_FILE_DIR = "temp";
+    String TEMP_FILE_DIR = "temp";  //which is used to store temp file user created and will be move to corresponding directory when finishing editing note.
     //file constants end
 
     //View span size constant(dp)
@@ -62,16 +62,6 @@ public interface Constants {
     int RESOURCE_TYPE_VIDEO = 2;
     int RESOURCE_TYPE_FILE = 3;
     //Resource data type
-
-    //Toast text
-    String TOAST_TEXT_WITHOUT_PERMISSION = "Permission Denial";
-    String TOAST_NEW_NOTE_WITH_NOTHING = "do not save a empty note";
-    String TOAST_TAG_NAME_NOT_EMPTY = "tag name can not be empty";
-    String TOAST_TAG_ADD_FAILED = "add tag failed";
-    String TOAST_TAG_ADD_REPEAT = "add a repeat name here";
-    String TOAST_TAG_DELETE_FAILED = "delete failed ,tag contains sub tags or notes";
-    String TOAST_TAG_RECORD_EDIT_ENTER_SUB_TAG = "this tag has no sub tags";
-    String TOAST_EXIT_HINT = "another press to exit";
 
     //SharePreference
     String USER_INFO = "user_info";

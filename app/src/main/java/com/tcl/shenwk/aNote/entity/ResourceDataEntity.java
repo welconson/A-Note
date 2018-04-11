@@ -13,7 +13,7 @@ public class ResourceDataEntity implements Serializable{
     private long resourceId = Constants.NO_RESOURCE_ID;
     private long noteId = Constants.NO_NOTE_ID;
     private String fileName;
-    private String path = null;
+    private String resourceRelativePath = null;
     private int dataType;
     private int spanStart;
 
@@ -57,11 +57,11 @@ public class ResourceDataEntity implements Serializable{
         this.spanStart = spanStart;
     }
 
-    public String getPath() {
-        return path;
+    public String getResourceRelativePath() {
+        return resourceRelativePath;
     }
 
-    public void setPath(String path) {
-        this.path = path;
+    public void setResourceRelativePath(String resourceRelativePath) {
+        this.resourceRelativePath = resourceRelativePath;
     }
 }
