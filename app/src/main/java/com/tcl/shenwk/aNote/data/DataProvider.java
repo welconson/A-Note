@@ -1,4 +1,4 @@
-package com.tcl.shenwk.aNote.model;
+package com.tcl.shenwk.aNote.data;
 
 import android.content.Context;
 

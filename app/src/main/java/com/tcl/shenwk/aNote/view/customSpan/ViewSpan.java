@@ -11,6 +11,7 @@ import android.view.MotionEvent;
 import android.view.View;
 
 import com.tcl.shenwk.aNote.entity.ResourceDataEntity;
+import com.tcl.shenwk.aNote.util.FileUtil;
 
 import java.io.File;
 
@@ -33,7 +34,7 @@ public abstract class ViewSpan extends DynamicDrawableSpan implements View.OnTou
         super(DynamicDrawableSpan.ALIGN_BOTTOM);
         this.mView = view;
         this.mResourceDataEntity = resourceDataEntity;
-        this.filePath = view.getContext().getFilesDir() + File.separator + mResourceDataEntity.getResourceRelativePath();
+        this.filePath = FileUtil.getResourcePath(view.getContext(), mResourceDataEntity.getResourceRelativePath());
         measure();
     }
 

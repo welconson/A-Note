@@ -5,16 +5,14 @@ import android.content.ContentValues;
 import android.content.UriMatcher;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+import android.database.sqlite.SQLiteOpenHelper;
 import android.net.Uri;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.text.TextUtils;
 import android.util.Log;
 
-import com.tcl.shenwk.aNote.model.ANoteDBOpenHelper;
-import com.tcl.shenwk.aNote.model.DBFieldsName;
 import com.tcl.shenwk.aNote.util.Constants;
-import com.tcl.shenwk.aNote.util.StringUtil;
 
 import static com.tcl.shenwk.aNote.data.ContentProviderConstants.*;
 
@@ -34,7 +32,7 @@ public class ANoteContentProvider extends ContentProvider {
 
     @Override
     public boolean onCreate() {
-        mDBHelper = new ANoteDBOpenHelper(getContext(), Constants.A_NOTE_DATABASE_NAME, null, Constants.DB_VERSION);
+        mDBHelper = new ANoteDBOpenHelper(getContext(), Constants.A_NOTE_DATA_DATABASE_NAME, null, Constants.A_NOTE_DATA_DB_VERSION);
         return true;
     }
 
@@ -108,5 +106,13 @@ public class ANoteContentProvider extends ContentProvider {
             }
         }
         return table;
+    }
+
+    public void resetDBHelper(){
+        mDBHelper.resetDatabase(getContext());
+    }
+
+    public void closeDatabase(){
+        mDBHelper.close();
     }
 }

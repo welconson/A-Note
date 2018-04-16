@@ -1,11 +1,17 @@
-package com.tcl.shenwk.aNote.model;
+package com.tcl.shenwk.aNote.data;
 
 import android.content.Context;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.util.Log;
 
-import static com.tcl.shenwk.aNote.model.DBFieldsName.*;
+import com.tcl.shenwk.aNote.manager.LoginManager;
+import com.tcl.shenwk.aNote.util.Constants;
+import com.tcl.shenwk.aNote.util.FileUtil;
+
+import java.io.File;
+
+import static com.tcl.shenwk.aNote.data.DBFieldsName.*;
 
 /**
  * Create, open, update database entity.
@@ -14,8 +20,11 @@ import static com.tcl.shenwk.aNote.model.DBFieldsName.*;
 
 public class ANoteDBOpenHelper extends SQLiteOpenHelper {
     private static String TAG = "ANoteDBOpenHelper";
+    private SQLiteDatabase databaseFromServer;
+
     public ANoteDBOpenHelper(Context context, String name, SQLiteDatabase.CursorFactory factory, int version) {
         super(context, name, factory, version);
+        resetDatabase(context);
     }
 
     @Override
@@ -48,5 +57,50 @@ public class ANoteDBOpenHelper extends SQLiteOpenHelper {
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
         Log.i(TAG, "onUpgrade: oldVersion = " + oldVersion + " , newVersion = " + newVersion);
+    }
+
+    private boolean hasServerDatabase(){
+        return databaseFromServer != null;
+    }
+
+    public SQLiteDatabase getDatabaseFromServer() {
+        return databaseFromServer;
+    }
+
+    @Override
+    public SQLiteDatabase getWritableDatabase() {
+        if(hasServerDatabase())
+            return databaseFromServer;
+        return super.getWritableDatabase();
+    }
+
+    @Override
+    public SQLiteDatabase getReadableDatabase() {
+        if(hasServerDatabase())
+            return databaseFromServer;
+        return super.getReadableDatabase();
+    }
+
+    public void resetDatabase(Context context){
+        String userFolder = context.getSharedPreferences(Constants.PREFERENCE_USER_INFO,
+                Context.MODE_PRIVATE).getString(Constants.PREFERENCE_FIELD_USER_EMAIL, "anonymous");
+        String path = context.getFilesDir() + File.separator + userFolder + File.separator + Constants.A_NOTE_DATA_DATABASE_NAME;
+        Log.i(TAG, "resetDatabase: " + path);
+        if(FileUtil.isFileOrDirectoryExist(path)){
+            this.close();
+            databaseFromServer = SQLiteDatabase.openDatabase(
+                    path,
+                    null,
+                    SQLiteDatabase.OPEN_READWRITE);
+        }
+    }
+
+    @Override
+    public synchronized void close() {
+        if(hasServerDatabase()) {
+            databaseFromServer.close();
+            databaseFromServer = null;
+        }
+        super.close();
     }
 }

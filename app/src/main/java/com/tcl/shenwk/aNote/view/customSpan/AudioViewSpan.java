@@ -68,7 +68,7 @@ public class AudioViewSpan extends ViewSpan {
                     if(onClickListener != null){
                         Uri uri = getResourceDataUri();
                         if(uri == null)
-                            uri = FileUtil.generateUriFromFilePath(FileUtil.getResourcePath(v.getContext(), getFilePath()));
+                            uri = FileUtil.generateUriFromFilePath(getFilePath());
                         onClickListener.onPlayClick(v, uri);
                     }
                 }

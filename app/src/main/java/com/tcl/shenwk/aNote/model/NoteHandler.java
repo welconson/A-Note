@@ -5,6 +5,8 @@ import android.net.Uri;
 import android.text.Editable;
 import android.util.Log;
 
+import com.tcl.shenwk.aNote.data.ANoteDBManager;
+import com.tcl.shenwk.aNote.data.DataProvider;
 import com.tcl.shenwk.aNote.entity.NoteEntity;
 import com.tcl.shenwk.aNote.entity.ResourceDataEntity;
 import com.tcl.shenwk.aNote.entity.TagRecordEntity;

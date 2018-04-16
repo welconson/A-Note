@@ -1,4 +1,4 @@
-package com.tcl.shenwk.aNote.model;
+package com.tcl.shenwk.aNote.data;
 
 /**
  * Database fields definition
@@ -40,4 +40,13 @@ public interface DBFieldsName {
     String TAG_RECORD_TABLE_NAME = "tag_note_record_table_name";
     String TAG_RECORD_ID = "tag_note_record_id";
     String TAG_RECORD_CREATE_TIMESTAMP = "tag_note_record_create_timestamp";
+
+    //SYNC_RECORD table fields
+    String MODIFY_RECORD_ID = "sync_record_id";
+    String MODIFY_RECORD_INITIAL_STATUS = "status";
+    String MODIFY_RECORD_LAST_OPERATION_TYPE = "operation_type";
+    String MODIFY_RECORD_TYPE = "type";
+    String MODIFY_RECORD_ROW_ID = "rowID";
+    String MODIFY_RECORD_PATH = "";
+    String MODIFY_RECORD_TIMESTAMP = "timestamp";
 }

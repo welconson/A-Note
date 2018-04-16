@@ -8,6 +8,7 @@ import android.support.annotation.Nullable;
 
 import com.tcl.shenwk.aNote.R;
 import com.tcl.shenwk.aNote.manager.LoginManager;
+import com.tcl.shenwk.aNote.service.ANoteService;
 
 /**
  * Splash screen displaying activity. Here we will check whether there
@@ -30,6 +31,7 @@ public class SplashActivity extends Activity {
                 LoginManager loginManager = LoginManager.getInstance(getApplicationContext());
                 if(loginManager.hasLoggedIn(getApplicationContext())) {
                     Intent intent = new Intent(getApplicationContext(), HomePageActivity.class);
+                    startService(new Intent(getApplicationContext(), ANoteService.class));
                     SplashActivity.this.startActivity(intent);
                 }else{
                     Intent intent = new Intent(getApplicationContext(), LoginActivity.class);

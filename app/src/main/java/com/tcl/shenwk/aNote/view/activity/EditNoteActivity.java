@@ -33,8 +33,8 @@ import com.tcl.shenwk.aNote.R;
 import com.tcl.shenwk.aNote.entity.NoteEntity;
 import com.tcl.shenwk.aNote.entity.ResourceDataEntity;
 import com.tcl.shenwk.aNote.entity.TagRecordEntity;
-import com.tcl.shenwk.aNote.model.ANoteDBManager;
-import com.tcl.shenwk.aNote.model.DataProvider;
+import com.tcl.shenwk.aNote.data.ANoteDBManager;
+import com.tcl.shenwk.aNote.data.DataProvider;
 import com.tcl.shenwk.aNote.model.NoteHandler;
 import com.tcl.shenwk.aNote.multiMediaInputSupport.CustomScrollingMovementMethod;
 import com.tcl.shenwk.aNote.service.ANoteService;
@@ -758,7 +758,7 @@ public class EditNoteActivity extends AppCompatActivity implements MediaPlayer.O
         public void onPlayClick(View v, Uri uri) {
             if(audioPlayTask == null)
                 initAudioPlayTask();
-            if(audioPlayTask.getUri() == uri){
+            if(audioPlayTask.getUri() != null && StringUtil.equal(uri.getPath(), uri.getPath())){
                 if(audioPlayTask.isPlaying()){
                     audioPlayTask.pause();
                 }else {

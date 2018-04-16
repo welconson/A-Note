@@ -31,8 +31,8 @@ public class NetworkBase {
         requestQueue = Volley.newRequestQueue(context);
     }
 
-    public void addRequest(JsonRequest jsonRequest){
+    public void addRequest(Request request){
         // Add the request to the RequestQueue.
-        requestQueue.add(jsonRequest);
+        requestQueue.add(request);
     }
 }

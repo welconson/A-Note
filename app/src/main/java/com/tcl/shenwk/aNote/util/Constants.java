@@ -38,8 +38,11 @@ public interface Constants {
     //Extra name and values end
 
     //db constants start
-    String A_NOTE_DATABASE_NAME = "a_note_local.db";
-    int DB_VERSION = 1;
+    String A_NOTE_DATA_DATABASE_NAME = "a_note_local.db";
+    int A_NOTE_DATA_DB_VERSION = 1;
+
+    String SYNC_DATABASE_NAME = "sync.db";
+    int SYNC_DATABASE_VERSION = 1;
     //db constants end
 
     //file constants start
@@ -63,11 +66,31 @@ public interface Constants {
     int RESOURCE_TYPE_FILE = 3;
     //Resource data type
 
-    //SharePreference
-    String USER_INFO = "user_info";
-    String USER_EMAIL = "email";
-    String USER_NAME = "name";
-    String ACCOUNT_CREATE_TIME = "create_time";
+    // SharePreference
+    String PREFERENCE_USER_INFO = "user_info";
 
-    String LOGIN_STATUS = "login_status";
+    String PREFERENCE_FIELD_USER_ID = "user_id";
+    String PREFERENCE_FIELD_USER_EMAIL = "email";
+    String PREFERENCE_FIELD_USER_NAME = "name";
+    String PREFERENCE_FIELD_USER_PASSWORD = "password";
+    String PREFERENCE_FIELD_ACCOUNT_CREATE_TIME = "create_time";
+
+    String PREFERENCE_FIELD_LOGIN_STATUS = "login_status";
+    String PREFERENCE_FIELD_NEED_FULL_DOWNLOAD = "need_full_download";
+
+    // JSON constants
+    String JSON_USER_ID = "userId";
+    String JSON_USER_EMAIL = "email";
+    String JSON_USER_NAME = "name";
+    String JSON_USER_PASSWORD = "password";
+    String JSON_ACCOUNT_CREATE_TIME = "createTime";
+    String JSON_SERVER_FULL_SYNC_STATUS = "fullSyncStatus";
+    String JSON_SERVER_DATABASE_URL = "serverDatabaseUrl";
+    String JSON_DOWNLOAD_PATH = "downloadPath";
+
+    String JSON_REQUEST_RESULT = "result";
+
+    String SYNC_FILE_TYPE_DATABASE = "database";
+    String SYNC_FILE_TYPE_RESOURCE = "resource";
+    String SYNC_FILE_TYPE_CONTENT = "content";
 }

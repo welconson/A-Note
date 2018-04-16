@@ -16,6 +16,7 @@
     <string name="ok">OK</string>
     <string name="cancel">Cancel</string>
     <string name="nav_exit">log out</string>
+    <string name="nav_sync">synchronize</string>
 
     <string name="all_note">All Notes</string>
     <string name="tag">Tags</string>
@@ -47,4 +48,8 @@
     <string name="toast_login_server_database_error">server error, please try again</string>
     <string name="toast_login_email_or_password_wrong">email or password wrong</string>
     <string name="toast_login_email_not_activated">email has not been activating</string>
+    <string name="toast_service_not_connected_yet">sync service is not connected yet</string>
+    <string name="toast_is_synchronizing_now">sync is running background</string>
+    <string name="toast_failed_build_session_with_server">failed to build connection with server</string>
+    <string name="toast_sync_finished">synchronization has finished</string>
 </resources>

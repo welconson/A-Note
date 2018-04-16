@@ -3,8 +3,6 @@ package com.tcl.shenwk.aNote.data;
 import android.content.ContentResolver;
 import android.net.Uri;
 
-import com.tcl.shenwk.aNote.model.DBFieldsName;
-
 public interface ContentProviderConstants {
     String AUTHORITY = "com.tcl.shenwk.aNote.data.aNoteContentProvider";
     Uri NOTE_TABLE_URI = Uri.parse(ContentResolver.SCHEME_CONTENT + "://" + AUTHORITY + "/" + DBFieldsName.NOTE_TABLE_NAME);

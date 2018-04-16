@@ -24,11 +24,11 @@
     <item android:title="">
         <menu>
             <item
-                android:id="@+id/nav_share"
-                android:icon="@drawable/ic_menu_share"
-                android:title="Share" />
+                android:id="@+id/nav_sync"
+                android:icon="@drawable/ic_sync_black"
+                android:title="@string/nav_sync" />
             <item
-                android:id="@+id/exit"
+                android:id="@+id/nav_exit"
                 android:icon="@drawable/ic_exit_to_app"
                 android:title="@string/nav_exit" />
         </menu>

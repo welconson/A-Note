@@ -4,8 +4,6 @@ import android.content.ContentResolver;
 import android.database.Cursor;
 import android.util.Log;
 
-import com.tcl.shenwk.aNote.model.DBFieldsName;
-
 public class Test {
     String TAG = "ANoteProviderTest";
     // A "projection" defines the columns that will be returned for each row

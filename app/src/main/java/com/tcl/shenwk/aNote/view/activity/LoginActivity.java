@@ -1,6 +1,9 @@
 package com.tcl.shenwk.aNote.view.activity;
 
 import android.app.Activity;
+import android.content.Context;
+import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.util.Log;
@@ -16,6 +19,8 @@ import com.android.volley.toolbox.JsonRequest;
 import com.tcl.shenwk.aNote.R;
 import com.tcl.shenwk.aNote.manager.LoginManager;
 import com.tcl.shenwk.aNote.network.NetworkBase;
+import com.tcl.shenwk.aNote.service.ANoteService;
+import com.tcl.shenwk.aNote.util.Constants;
 import com.tcl.shenwk.aNote.util.TextUtil;
 import com.tcl.shenwk.aNote.util.UrlSource;
 
@@ -50,6 +55,9 @@ public class LoginActivity extends Activity {
         view.setOnClickListener(signUpOnClickListener);
 
         emailText = findViewById(R.id.input_email);
+        SharedPreferences sharedPreferences = getSharedPreferences(Constants.PREFERENCE_USER_INFO, Context.MODE_PRIVATE);
+        String email = sharedPreferences.getString(Constants.PREFERENCE_FIELD_USER_EMAIL, "");
+        emailText.setText(email);
         passwordText = findViewById(R.id.input_password);
 
         loginManager = LoginManager.getInstance(getApplicationContext());
@@ -62,8 +70,8 @@ public class LoginActivity extends Activity {
                 NetworkBase networkBase = NetworkBase.getInstance(getApplicationContext());
                 JSONObject jsonObject = new JSONObject();
                 try {
-                    jsonObject.put("email", emailText.getText().toString());
-                    jsonObject.put("password", passwordText.getText().toString());
+                    jsonObject.put(Constants.PREFERENCE_FIELD_USER_EMAIL, emailText.getText().toString());
+                    jsonObject.put(Constants.PREFERENCE_FIELD_USER_PASSWORD, passwordText.getText().toString());
                 } catch (JSONException e) {
                     e.printStackTrace();
                 }
@@ -113,6 +121,7 @@ public class LoginActivity extends Activity {
                         case LOGIN_RESULT_SUCCESS:{
                             Log.i(TAG, "onResponse: login check passed");
                             loginManager.saveUserInfo(getApplicationContext(), response.getJSONObject("userInfo"));
+                            startService(new Intent(getApplicationContext(), ANoteService.class));
                             loginManager.toHomePage(getApplicationContext());
                             finish();
                             break;

@@ -2,8 +2,12 @@ package com.tcl.shenwk.aNote.view.activity;
 
 import android.app.Fragment;
 import android.app.FragmentManager;
+import android.app.Service;
+import android.content.ComponentName;
 import android.content.Intent;
+import android.content.ServiceConnection;
 import android.os.Bundle;
+import android.os.IBinder;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.Menu;
@@ -76,8 +80,7 @@ public class HomePageActivity extends AppCompatActivity
             FileUtil.createDir(FileUtil.getTempDir(getApplicationContext()));
         }
 
-        Test test = new Test();
-        test.query(getContentResolver());
+        bindService(new Intent(getApplicationContext(), ANoteService.class), conn, Service.BIND_AUTO_CREATE);
     }
 
     @Override
@@ -117,6 +120,7 @@ public class HomePageActivity extends AppCompatActivity
         Log.i(TAG, "onNavigationItemSelected: ");
         int id = item.getItemId();
         boolean isCheckedSameItem = false;
+        boolean shouldCloseDrawer = true;
         Class fragmentClass = null;
         String tag = "";
         if(id == mCheckedMenuItemId) {
@@ -140,15 +144,21 @@ public class HomePageActivity extends AppCompatActivity
                 fragmentClass = DiscardDrawerFragment.class;
                 tag = DISCARD_DRAWER_FRAGMENT_TAG;
                 break;
-            case R.id.nav_share:
-
+            case R.id.nav_sync:
+                shouldCloseDrawer = false;
+                if(aNoteService == null){
+                    Toast.makeText(getApplicationContext(), R.string.toast_server_response_error, Toast.LENGTH_SHORT).show();
+                }else {
+                    aNoteService.sync();
+                }
                 break;
-            case R.id.exit:
+            case R.id.nav_exit:
                 LoginManager.getInstance(getApplicationContext()).logOut(getApplicationContext());
                 finish();
                 break;
         }
-        mDrawer.closeDrawer(GravityCompat.START);
+        if(shouldCloseDrawer)
+            mDrawer.closeDrawer(GravityCompat.START);
         if(!isCheckedSameItem){
             if(fragmentClass != null) {
                 try {
@@ -216,4 +226,18 @@ public class HomePageActivity extends AppCompatActivity
     public interface OnKeyDownListener{
         boolean onKeyDown(int keyCode, KeyEvent keyEvent);
     }
+
+
+    private ANoteService.ANoteBinder aNoteService;
+    private ServiceConnection conn = new ServiceConnection() {
+        @Override
+        public void onServiceConnected(ComponentName name, IBinder service) {
+            aNoteService = ((ANoteService.ANoteBinder) service);
+        }
+
+        @Override
+        public void onServiceDisconnected(ComponentName name) {
+
+        }
+    };
 }

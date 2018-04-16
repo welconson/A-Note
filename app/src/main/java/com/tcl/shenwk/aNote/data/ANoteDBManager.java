@@ -1,4 +1,4 @@
-package com.tcl.shenwk.aNote.model;
+package com.tcl.shenwk.aNote.data;
 
 import android.content.ContentResolver;
 import android.content.ContentUris;
@@ -9,7 +9,6 @@ import android.database.sqlite.SQLiteDatabase;
 import android.net.Uri;
 import android.util.Log;
 
-import com.tcl.shenwk.aNote.data.ContentProviderConstants;
 import com.tcl.shenwk.aNote.entity.NoteEntity;
 import com.tcl.shenwk.aNote.entity.NoteTagEntity;
 import com.tcl.shenwk.aNote.entity.ResourceDataEntity;
@@ -19,7 +18,7 @@ import com.tcl.shenwk.aNote.util.Constants;
 import java.util.ArrayList;
 import java.util.List;
 
-import static com.tcl.shenwk.aNote.model.DBFieldsName.*;
+import static com.tcl.shenwk.aNote.data.DBFieldsName.*;
 
 /**
  * Local database accessing interfaces.
@@ -29,8 +28,7 @@ import static com.tcl.shenwk.aNote.model.DBFieldsName.*;
 public class ANoteDBManager {
     private static String TAG = "ANoteDBManager";
     private static ANoteDBManager mInstance = null;
-    private ANoteDBOpenHelper mDBHelper;
-    interface UpdateFlagTable{
+    public interface UpdateFlagTable{
         int UPDATE_NOTE_TITLE = 1;
         int UPDATE_UPDATE_TIMESTAMP = 2;
         int UPDATE_LOCATION_INFO = (1 << 2);
@@ -42,7 +40,6 @@ public class ANoteDBManager {
     private ContentResolver contentResolver;
 
     private ANoteDBManager(Context context) {
-        this.mDBHelper = new ANoteDBOpenHelper(context, Constants.A_NOTE_DATABASE_NAME, null, Constants.DB_VERSION);
         this.contentResolver = context.getContentResolver();
     }
 
@@ -81,7 +78,6 @@ public class ANoteDBManager {
         if(noteEntity == null || updateFlags == 0)
             return;
         int ret = -1;
-        SQLiteDatabase database = mDBHelper.getWritableDatabase();
         ContentValues contentValues = new ContentValues();
         if((updateFlags & UpdateFlagTable.UPDATE_NOTE_TITLE) != 0 && noteEntity.getNoteTitle() != null)
             contentValues.put(NOTE_TITLE, noteEntity.getNoteTitle());
@@ -96,7 +92,6 @@ public class ANoteDBManager {
             ret = contentResolver.update(ContentProviderConstants.NOTE_TABLE_URI, contentValues
                     , DBFieldsName.NOTE_ID + " = " + noteEntity.getNoteId(), null);
         }
-        database.close();
         if(ret == -1) {
             Log.i(TAG, "updateNoteRecord: update execute failed");
         }

@@ -18,8 +18,8 @@ import android.widget.PopupMenu;
 
 import com.tcl.shenwk.aNote.R;
 import com.tcl.shenwk.aNote.entity.NoteEntity;
-import com.tcl.shenwk.aNote.model.ANoteDBManager;
-import com.tcl.shenwk.aNote.model.DataProvider;
+import com.tcl.shenwk.aNote.data.ANoteDBManager;
+import com.tcl.shenwk.aNote.data.DataProvider;
 import com.tcl.shenwk.aNote.model.NoteHandler;
 import com.tcl.shenwk.aNote.util.Constants;
 import com.tcl.shenwk.aNote.view.activity.EditNoteActivity;

@@ -33,12 +33,14 @@
         <activity android:name=".view.activity.EditNoteActivity"
             android:label="@string/add"
             android:launchMode="singleInstance"
+            android:theme="@style/AppTheme.ActionBar"
             >
         </activity>
 
         <activity android:name=".view.activity.LoginActivity"
             android:label="login"
-            android:launchMode="singleTask"/>
+            android:launchMode="singleTask"
+            android:theme="@style/AppTheme.NoActionBar"/>
 
         <service android:name=".service.ANoteService"/>
 

@@ -12,7 +12,7 @@ import com.tcl.shenwk.aNote.R;
 import com.tcl.shenwk.aNote.entity.NoteEntity;
 import com.tcl.shenwk.aNote.entity.NoteTagEntity;
 import com.tcl.shenwk.aNote.entity.TagRecordEntity;
-import com.tcl.shenwk.aNote.model.ANoteDBManager;
+import com.tcl.shenwk.aNote.data.ANoteDBManager;
 import com.tcl.shenwk.aNote.util.DateUtil;
 import com.tcl.shenwk.aNote.util.StringUtil;
 
