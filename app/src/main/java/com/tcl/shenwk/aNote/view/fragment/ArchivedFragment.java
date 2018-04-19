@@ -33,7 +33,7 @@ import java.util.List;
  * Created by shenwk on 2018/3/29.
  */
 
-public class ArchivedFragment extends Fragment{
+public class ArchivedFragment extends BaseFragment{
     private static final String TAG = "ArchivedFragment";
     private static final int REQUEST_CODE_NEW_NOTE_EDIT = 0;
     private static final int REQUEST_CODE_SAVED_NOTE_EDIT = 1;
@@ -143,4 +143,8 @@ public class ArchivedFragment extends Fragment{
         return recyclerView;
     }
 
+    @Override
+    public void reload() {
+
+    }
 }

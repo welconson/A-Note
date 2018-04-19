@@ -1,8 +1,9 @@
-package com.tcl.shenwk.aNote.task;
+package com.tcl.shenwk.aNote.manager;
 
 import android.content.Context;
 import android.util.Log;
 
+import com.tcl.shenwk.aNote.task.DownloadTask;
 import com.tcl.shenwk.aNote.util.FileUtil;
 import com.tcl.shenwk.aNote.util.UrlSource;
 

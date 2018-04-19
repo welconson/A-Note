@@ -7,12 +7,7 @@ import android.os.IBinder;
 import android.support.annotation.Nullable;
 import android.util.Log;
 
-import com.android.volley.Response;
-import com.android.volley.VolleyError;
 import com.tcl.shenwk.aNote.manager.SyncManager;
-import com.tcl.shenwk.aNote.network.NetworkBase;
-
-import org.json.JSONObject;
 
 /**
  * Created by shenwk on 2018/3/30.
@@ -51,7 +46,7 @@ public class ANoteService extends Service {
 
     public class ANoteBinder extends Binder{
         public void sync(){
-            syncManager.startSync();
+            syncManager.startManualSync();
         }
     }
 }

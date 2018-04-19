@@ -77,6 +77,7 @@ public interface Constants {
 
     String PREFERENCE_FIELD_LOGIN_STATUS = "login_status";
     String PREFERENCE_FIELD_NEED_FULL_DOWNLOAD = "need_full_download";
+    String PREFERENCE_FIELD_UPDATE_CODE = "update_code";
 
     // JSON constants
     String JSON_USER_ID = "userId";
@@ -84,8 +85,8 @@ public interface Constants {
     String JSON_USER_NAME = "name";
     String JSON_USER_PASSWORD = "password";
     String JSON_ACCOUNT_CREATE_TIME = "createTime";
-    String JSON_SERVER_FULL_SYNC_STATUS = "fullSyncStatus";
-    String JSON_SERVER_DATABASE_URL = "serverDatabaseUrl";
+    String JSON_UPDATE_CODE = "updateCode";
+    String JSON_SERVER_DATABASE_PATH = "serverDatabasePath";
     String JSON_DOWNLOAD_PATH = "downloadPath";
 
     String JSON_REQUEST_RESULT = "result";
@@ -93,4 +94,7 @@ public interface Constants {
     String SYNC_FILE_TYPE_DATABASE = "database";
     String SYNC_FILE_TYPE_RESOURCE = "resource";
     String SYNC_FILE_TYPE_CONTENT = "content";
+
+    //broadcast action
+    String BROADCAST_ACTION_SYNC_MODIFIED = "com.tcl.shenwk.aNote.SYNC_FINISHED";
 }

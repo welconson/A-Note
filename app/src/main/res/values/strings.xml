@@ -42,7 +42,7 @@
     <string name="toast_add_tag_error">add tag error</string>
     <string name="toast_sign_up_email_send_successfully">activating email has been sent to your email</string>
     <string name="toast_sign_up_not_activated">email has not been activating</string>
-    <string name="toast_sign_up_email_already_signed_up">the email already has been signed up</string>
+    <string name="toast_sign_up_email_already_signed_up">activating email has already been signed up</string>
     <string name="toast_sign_up_email_send_error">error on sending activating email, please try again</string>
     <string name="toast_sign_up_server_database_error">server error, please try again</string>
     <string name="toast_login_server_database_error">server error, please try again</string>

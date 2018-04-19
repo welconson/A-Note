@@ -43,7 +43,7 @@ import java.util.Stack;
  * Created by shenwk on 2018/3/23.
  */
 
-public class TagManagerFragment extends Fragment implements HomePageActivity.OnKeyDownListener, AddTagFragment.OnDoneListener{
+public class TagManagerFragment extends BaseFragment implements HomePageActivity.OnKeyDownListener, AddTagFragment.OnDoneListener{
     private static final String TAG = "TagManagerFragment";
     private static final int REQUEST_CODE_NEW_NOTE_EDIT = 0;
     private static final int REQUEST_CODE_OLD_NOTE_EDIT = 1;
@@ -300,5 +300,10 @@ public class TagManagerFragment extends Fragment implements HomePageActivity.OnK
         }
         else Toast.makeText(getContext(), R.string.toast_tag_name_not_empty, Toast.LENGTH_SHORT).show();
         return isDone;
+    }
+
+    @Override
+    public void reload() {
+
     }
 }

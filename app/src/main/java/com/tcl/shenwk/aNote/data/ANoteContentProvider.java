@@ -1,11 +1,11 @@
 package com.tcl.shenwk.aNote.data;
 
 import android.content.ContentProvider;
+import android.content.ContentResolver;
 import android.content.ContentValues;
 import android.content.UriMatcher;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
-import android.database.sqlite.SQLiteOpenHelper;
 import android.net.Uri;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -22,6 +22,7 @@ public class ANoteContentProvider extends ContentProvider {
 
 
     private ANoteDBOpenHelper mDBHelper;
+    private ContentResolver contentResolver;
 
     static{
         mUriMatcher.addURI(AUTHORITY, DBFieldsName.NOTE_TABLE_NAME, CODE_NOTE_TABLE);
@@ -33,6 +34,7 @@ public class ANoteContentProvider extends ContentProvider {
     @Override
     public boolean onCreate() {
         mDBHelper = new ANoteDBOpenHelper(getContext(), Constants.A_NOTE_DATA_DATABASE_NAME, null, Constants.A_NOTE_DATA_DB_VERSION);
+        contentResolver = getContext().getContentResolver();
         return true;
     }
 
@@ -60,7 +62,10 @@ public class ANoteContentProvider extends ContentProvider {
             return null;
         SQLiteDatabase database = mDBHelper.getWritableDatabase();
         long rowId = database.insert(table, null, values);
-        return Uri.withAppendedPath(uri, String.valueOf(rowId));
+        Uri returnUri = Uri.withAppendedPath(uri, String.valueOf(rowId));
+        if(contentResolver != null)
+            contentResolver.notifyChange(returnUri, null);
+        return returnUri;
     }
 
     @Override
@@ -69,6 +74,8 @@ public class ANoteContentProvider extends ContentProvider {
         if(TextUtils.isEmpty(table))
             return 0;
         SQLiteDatabase database = mDBHelper.getWritableDatabase();
+        if(contentResolver != null)
+            contentResolver.notifyChange(uri, null);
         return database.delete(table, selection, selectionArgs);
     }
 
@@ -78,6 +85,8 @@ public class ANoteContentProvider extends ContentProvider {
         if(TextUtils.isEmpty(table) || values == null || values.size() == 0)
             return 0;
         SQLiteDatabase database = mDBHelper.getWritableDatabase();
+        if(contentResolver != null)
+            contentResolver.notifyChange(uri, null);
         return database.update(table, values, selection, selectionArgs);
     }
 

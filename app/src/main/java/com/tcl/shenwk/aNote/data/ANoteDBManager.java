@@ -7,6 +7,8 @@ import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.net.Uri;
+import android.os.Handler;
+import android.os.Looper;
 import android.util.Log;
 
 import com.tcl.shenwk.aNote.entity.NoteEntity;
@@ -41,6 +43,8 @@ public class ANoteDBManager {
 
     private ANoteDBManager(Context context) {
         this.contentResolver = context.getContentResolver();
+        ANoteContentObserver aNoteContentObserver = new ANoteContentObserver(new Handler(Looper.getMainLooper()), TAG, context);
+        this.contentResolver.registerContentObserver(Uri.parse(ContentProviderConstants.BASE_URI), true, aNoteContentObserver);
     }
 
     public static ANoteDBManager getInstance(Context context){

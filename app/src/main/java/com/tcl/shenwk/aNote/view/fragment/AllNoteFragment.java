@@ -34,7 +34,7 @@ import java.util.List;
  * Created by shenwk on 2018/3/23.
  */
 
-public class AllNoteFragment extends Fragment {
+public class AllNoteFragment extends BaseFragment {
     private static final String TAG = "AllNoteFragment";
     private static final int REQUEST_CODE_NEW_NOTE_EDIT = 0;
     private static final int REQUEST_CODE_SAVED_NOTE_EDIT = 1;
@@ -153,5 +153,11 @@ public class AllNoteFragment extends Fragment {
 
     public RecyclerView getRecyclerView(){
         return recyclerView;
+    }
+
+    @Override
+    public void reload() {
+        allNoteDisplayAdapter.reload();
+        Log.i(TAG, "reload: ");
     }
 }

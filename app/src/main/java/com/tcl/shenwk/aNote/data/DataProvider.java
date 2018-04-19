@@ -95,4 +95,15 @@ public class DataProvider {
         }
         return noteEntities;
     }
+
+    public void reset(){
+        if(allNoteEntities != null){
+            allNoteEntities.clear();
+            allNoteEntities = null;
+        }
+        if(allNoteTagEntity != null){
+            allNoteTagEntity.clear();
+            allNoteTagEntity = null;
+        }
+    }
 }

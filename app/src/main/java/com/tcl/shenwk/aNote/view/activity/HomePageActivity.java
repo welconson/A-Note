@@ -3,8 +3,13 @@ package com.tcl.shenwk.aNote.view.activity;
 import android.app.Fragment;
 import android.app.FragmentManager;
 import android.app.Service;
+import android.content.BroadcastReceiver;
 import android.content.ComponentName;
+import android.content.ContentProviderClient;
+import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
+import android.content.SearchRecentSuggestionsProvider;
 import android.content.ServiceConnection;
 import android.os.Bundle;
 import android.os.IBinder;
@@ -21,13 +26,17 @@ import android.view.MenuItem;
 import android.widget.Toast;
 
 import com.tcl.shenwk.aNote.R;
-import com.tcl.shenwk.aNote.data.Test;
+import com.tcl.shenwk.aNote.data.ANoteContentProvider;
+import com.tcl.shenwk.aNote.data.ContentProviderConstants;
+import com.tcl.shenwk.aNote.data.DataProvider;
 import com.tcl.shenwk.aNote.manager.LoginManager;
 import com.tcl.shenwk.aNote.service.ANoteService;
+import com.tcl.shenwk.aNote.util.Constants;
 import com.tcl.shenwk.aNote.util.DateUtil;
 import com.tcl.shenwk.aNote.util.FileUtil;
 import com.tcl.shenwk.aNote.view.fragment.AllNoteFragment;
 import com.tcl.shenwk.aNote.view.fragment.ArchivedFragment;
+import com.tcl.shenwk.aNote.view.fragment.BaseFragment;
 import com.tcl.shenwk.aNote.view.fragment.DiscardDrawerFragment;
 import com.tcl.shenwk.aNote.view.fragment.TagManagerFragment;
 
@@ -39,15 +48,22 @@ public class HomePageActivity extends AppCompatActivity
     private int mCheckedMenuItemId;
     private DrawerLayout mDrawer;
     private FragmentManager mFragmentManager;
-    private Fragment currentFragment;
+    private BaseFragment currentFragment;
     private OnKeyDownListener onKeyDownListener;
     private Toolbar toolbar;
     private long lastTime = 0;
+    private BroadcastReceiver aNoteBroadReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            Log.i(TAG, "onReceive: sync finished");
+            reload();
+        }
+    };
 
-    private static final String ALL_NOTES_FRAGMENT_TAG = "all notes";
-    private static final String TAG_MANAGER_FRAGMENT_TAG = "tag manager";
-    private static final String ARCHIVED_FRAGMENT_TAG = "archived notes";
-    private static final String DISCARD_DRAWER_FRAGMENT_TAG = "discard drawer";
+    private static final String ALL_NOTES_FRAGMENT_TAG = "All Notes";
+    private static final String TAG_MANAGER_FRAGMENT_TAG = "Tag Manager";
+    private static final String ARCHIVED_FRAGMENT_TAG = "Archived Notes";
+    private static final String DISCARD_DRAWER_FRAGMENT_TAG = "Discard Drawer";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -68,7 +84,7 @@ public class HomePageActivity extends AppCompatActivity
 
         mFragmentManager = getFragmentManager();
 
-        Fragment fragment = new AllNoteFragment();
+        BaseFragment fragment = new AllNoteFragment();
         currentFragment = fragment;
         mFragmentManager.beginTransaction()
                 .add(R.id.content_main_frame, fragment, ALL_NOTES_FRAGMENT_TAG)
@@ -81,6 +97,9 @@ public class HomePageActivity extends AppCompatActivity
         }
 
         bindService(new Intent(getApplicationContext(), ANoteService.class), conn, Service.BIND_AUTO_CREATE);
+
+        IntentFilter intentFilter = new IntentFilter(Constants.BROADCAST_ACTION_SYNC_MODIFIED);
+        registerReceiver(aNoteBroadReceiver, intentFilter);
     }
 
     @Override
@@ -162,7 +181,7 @@ public class HomePageActivity extends AppCompatActivity
         if(!isCheckedSameItem){
             if(fragmentClass != null) {
                 try {
-                    Fragment fragment = (Fragment) fragmentClass.newInstance();
+                    BaseFragment fragment = (BaseFragment) fragmentClass.newInstance();
                     currentFragment = fragment;
                     mFragmentManager.beginTransaction()
                             .replace(R.id.content_main_frame, fragment, tag)
@@ -240,4 +259,17 @@ public class HomePageActivity extends AppCompatActivity
 
         }
     };
+
+    private void reload(){
+        ContentProviderClient contentProviderClient = getContentResolver().acquireUnstableContentProviderClient(ContentProviderConstants.NOTE_TABLE_URI);
+        if(contentProviderClient != null){
+            ANoteContentProvider aNoteContentProvider = ((ANoteContentProvider) contentProviderClient.getLocalContentProvider());
+            if(aNoteContentProvider != null)
+                aNoteContentProvider.resetDBHelper();
+        }
+        DataProvider.getInstance(getApplicationContext()).updateNoteEntity();
+        DataProvider.getInstance(getApplicationContext()).updateAllTopTagEntity();
+        if(currentFragment != null)
+            currentFragment.reload();
+    }
 }

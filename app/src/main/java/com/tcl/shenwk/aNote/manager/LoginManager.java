@@ -5,19 +5,17 @@ import android.app.FragmentManager;
 import android.content.ContentProviderClient;
 import android.content.Context;
 import android.content.Intent;
-import android.content.SearchRecentSuggestionsProvider;
 import android.content.SharedPreferences;
 import android.util.Log;
 
 import com.tcl.shenwk.aNote.R;
 import com.tcl.shenwk.aNote.data.ANoteContentProvider;
-import com.tcl.shenwk.aNote.data.ANoteDBManager;
 import com.tcl.shenwk.aNote.data.ContentProviderConstants;
+import com.tcl.shenwk.aNote.data.DataProvider;
 import com.tcl.shenwk.aNote.util.Constants;
 import com.tcl.shenwk.aNote.util.DateUtil;
 import com.tcl.shenwk.aNote.util.FileUtil;
 import com.tcl.shenwk.aNote.util.StringUtil;
-import com.tcl.shenwk.aNote.util.UrlSource;
 import com.tcl.shenwk.aNote.view.activity.HomePageActivity;
 import com.tcl.shenwk.aNote.view.activity.LoginActivity;
 import com.tcl.shenwk.aNote.view.fragment.SignUpFragment;
@@ -107,7 +105,7 @@ public class LoginManager {
 
     // navigate to HomePageActivity from LoginActivity.
     public void toHomePage(Context context){
-        SyncManager.getInstance(context).startSync();
+        SyncManager.getInstance(context).startManualSync();
         context.startActivity(new Intent(context, HomePageActivity.class));
     }
 
@@ -117,8 +115,10 @@ public class LoginManager {
 
     public void logOut(Context context){
         // clear login status, set next time for login to run a full download if possible
-        context.getSharedPreferences(Constants.PREFERENCE_USER_INFO, Context.MODE_PRIVATE).edit().putBoolean(Constants.PREFERENCE_FIELD_LOGIN_STATUS, false)
-                .putBoolean(Constants.PREFERENCE_FIELD_NEED_FULL_DOWNLOAD, true)
+        context.getSharedPreferences(Constants.PREFERENCE_USER_INFO, Context.MODE_PRIVATE)
+                .edit()
+                .putBoolean(Constants.PREFERENCE_FIELD_LOGIN_STATUS, false)
+                .putLong(Constants.PREFERENCE_FIELD_UPDATE_CODE, SyncManager.UPDATE_CODE_BLANK)
                 .apply();
         // close database so the database file can be delete
         ContentProviderClient contentProviderClient = context.getContentResolver().acquireContentProviderClient(ContentProviderConstants.NOTE_TABLE_URI);
@@ -130,6 +130,7 @@ public class LoginManager {
                 aNoteContentProvider.closeDatabase();
             }
         }
+        DataProvider.getInstance(context).reset();
 
         // delete user files and database
         FileUtil.deleteDirectoryAndFiles(FileUtil.getUserDirPath(context));
@@ -139,9 +140,11 @@ public class LoginManager {
         if(FileUtil.isFileOrDirectoryExist(databasePath + "-journal"))
             FileUtil.deleteFile(databasePath + "-journal");
 
+        // create and open a local database, to avoid show half-sync list after next login
         if(aNoteContentProvider != null){
             aNoteContentProvider.resetDBHelper();
         }
+
         context.startActivity(new Intent(context, LoginActivity.class));
     }
 }

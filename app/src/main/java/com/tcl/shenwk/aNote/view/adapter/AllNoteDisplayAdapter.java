@@ -12,6 +12,7 @@ import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import com.tcl.shenwk.aNote.R;
+import com.tcl.shenwk.aNote.data.DataProvider;
 import com.tcl.shenwk.aNote.entity.NoteEntity;
 import com.tcl.shenwk.aNote.entity.ResourceDataEntity;
 import com.tcl.shenwk.aNote.util.Constants;
@@ -241,5 +242,13 @@ public class AllNoteDisplayAdapter extends RecyclerView.Adapter {
             return;
         }
         else mPreviewNoteItemList.remove(position);
+    }
+
+    public void reload(){
+        mPreviewNoteItemList.clear();
+        mPreviewNoteItemList = DataProvider.getInstance(this.mInflater.getContext()).transformNoteEntityToPreviewList(
+                DataProvider.getInstance(mInflater.getContext()).getAllNoteEntities()
+        );
+        notifyDataSetChanged();
     }
 }

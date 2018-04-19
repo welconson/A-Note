@@ -50,11 +50,16 @@ public class DownloadTask {
                     out.close();
 
                     Log.i(TAG, "run: responseCode " + connection.getResponseCode());
-                    if(connection.getResponseCode() == 403){
+                    int responseCode = connection.getResponseCode();
+                    if(responseCode == 403){
                         if(onFinishListener != null){
-                            onFinishListener.onError("server has no such file, path: ");
+                            onFinishListener.onError("try to build session again");
                         }
                         return;
+                    }else if(responseCode == 404){
+                        if(onFinishListener != null){
+                            onFinishListener.onError("server has no file on path");
+                        }
                     }
                     // download the file
                     InputStream input = new BufferedInputStream(connection.getInputStream());
@@ -82,7 +87,9 @@ public class DownloadTask {
                     }
                 } catch (IOException | JSONException e) {
                     e.printStackTrace();
-                    onFinishListener.onError(e.getMessage());
+                    if (onFinishListener != null) {
+                        onFinishListener.onError(e.getMessage());
+                    }
                 }
             }
         });

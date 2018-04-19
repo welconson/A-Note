@@ -2,6 +2,7 @@ package com.tcl.shenwk.aNote.network;
 
 import android.support.annotation.NonNull;
 
+import com.android.volley.DefaultRetryPolicy;
 import com.android.volley.NetworkResponse;
 import com.android.volley.ParseError;
 import com.android.volley.Response;
@@ -25,6 +26,7 @@ public class BuildSessionRequest extends JsonRequest<JSONObject> {
     public BuildSessionRequest(int method, String url, JSONObject jsonRequest, Response.Listener<JSONObject> listener, Response.ErrorListener errorListener) {
         super(method, url, (jsonRequest == null) ? null : jsonRequest.toString(), listener,
                 errorListener);
+        this.setRetryPolicy(new DefaultRetryPolicy(5000, 0, 1));
     }
 
     // Override to acquire the header field of set-cookie, which used in later request to show

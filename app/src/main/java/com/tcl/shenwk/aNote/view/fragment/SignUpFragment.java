@@ -79,7 +79,7 @@ public class SignUpFragment extends Fragment{
                 }
                 NetworkBase networkBase = NetworkBase.getInstance(getContext());
                 JsonRequest jsonRequest = new JsonObjectRequest(Request.Method.POST, UrlSource.URL_SIGN_UP, jsonObject, resListener, resErrListener);
-                jsonRequest.setRetryPolicy(new DefaultRetryPolicy(5000, 0, DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
+                jsonRequest.setRetryPolicy(new DefaultRetryPolicy(10000, 0, DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
                 networkBase.addRequest(jsonRequest);
                 Log.i(TAG, "onClick: url " + UrlSource.URL_SIGN_UP);
             }
