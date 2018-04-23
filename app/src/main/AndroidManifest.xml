@@ -46,7 +46,8 @@
 
         <provider
             android:authorities="com.tcl.shenwk.aNote.data.aNoteContentProvider"
-            android:name=".data.ANoteContentProvider"/>
+            android:name=".data.ANoteContentProvider"
+            android:exported="false"/>
     </application>
 
 </manifest>

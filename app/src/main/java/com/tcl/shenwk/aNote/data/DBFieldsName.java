@@ -26,6 +26,8 @@ public interface DBFieldsName {
     String RESOURCE_ID = "resource_id";
     String RESOURCE_FILE_NAME = "resource_file_name";
     String RESOURCE_PATH = "resource_path";
+    String RESOURCE_DURATION = "resource_duration";
+    String RESOURCE_SIZE = "resource_size";
     String DATA_TYPE = "data_type";
     String SPAN_START = "span_start";
 

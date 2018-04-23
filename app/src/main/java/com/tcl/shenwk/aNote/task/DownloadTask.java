@@ -60,6 +60,7 @@ public class DownloadTask {
                         if(onFinishListener != null){
                             onFinishListener.onError("server has no file on path");
                         }
+                        return;
                     }
                     // download the file
                     InputStream input = new BufferedInputStream(connection.getInputStream());

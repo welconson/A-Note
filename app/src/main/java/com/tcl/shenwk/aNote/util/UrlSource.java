@@ -7,7 +7,7 @@ public interface UrlSource {
     String URL_SIGN_IN = URL_TITLE + "/login";
     String URL_SYNC_BUILD_SESSION = URL_TITLE + "/sync/build";
     String URL_SYNC_UPLOAD = URL_TITLE + "/sync/upload";
-    String URL_SYNC_CANCEL_SESSION = URL_TITLE + "/sync/cancel";
+    String URL_SYNC_UPDATE = URL_TITLE + "/sync/update";
     String URL_SYNC_FULL_DOWNLOAD = URL_TITLE + "/sync/full_download";
     String URL_SYNC_DOWNLOAD = URL_TITLE + "/sync/download";
 }

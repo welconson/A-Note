@@ -172,6 +172,8 @@ public class ANoteDBManager {
         contentValues.put(RESOURCE_PATH, resourceDataEntity.getResourceRelativePath());
         contentValues.put(DATA_TYPE, resourceDataEntity.getDataType());
         contentValues.put(SPAN_START, resourceDataEntity.getSpanStart());
+        contentValues.put(RESOURCE_DURATION, resourceDataEntity.getDuration());
+        contentValues.put(RESOURCE_SIZE, resourceDataEntity.getSize());
         Uri uri = contentResolver.insert(ContentProviderConstants.RESOURCE_TABLE_URI, contentValues);
         ret = ContentUris.parseId(uri);
         if(ret == -1){
@@ -198,6 +200,8 @@ public class ANoteDBManager {
             resourceDataEntity.setResourceRelativePath(cursor.getString(cursor.getColumnIndex(RESOURCE_PATH)));
             resourceDataEntity.setDataType(cursor.getInt(cursor.getColumnIndex(DATA_TYPE)));
             resourceDataEntity.setSpanStart(cursor.getInt(cursor.getColumnIndex(SPAN_START)));
+            resourceDataEntity.setDuration(cursor.getInt(cursor.getColumnIndex(RESOURCE_DURATION)));
+            resourceDataEntity.setSize(cursor.getString(cursor.getColumnIndex(RESOURCE_SIZE)));
             resourceDataEntries.add(resourceDataEntity);
         }
         cursor.close();
@@ -222,6 +226,8 @@ public class ANoteDBManager {
             resourceDataEntity.setResourceRelativePath(cursor.getString(cursor.getColumnIndex(RESOURCE_PATH)));
             resourceDataEntity.setDataType(cursor.getInt(cursor.getColumnIndex(DATA_TYPE)));
             resourceDataEntity.setSpanStart(cursor.getInt(cursor.getColumnIndex(SPAN_START)));
+            resourceDataEntity.setDuration(cursor.getInt(cursor.getColumnIndex(RESOURCE_DURATION)));
+            resourceDataEntity.setSize(cursor.getString(cursor.getColumnIndex(RESOURCE_SIZE)));
         }
         cursor.close();
         return resourceDataEntity;

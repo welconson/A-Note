@@ -38,7 +38,7 @@ import com.tcl.shenwk.aNote.data.DataProvider;
 import com.tcl.shenwk.aNote.model.NoteHandler;
 import com.tcl.shenwk.aNote.multiMediaInputSupport.CustomScrollingMovementMethod;
 import com.tcl.shenwk.aNote.service.ANoteService;
-import com.tcl.shenwk.aNote.task.AudioPlayTask;
+import com.tcl.shenwk.aNote.manager.AudioPlayManager;
 import com.tcl.shenwk.aNote.task.AudioRecorder;
 import com.tcl.shenwk.aNote.util.DateUtil;
 import com.tcl.shenwk.aNote.util.FileUtil;
@@ -108,7 +108,7 @@ public class EditNoteActivity extends AppCompatActivity implements MediaPlayer.O
     private boolean mIsNewNote;
     private List<ViewSpan> mViewSpans;
     private List<TagRecordEntity> mTagRecordEntries;
-    private AudioPlayTask audioPlayTask;
+    private AudioPlayManager audioPlayManager;
 
     private List<ActivityResult> unhandledActivityResults = new ArrayList<>();
     private AudioRecorder audioRecorder;
@@ -256,8 +256,8 @@ public class EditNoteActivity extends AppCompatActivity implements MediaPlayer.O
         if(audioRecorder != null){
             audioRecorder.stop();
         }
-        if(audioPlayTask != null)
-            audioPlayTask.release();
+        if(audioPlayManager != null)
+            audioPlayManager.release();
         FileUtil.cleanTempDirectory(getApplicationContext());
     }
 
@@ -379,7 +379,7 @@ public class EditNoteActivity extends AppCompatActivity implements MediaPlayer.O
                     view = layoutInflater.inflate(R.layout.file_span_layout, (ViewGroup) mNoteContentText.getParent(), false);
                     viewSpan = new FileViewSpan(view, resourceDataEntity);
                     TextView textView = view.findViewById(R.id.size);
-                    textView.setText(FileUtil.getFileSize(viewSpan.getFilePath()));
+                    textView.setText(viewSpan.getSize());
                     textView = view.findViewById(R.id.resource_name);
                     textView.setText(viewSpan.getFileName());
                     break;
@@ -471,8 +471,8 @@ public class EditNoteActivity extends AppCompatActivity implements MediaPlayer.O
     };
 
     private void initAudioPlayTask(){
-        if(audioPlayTask == null){
-            audioPlayTask = new AudioPlayTask(playedTime, totalTime,
+        if(audioPlayManager == null){
+            audioPlayManager = new AudioPlayManager(playedTime, totalTime,
                     seekBar, getApplicationContext(), this);
         }
     }
@@ -570,7 +570,7 @@ public class EditNoteActivity extends AppCompatActivity implements MediaPlayer.O
 
                 viewSpan = new FileViewSpan(view, uri, resourceDataEntity);
                 TextView textView = view.findViewById(R.id.size);
-                textView.setText(FileUtil.getFileSize(getApplicationContext(), uri));
+                textView.setText(viewSpan.getSize());
                 textView = view.findViewById(R.id.resource_name);
                 textView.setText(viewSpan.getFileName());
 
@@ -755,18 +755,23 @@ public class EditNoteActivity extends AppCompatActivity implements MediaPlayer.O
 
     private AudioViewSpan.OnClickListener audioOnClickListener = new AudioViewSpan.OnClickListener(){
         @Override
-        public void onPlayClick(View v, Uri uri) {
-            if(audioPlayTask == null)
+        public void onPlayClick(View v, Uri uri, String filePath) {
+            if(audioPlayManager == null)
                 initAudioPlayTask();
-            if(audioPlayTask.getUri() != null && StringUtil.equal(uri.getPath(), uri.getPath())){
-                if(audioPlayTask.isPlaying()){
-                    audioPlayTask.pause();
+            // uri == null, indicate there resource file is not local, need to be download.
+            if(uri == null){
+                audioPlayManager.downloadAudio(filePath, v);
+                return;
+            }
+            if(audioPlayManager.getPlayingView() == v){
+                if(audioPlayManager.isPlaying()){
+                    audioPlayManager.pause();
                 }else {
-                    audioPlayTask.start();
+                    audioPlayManager.start();
                 }
             }else {
-                audioPlayTask.stop();
-                audioPlayTask.playNewUriAudio(uri);
+                audioPlayManager.reset();
+                audioPlayManager.playNewUriAudio(uri, v);
                 totalTime.setVisibility(View.VISIBLE);
                 playedTime.setVisibility(View.VISIBLE);
                 seekBar.setVisibility(View.VISIBLE);
@@ -780,8 +785,8 @@ public class EditNoteActivity extends AppCompatActivity implements MediaPlayer.O
         public void onClick(View v) {
             switch (v.getId()){
                 case R.id.play_stop:
-                    if(audioPlayTask != null)
-                        audioPlayTask.stop();
+                    if(audioPlayManager != null)
+                        audioPlayManager.reset();
                     totalTime.setVisibility(View.INVISIBLE);
                     playedTime.setVisibility(View.INVISIBLE);
                     v.setVisibility(View.INVISIBLE);

@@ -18,6 +18,7 @@ import com.tcl.shenwk.aNote.network.BuildSessionRequest;
 import com.tcl.shenwk.aNote.network.CancelSessionRequest;
 import com.tcl.shenwk.aNote.network.DownloadInfoRequest;
 import com.tcl.shenwk.aNote.network.NetworkBase;
+import com.tcl.shenwk.aNote.task.DownloadTask;
 import com.tcl.shenwk.aNote.util.Constants;
 import com.tcl.shenwk.aNote.util.StringUtil;
 import com.tcl.shenwk.aNote.util.UrlSource;
@@ -25,6 +26,9 @@ import com.tcl.shenwk.aNote.util.UrlSource;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.File;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -45,8 +49,6 @@ public class SyncManager {
     private boolean isSynchronizing = false;
     private final Object syncLock = new Object();
     private final Object updateCodeLock = new Object();
-    private int fullUploadFileNum;
-    private int fullUploadFileCount;
     private String cookie;
     private Handler handler;
 
@@ -60,6 +62,9 @@ public class SyncManager {
     private static final int SERVER_FULL_SYNC_STATUS_NO = 0;
 
     private static final int MSG_SYNC_FINISH = 0;
+    private static final int MSG_SYNC_BUILD_FAILED = 1;
+    private static final int MSG_SYNC_DOING = 2;
+    private static final int MSG_SYNC_ERROR = 3;
 
     private SyncManager(Context context){
         this.context = context;
@@ -69,13 +74,24 @@ public class SyncManager {
             public void handleMessage(Message msg) {
                 switch (msg.what){
                     case MSG_SYNC_FINISH:{
-                        fullUploadFileCount = 0;
-                        fullUploadFileNum = 0;
                         synchronized (syncLock){
                             isSynchronizing = false;
                         }
                         cookie = "";
                         Toast.makeText(SyncManager.this.context, R.string.toast_sync_finished, Toast.LENGTH_SHORT).show();
+                        break;
+                    }
+                    case MSG_SYNC_BUILD_FAILED:{
+                        Toast.makeText(SyncManager.this.context, R.string.toast_failed_build_session_with_server, Toast.LENGTH_SHORT).show();
+                        break;
+                    }
+                    case MSG_SYNC_DOING:{
+                        Toast.makeText(SyncManager.this.context, R.string.toast_is_synchronizing_now, Toast.LENGTH_SHORT).show();
+                        break;
+                    }
+                    case MSG_SYNC_ERROR:{
+                        Toast.makeText(SyncManager.this.context, R.string.toast_sync_error, Toast.LENGTH_SHORT).show();
+                        break;
                     }
                 }
             }
@@ -91,9 +107,10 @@ public class SyncManager {
         return mInstance;
     }
 
+    // start manual synchronization, lock to set isSynchronizing
     public void startManualSync(){
         if(isSynchronizing){
-            Toast.makeText(context, R.string.toast_is_synchronizing_now, Toast.LENGTH_SHORT).show();
+            handler.sendMessage(handler.obtainMessage(MSG_SYNC_DOING));
         }
         else {
             synchronized (syncLock){
@@ -119,13 +136,24 @@ public class SyncManager {
             } catch (JSONException e) {
                 e.printStackTrace();
             }
-            sendBuildRequest(jsonObject, buildTime);
+            sendBuildRequest(jsonObject, buildTime, new BuildListener() {
+                @Override
+                public void onSuccess(long serverUpdateCode) {
+                    checkSyncInfo(serverUpdateCode);
+                }
+
+                @Override
+                public void onError() {
+                    handler.sendMessage(handler.obtainMessage(MSG_SYNC_BUILD_FAILED));
+                }
+            });
         }else {
+            finishSync(MSG_SYNC_ERROR, false);
             Log.i(TAG, "manualSync: no user logged in, can not build session");
         }
     }
 
-    private void sendBuildRequest(final JSONObject jsonObject, final int buildTime){
+    private void sendBuildRequest(final JSONObject jsonObject, final int buildTime, final BuildListener buildListener){
         BuildSessionRequest buildSessionRequest = new BuildSessionRequest(Request.Method.POST, UrlSource.URL_SYNC_BUILD_SESSION,
                 jsonObject, new Response.Listener<JSONObject>() {
             @Override
@@ -138,24 +166,26 @@ public class SyncManager {
                             Log.i(TAG, "onResponse: build session successfully");
                             cookie = response.getString(BuildSessionRequest.SET_COOKIES);
                             long serverUpdateCode = response.getLong(Constants.JSON_UPDATE_CODE);
-                            checkSyncInfo(serverUpdateCode);
+                            if(buildListener != null)
+                                buildListener.onSuccess(serverUpdateCode);
                             break;
                         }
                         case SYNC_RESULT_BUILD_SESSION_FAILED:{
                             Log.i(TAG, "onResponse: build session error times-" + buildTime);
                             if(buildTime < 5){
                                 Log.i(TAG, "onResponse: rebuild session again");
-                                sendBuildRequest(jsonObject, buildTime + 1);
+                                sendBuildRequest(jsonObject, buildTime + 1, buildListener);
                             }else{
-                                Toast.makeText(context, R.string.toast_failed_build_session_with_server, Toast.LENGTH_SHORT).show();
+                                if(buildListener != null)
+                                    buildListener.onError();
                             }
                             break;
                         }
                     }
                 } catch (JSONException e) {
                     e.printStackTrace();
-                    cancelSession(null);
-                    finishSync(false);
+                    if(buildListener != null)
+                        buildListener.onError();
                 }
             }
         }, new Response.ErrorListener() {
@@ -163,22 +193,26 @@ public class SyncManager {
             public void onErrorResponse(VolleyError error) {
                 Log.i(TAG, "onErrorResponse: " + error);
                 if(buildTime < 5)
-                    sendBuildRequest(jsonObject, buildTime + 1);
+                    sendBuildRequest(jsonObject, buildTime + 1, buildListener);
                 else {
-                    finishSync(false);
+                    finishSync(MSG_SYNC_ERROR, false);
                 }
             }
         });
         networkBase.addRequest(buildSessionRequest);
     }
 
+    // compare updateCode of local and server:
+    // 1.equal, do nothing, just to stop the synchronization
+    // 2.local updateCode is blank, full download from server
+    // 3.server updateCode is blank, full upload to server
+    // 4.others, increment synchronization, need further analysis with both database.
     private void checkSyncInfo(long serverUpdateCode){
         // check whether server need a full download or a full upload
         if(localUpdateCode == serverUpdateCode){
             // both ends have no data to complete a full synchronization
             Log.i(TAG, "checkSyncInfo: updateCode matched, nothing to do");
-            cancelSession(null);
-            finishSync(false);
+            finishSync(MSG_SYNC_FINISH, false);
         }
         else if(localUpdateCode == UPDATE_CODE_BLANK){
             // full download from server
@@ -198,8 +232,7 @@ public class SyncManager {
     }
 
     private void incrementSync(long serverUpdateCode) {
-        cancelSession(null);
-        finishSync(true);
+        finishSync(MSG_SYNC_FINISH, true);
     }
 
     private void sendFullDownLoadRequest() {
@@ -215,14 +248,19 @@ public class SyncManager {
                     @Override
                     public void onResponse(JSONObject response) {
                         Log.i(TAG, "DownloadInfoRequest onResponse: " + response.toString());
-                        fullDownload(response);
+                        String serverDatabase = null;
+                        try {
+                            serverDatabase = response.getString(Constants.JSON_SERVER_DATABASE_PATH);
+                        } catch (JSONException e) {
+                            e.printStackTrace();
+                        }
+                        fullDownload(serverDatabase);
                     }
                 },
                 new Response.ErrorListener() {
                     @Override
                     public void onErrorResponse(VolleyError error) {
-                        cancelSession(null);
-                        finishSync(false);
+                        finishSync(MSG_SYNC_ERROR, false);
                         Log.i(TAG, "DownloadInfoRequest onErrorResponse: " + error);
                     }
                 });
@@ -242,44 +280,44 @@ public class SyncManager {
                     jsonObject = null;
                 }
 
-                cancelSession(jsonObject);
-                finishSync(true);
+                updateServerUpdateCode(jsonObject);
+                finishSync(MSG_SYNC_FINISH, true);
             }
 
             @Override
             public void onError(String err) {
                 Log.i(TAG, "fullUpload onError: " + err);
-                cancelSession(null);
-                finishSync(false);
+                finishSync(MSG_SYNC_ERROR, false);
             }
         }).start();
     }
 
-    private void cancelSession(JSONObject jsonObject){
+    private void updateServerUpdateCode(JSONObject jsonObject){
         Map<String, String> header = new HashMap<>();
         header.put(CancelSessionRequest.REQUEST_COOKIE, cookie);
         Request<JSONObject> request = new CancelSessionRequest(Request.Method.POST,
-                UrlSource.URL_SYNC_CANCEL_SESSION,
+                UrlSource.URL_SYNC_UPDATE,
                 jsonObject,
                 header,
                 new Response.Listener<JSONObject>() {
                     @Override
                     public void onResponse(JSONObject response) {
-                        Log.i(TAG, "cancelSession onResponse: " + response);
+                        Log.i(TAG, "updateServerUpdateCode onResponse: " + response);
                     }
                 },
                 new Response.ErrorListener() {
                     @Override
                     public void onErrorResponse(VolleyError error) {
-                        Log.i(TAG, "cancelSession onErrorResponse: " + error);
+                        Log.i(TAG, "updateServerUpdateCode onErrorResponse: " + error);
                     }
                 }
         );
         networkBase.addRequest(request);
     }
 
-    private void finishSync(boolean hasLocalDataModified){
-        handler.sendMessage(handler.obtainMessage(MSG_SYNC_FINISH));
+    //
+    private void finishSync(int finishMsg, boolean hasLocalDataModified){
+        handler.sendMessage(handler.obtainMessage(finishMsg));
         if(hasLocalDataModified) {
             Log.i(TAG, "finishSync: send sync modified broadcast");
             DataProvider.getInstance(context).updateAllTopTagEntity();
@@ -289,35 +327,56 @@ public class SyncManager {
     }
 
     // start asynchronous task for full download
-    private void fullDownload(JSONObject jsonObject){
-        try {
-            new FullDownloadManager(
-                    context,
-                    new FullDownloadManager.FullDownloadResultListener() {
-                        @Override
-                        public void onFullDownloadFinish() {
-                            Log.i(TAG, "onFullDownloadFinish: full download all done");
-                            cancelSession(null);
-                            finishSync(true);
-                        }
+    private void fullDownload(String relativePath){
+        if(relativePath != null) {
+            try {
+                new DownloadTask(
+                        new URL(UrlSource.URL_SYNC_DOWNLOAD),
+                        relativePath,
+                        context.getFilesDir() + File.separator + relativePath,
+                        cookie,
+                        new DownloadTask.OnFinishListener() {
+                            @Override
+                            public void onSuccess() {
+                                Log.i(TAG, "fullDownload download database: done");
+                                finishSync(MSG_SYNC_FINISH, true);
+                            }
 
-                        @Override
-                        public void onFullDownloadError(String error) {
-                            Log.i(TAG, "onFullDownloadError: full download error");
-                            cancelSession(null);
-                            finishSync(true);
+                            @Override
+                            public void onError(String err) {
+                                Log.i(TAG, "fullDownload download database: download error");
+                                finishSync(MSG_SYNC_ERROR, false);
+                            }
                         }
-                    },
-                    jsonObject.getJSONArray("paths"),
-                    cookie
-                    ).start();
-        } catch (JSONException e) {
-            e.printStackTrace();
-            cancelSession(null);
-            finishSync(false);
+                ).start();
+//            new BatchDownloadManager(
+//                    context,
+//                    new BatchDownloadManager.FullDownloadResultListener() {
+//                        @Override
+//                        public void onFullDownloadFinish() {
+//                            Log.i(TAG, "onFullDownloadFinish: full download all done");
+//                            finishSync(true);
+//                        }
+//
+//                        @Override
+//                        public void onFullDownloadError(String error) {
+//                            Log.i(TAG, "onFullDownloadError: full download error");
+//                            finishSync(true);
+//                        }
+//                    },
+//                    jsonObject.getJSONArray("paths"),
+//                    cookie
+//                    ).start();
+            } catch (MalformedURLException e) {
+                e.printStackTrace();
+                finishSync(MSG_SYNC_ERROR, false);
+            }
+        }else {
+            finishSync(MSG_SYNC_ERROR, false);
         }
     }
 
+    // local component invoke this method to increase updateCode
     public void increaseUpdateCode(){
         synchronized (updateCodeLock){
             localUpdateCode++;
@@ -330,5 +389,54 @@ public class SyncManager {
                 Log.i(TAG, "increaseUpdateCode: increase local updateCode failed " + localUpdateCode);
             }
         }
+    }
+
+    public void realTimeDownload(final URL url, final String downloadPath, final String storePath, final DownloadTask.OnFinishListener onFinishListener){
+        JSONObject jsonObject = new JSONObject();
+        int buildTime = 0;
+        SharedPreferences sharedPreferences = context.getSharedPreferences(Constants.PREFERENCE_USER_INFO, Context.MODE_PRIVATE);
+        if(sharedPreferences.getBoolean(Constants.PREFERENCE_FIELD_LOGIN_STATUS, false)) {
+            String email = sharedPreferences.getString(Constants.PREFERENCE_FIELD_USER_EMAIL, "");
+            long userId = sharedPreferences.getLong(Constants.PREFERENCE_FIELD_USER_ID, -1);
+            if (StringUtil.equal(email, "")) {
+                Log.i(TAG, "manualSync: set json --- no email");
+            }
+            try {
+                jsonObject.put(Constants.JSON_USER_ID, userId);
+                jsonObject.put(Constants.JSON_USER_EMAIL, email);
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+            sendBuildRequest(jsonObject, buildTime, new BuildListener() {
+                @Override
+                public void onSuccess(long serverUpdateCode) {
+                    new DownloadTask(
+                            url,
+                            downloadPath,
+                            storePath,
+                            cookie,
+                            onFinishListener).start();
+                }
+
+                @Override
+                public void onError() {
+                    handler.sendMessage(handler.obtainMessage(MSG_SYNC_BUILD_FAILED));
+                }
+            });
+        }else {
+            Log.i(TAG, "manualSync: no user logged in, can not build session");
+        }
+    }
+
+    // when login, reset user's synchronization data.
+    public void reset(){
+        localUpdateCode = context.getSharedPreferences(Constants.PREFERENCE_USER_INFO, Context.MODE_PRIVATE)
+                .getLong(Constants.PREFERENCE_FIELD_UPDATE_CODE, UPDATE_CODE_BLANK);
+        cookie = null;
+    }
+
+    private interface BuildListener{
+        void onSuccess(long serverUpdateCode);
+        void onError();
     }
 }

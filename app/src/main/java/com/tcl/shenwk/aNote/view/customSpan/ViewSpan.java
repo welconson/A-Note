@@ -44,6 +44,7 @@ public abstract class ViewSpan extends DynamicDrawableSpan implements View.OnTou
         this.mResourceDataEntity = resourceDataEntity;
         this.mResourceDataUri = uri;
         this.mResourceDataEntity.setDataType(getResourceDataType());
+        this.mResourceDataEntity.setSize(FileUtil.getFileSize(view.getContext(), uri));
         measure();
     }
 
@@ -131,5 +132,9 @@ public abstract class ViewSpan extends DynamicDrawableSpan implements View.OnTou
 
     public ResourceDataEntity getResourceDataEntity() {
         return mResourceDataEntity;
+    }
+
+    public String getSize() {
+        return getResourceDataEntity().getSize();
     }
 }

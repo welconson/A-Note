@@ -19,6 +19,7 @@ public class FileViewSpan extends ViewSpan {
     public FileViewSpan(View view, Uri uri, ResourceDataEntity resourceDataEntity) {
         super(view, uri, resourceDataEntity);
         resourceDataEntity.setFileName(FileUtil.getFileNameFromURI(view.getContext(), uri, resourceDataEntity.getDataType()));
+        resourceDataEntity.setSize(FileUtil.getFileSize(view.getContext(), uri));
     }
 
     @Override

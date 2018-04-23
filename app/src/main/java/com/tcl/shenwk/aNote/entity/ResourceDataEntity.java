@@ -16,6 +16,8 @@ public class ResourceDataEntity implements Serializable{
     private String resourceRelativePath = null;
     private int dataType;
     private int spanStart;
+    private int duration = 0;
+    private String size;
 
     public long getResourceId() {
         return resourceId;
@@ -63,5 +65,21 @@ public class ResourceDataEntity implements Serializable{
 
     public void setResourceRelativePath(String resourceRelativePath) {
         this.resourceRelativePath = resourceRelativePath;
+    }
+
+    public int getDuration() {
+        return duration;
+    }
+
+    public void setDuration(int duration) {
+        this.duration = duration;
+    }
+
+    public String getSize() {
+        return size;
+    }
+
+    public void setSize(String size) {
+        this.size = size;
     }
 }

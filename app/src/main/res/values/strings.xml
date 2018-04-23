@@ -52,4 +52,5 @@
     <string name="toast_is_synchronizing_now">sync is running background</string>
     <string name="toast_failed_build_session_with_server">failed to build connection with server</string>
     <string name="toast_sync_finished">synchronization has finished</string>
+    <string name="toast_sync_error">error when synchronizing</string>
 </resources>

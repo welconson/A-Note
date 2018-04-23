@@ -26,6 +26,7 @@ public class AudioViewSpan extends ViewSpan {
     public AudioViewSpan(View view, Uri uri, ResourceDataEntity resourceDataEntity) {
         super(view, uri, resourceDataEntity);
         mDuration = extractDurationByUri(view.getContext(), uri);
+        resourceDataEntity.setDuration(mDuration);
         resourceDataEntity.setFileName(FileUtil.getFileNameFromURI(view.getContext(),
                 uri, resourceDataEntity.getDataType()));
         Log.i(TAG, "AudioViewSpan: mDuration = " + mDuration);
@@ -35,7 +36,7 @@ public class AudioViewSpan extends ViewSpan {
 
     public AudioViewSpan(View view, ResourceDataEntity resourceDataEntity){
         super(view, resourceDataEntity);
-        mDuration = extractDurationByFilePath(FileUtil.getResourcePath(view.getContext(), resourceDataEntity.getResourceRelativePath()));
+        mDuration = resourceDataEntity.getDuration();
         Log.i(TAG, "AudioViewSpan: mDuration = " + mDuration);
 
         init();
@@ -69,7 +70,7 @@ public class AudioViewSpan extends ViewSpan {
                         Uri uri = getResourceDataUri();
                         if(uri == null)
                             uri = FileUtil.generateUriFromFilePath(getFilePath());
-                        onClickListener.onPlayClick(v, uri);
+                        onClickListener.onPlayClick(v, uri, getFilePath());
                     }
                 }
             });
@@ -116,7 +117,7 @@ public class AudioViewSpan extends ViewSpan {
     }
 
     public interface OnClickListener{
-        void onPlayClick(View v, Uri uri);
+        void onPlayClick(View v, Uri uri, String filePath);
     }
 
     public void setOnClickListener(OnClickListener onClickListener) {

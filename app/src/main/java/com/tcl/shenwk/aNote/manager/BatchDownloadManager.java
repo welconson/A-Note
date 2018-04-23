@@ -14,8 +14,8 @@ import java.io.File;
 import java.net.MalformedURLException;
 import java.net.URL;
 
-public class FullDownloadManager {
-    private static final String TAG = "FullDownloadManager";
+public class BatchDownloadManager {
+    private static final String TAG = "BatchDownloadManager";
     private final int totalTaskNum;
     private int finishedTaskNum;
     private int errorTaskNum;
@@ -25,7 +25,7 @@ public class FullDownloadManager {
     private Context context;
     private final Object lock = new Object();
 
-    public FullDownloadManager(
+    public BatchDownloadManager(
             Context context, FullDownloadResultListener fullDownloadResultListener,
             JSONArray pathList, String cookie) {
         this.context = context;

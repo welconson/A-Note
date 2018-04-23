@@ -2,6 +2,9 @@ package com.tcl.shenwk.aNote.view.adapter;
 
 import android.content.Context;
 import android.graphics.BitmapFactory;
+import android.os.Handler;
+import android.os.Looper;
+import android.os.Message;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -15,9 +18,16 @@ import com.tcl.shenwk.aNote.R;
 import com.tcl.shenwk.aNote.data.DataProvider;
 import com.tcl.shenwk.aNote.entity.NoteEntity;
 import com.tcl.shenwk.aNote.entity.ResourceDataEntity;
+import com.tcl.shenwk.aNote.manager.LoginManager;
+import com.tcl.shenwk.aNote.manager.SyncManager;
+import com.tcl.shenwk.aNote.task.DownloadTask;
 import com.tcl.shenwk.aNote.util.Constants;
 import com.tcl.shenwk.aNote.util.FileUtil;
+import com.tcl.shenwk.aNote.util.UrlSource;
 
+import java.io.File;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.List;
 
 /**
@@ -27,14 +37,34 @@ import java.util.List;
 
 public class AllNoteDisplayAdapter extends RecyclerView.Adapter {
     private static String TAG = "AllNoteDisplayAdapter";
+
+    private static final int MSG_DOWNLOAD_FINISHED = 1;
+    private static final int MSG_DOWNLOAD_ERROR = 2;
+
     private LayoutInflater mInflater = null;
     private List<PreviewNoteItem> mPreviewNoteItemList;
     private OnItemClickListener onItemClickListener;
+    private Handler handler;
 
     public AllNoteDisplayAdapter(LayoutInflater inflater, List<PreviewNoteItem> previewNoteEntries) {
         super();
         mInflater = inflater;
         mPreviewNoteItemList = previewNoteEntries;
+        handler = new Handler(Looper.getMainLooper()){
+            @Override
+            public void handleMessage(Message msg) {
+                switch (msg.what){
+                    case MSG_DOWNLOAD_FINISHED:{
+                        notifyItemChanged(msg.arg1);
+                        break;
+                    }
+                    case MSG_DOWNLOAD_ERROR:{
+                        notifyItemChanged(msg.arg1);
+                        break;
+                    }
+                }
+            }
+        };
     }
 
     @Override
@@ -47,7 +77,7 @@ public class AllNoteDisplayAdapter extends RecyclerView.Adapter {
     public void onBindViewHolder(RecyclerView.ViewHolder holder, int position) {
         View viewItem = holder.itemView;
         PreviewNoteItem previewNoteItem = mPreviewNoteItemList.get(position);
-        setViewItemDisplay(previewNoteItem, (NoteDisplayViewHolder) holder);
+        setViewItemDisplay(previewNoteItem, (NoteDisplayViewHolder) holder, position);
     }
 
     @Override
@@ -69,7 +99,7 @@ public class AllNoteDisplayAdapter extends RecyclerView.Adapter {
         notifyItemInserted(Constants.ITEM_BEGIN_POSITION);
     }
 
-    private void setViewItemDisplay(PreviewNoteItem previewNoteItem, NoteDisplayViewHolder noteDisplayViewHolder){
+    private void setViewItemDisplay(PreviewNoteItem previewNoteItem, NoteDisplayViewHolder noteDisplayViewHolder, final int position){
         NoteEntity noteEntity = previewNoteItem.noteEntity;
         TextView textView = noteDisplayViewHolder.itemTitle;
         if(noteEntity.getNoteTitle() == null || noteEntity.getNoteTitle().equals("")){
@@ -78,40 +108,73 @@ public class AllNoteDisplayAdapter extends RecyclerView.Adapter {
         else textView.setText(noteEntity.getNoteTitle());
         textView = noteDisplayViewHolder.itemText;
         Context context = noteDisplayViewHolder.itemImage.getContext();
-        textView.setText(generatePreviewText(FileUtil.readFile(
-                FileUtil.getNoteContentPath(context, noteEntity.getNoteDirName())),
-                previewNoteItem.preResourceDataEntries));
+        // check if there is local file, if not turn to server get content file
+        if(!FileUtil.isFileOrDirectoryExist(FileUtil.getNoteContentPath(context, noteEntity.getNoteDirName()))){
+            if(!FileUtil.isFileOrDirectoryExist(FileUtil.getNoteDirPath(context, noteEntity.getNoteDirName()))){
+                FileUtil.createDir(FileUtil.getNoteDirPath(context, noteEntity.getNoteDirName()));
+                FileUtil.createDir(FileUtil.getNoteDirPath(context, noteEntity.getNoteDirName()) + File.separator + Constants.RESOURCE_DIR);
+            }
+            try {
+                SyncManager.getInstance(context).realTimeDownload(
+                        new URL(UrlSource.URL_SYNC_DOWNLOAD),
+                        LoginManager.userFolder + File.separator + noteEntity.getNoteDirName() + File.separator + Constants.CONTENT_FILE_NAME,
+                        FileUtil.getNoteContentPath(context, noteEntity.getNoteDirName()),
+                        new DownloadTask.OnFinishListener() {
+                            @Override
+                            public void onSuccess() {
+                                Log.i(TAG, "onSuccess: download successfully");
+                                Message message = handler.obtainMessage(MSG_DOWNLOAD_FINISHED);
+                                message.arg1 = position;
+                                handler.sendMessage(message);
+                            }
 
-        if(previewNoteItem.preResourceDataEntries != null && previewNoteItem.preResourceDataEntries.size() != 0) {
-            ImageView imageView = noteDisplayViewHolder.itemImage;
-            setItemInfoLayoutParameterWithResource(noteDisplayViewHolder.itemInfo);
-            switch (previewNoteItem.preResourceDataEntries.get(0).getDataType()){
-                case Constants.RESOURCE_TYPE_IMAGE:
-                    imageView.setImageBitmap(BitmapFactory.decodeFile(
-                            FileUtil.getResourcePath(context, previewNoteItem.preResourceDataEntries.get(0).getResourceRelativePath())));
-                    break;
-                case Constants.RESOURCE_TYPE_AUDIO:
-                    imageView.setBackground(context.getDrawable(R.color.primaryGrey));
-                    imageView.setImageDrawable(context.getDrawable(R.drawable.ic_audiotrack));
-                    break;
-                case Constants.RESOURCE_TYPE_VIDEO:
-                    imageView.setBackground(context.getDrawable(R.color.primaryGrey));
-                    imageView.setImageDrawable(context.getDrawable(R.drawable.ic_videocam));
-                    break;
-                case Constants.RESOURCE_TYPE_FILE:
-                    imageView.setBackground(context.getDrawable(R.color.primaryGrey));
-                    imageView.setImageDrawable(context.getDrawable(R.drawable.ic_insert_drive_file));
-                    break;
+                            @Override
+                            public void onError(String err) {
+                                Log.i(TAG, "onError: download error");
+                                Message message = handler.obtainMessage(MSG_DOWNLOAD_ERROR);
+                                message.arg1 = position;
+                                handler.sendMessage(message);
+                            }
+                        }
+                );
+            } catch (MalformedURLException e) {
+                e.printStackTrace();
+            }
+        }else {
+            textView.setText(generatePreviewText(FileUtil.readFile(
+                    FileUtil.getNoteContentPath(context, noteEntity.getNoteDirName())),
+                    previewNoteItem.preResourceDataEntries));
+
+            if (previewNoteItem.preResourceDataEntries != null && previewNoteItem.preResourceDataEntries.size() != 0) {
+                ImageView imageView = noteDisplayViewHolder.itemImage;
+                setItemInfoLayoutParameterWithResource(noteDisplayViewHolder.itemInfo);
+                switch (previewNoteItem.preResourceDataEntries.get(0).getDataType()) {
+                    case Constants.RESOURCE_TYPE_IMAGE:
+                        imageView.setImageBitmap(BitmapFactory.decodeFile(
+                                FileUtil.getResourcePath(context, previewNoteItem.preResourceDataEntries.get(0).getResourceRelativePath())));
+                        break;
+                    case Constants.RESOURCE_TYPE_AUDIO:
+                        imageView.setBackground(context.getDrawable(R.color.primaryGrey));
+                        imageView.setImageDrawable(context.getDrawable(R.drawable.ic_audiotrack));
+                        break;
+                    case Constants.RESOURCE_TYPE_VIDEO:
+                        imageView.setBackground(context.getDrawable(R.color.primaryGrey));
+                        imageView.setImageDrawable(context.getDrawable(R.drawable.ic_videocam));
+                        break;
+                    case Constants.RESOURCE_TYPE_FILE:
+                        imageView.setBackground(context.getDrawable(R.color.primaryGrey));
+                        imageView.setImageDrawable(context.getDrawable(R.drawable.ic_insert_drive_file));
+                        break;
                     default:
                         imageView.setBackground(null);
                         imageView.setImageDrawable(null);
+                }
+            } else {
+                ImageView imageView = noteDisplayViewHolder.itemImage;
+                imageView.setBackground(null);
+                imageView.setImageDrawable(null);
+                setItemInfoLayoutParameterToNoResource(noteDisplayViewHolder.itemInfo);
             }
-        }
-        else{
-            ImageView imageView = noteDisplayViewHolder.itemImage;
-            imageView.setBackground(null);
-            imageView.setImageDrawable(null);
-            setItemInfoLayoutParameterToNoResource(noteDisplayViewHolder.itemInfo);
         }
     }
 

@@ -120,6 +120,7 @@ public class LoginManager {
                 .putBoolean(Constants.PREFERENCE_FIELD_LOGIN_STATUS, false)
                 .putLong(Constants.PREFERENCE_FIELD_UPDATE_CODE, SyncManager.UPDATE_CODE_BLANK)
                 .apply();
+        SyncManager.getInstance(context).reset();
         // close database so the database file can be delete
         ContentProviderClient contentProviderClient = context.getContentResolver().acquireContentProviderClient(ContentProviderConstants.NOTE_TABLE_URI);
         ANoteContentProvider aNoteContentProvider = null;

@@ -1,4 +1,4 @@
-package com.tcl.shenwk.aNote.task;
+package com.tcl.shenwk.aNote.manager;
 
 import android.content.Context;
 import android.media.MediaPlayer;
@@ -8,16 +8,18 @@ import android.os.Looper;
 import android.os.Message;
 import android.util.Log;
 import android.view.View;
-import android.widget.ImageButton;
-import android.widget.ImageView;
 import android.widget.SeekBar;
 import android.widget.TextView;
 
+import com.tcl.shenwk.aNote.task.DownloadTask;
 import com.tcl.shenwk.aNote.util.DateUtil;
 import com.tcl.shenwk.aNote.util.FileUtil;
 import com.tcl.shenwk.aNote.util.MediaPlayAndRecordUtil;
+import com.tcl.shenwk.aNote.util.UrlSource;
 
 import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -25,12 +27,13 @@ import java.util.TimerTask;
  * Created by shenwk on 2018/4/1.
  */
 
-public class AudioPlayTask implements MediaPlayer.OnPreparedListener{
-    private static final String TAG = "AudioPlayTask";
+public class AudioPlayManager implements MediaPlayer.OnPreparedListener{
+    private static final String TAG = "AudioPlayManager";
     private static final String INIT_TIME = "00:00";
     private static final int UPDATE_PLAYED_TIME_TEXT = 0;
     private static final int INIT_VIEW = 1;
     private static final int CLEAN = 2;
+    private static final int DOWNLOAD_SUCCESS = 3;
     private MediaPlayer mediaPlayer;
     private Uri uri;
     private TextView playedTimeText;
@@ -38,8 +41,10 @@ public class AudioPlayTask implements MediaPlayer.OnPreparedListener{
     private SeekBar seekBar;
     private Context context;
     private Timer timer;
+    private View playingView;
+    private View pendingView;
 
-    public AudioPlayTask(TextView playedTimeText, TextView totalTimeText, SeekBar seekBar, Context context, MediaPlayer.OnCompletionListener onCompletionListener) {
+    public AudioPlayManager(TextView playedTimeText, TextView totalTimeText, SeekBar seekBar, Context context, MediaPlayer.OnCompletionListener onCompletionListener) {
         this.playedTimeText = playedTimeText;
         this.totalTimeText = totalTimeText;
         this.seekBar = seekBar;
@@ -71,19 +76,24 @@ public class AudioPlayTask implements MediaPlayer.OnPreparedListener{
                     playedTimeText.setText(INIT_TIME);
                     break;
                 }
+                case DOWNLOAD_SUCCESS:{
+                    ((View) msg.obj).performClick();
+                }
             }
         }
     };
 
-    public void playNewUriAudio(Uri uri){
+    public void playNewUriAudio(Uri uri, View view){
         this.uri = uri;
+        this.playingView = view;
+        this.pendingView = null;
         if(uri != null){
             try {
                 mediaPlayer.setDataSource(FileUtil.getAssetFileDescriptorFromUri(context, uri).getFileDescriptor());
                 mediaPlayer.prepareAsync();
             } catch (IOException e) {
                 e.printStackTrace();
-                Log.i(TAG, "AudioPlayTask: read file content from uri error");
+                Log.i(TAG, "AudioPlayManager: read file content from uri error");
             }
         }
     }
@@ -95,11 +105,11 @@ public class AudioPlayTask implements MediaPlayer.OnPreparedListener{
         timer.schedule(new UpdateViewTask(), MediaPlayAndRecordUtil.getResumeDelay(mediaPlayer.getCurrentPosition()), 1000);
     }
 
-    public void stop(){
+    public void reset(){
         cleanTimer();
         mediaPlayer.reset();
         uri = null;
-        new Timer().schedule(new CleanTask(), 0);
+        new CleanTask().run();
     }
 
     public void pause(){
@@ -147,5 +157,38 @@ public class AudioPlayTask implements MediaPlayer.OnPreparedListener{
 
     public Uri getUri() {
         return uri;
+    }
+
+    public View getPlayingView() {
+        return playingView;
+    }
+
+    public void downloadAudio(String path, final View view) {
+        pendingView = view;
+        try {
+            SyncManager.getInstance(context).realTimeDownload(
+                    new URL(UrlSource.URL_SYNC_DOWNLOAD),
+                    path.substring(path.lastIndexOf(LoginManager.userFolder)),
+                    path,
+                    new DownloadTask.OnFinishListener() {
+                        @Override
+                        public void onSuccess() {
+                            if(view == pendingView){
+                                Message message = handler.obtainMessage();
+                                message.obj = view;
+                                message.what = DOWNLOAD_SUCCESS;
+                                handler.sendMessage(message);
+                            }
+                        }
+
+                        @Override
+                        public void onError(String err) {
+                            Log.i(TAG, "AudioPlayManager download onError: " + err);
+                        }
+                    }
+            );
+        } catch (MalformedURLException e) {
+            e.printStackTrace();
+        }
     }
 }

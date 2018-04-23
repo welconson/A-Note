@@ -38,6 +38,7 @@ public class ANoteDBOpenHelper extends SQLiteOpenHelper {
 
         sql = "CREATE TABLE " + RESOURCE_TABLE_NAME + " ( " + RESOURCE_ID + " INTEGER PRIMARY KEY AUTOINCREMENT, "
                 + NOTE_ID + " INTEGER, " + RESOURCE_FILE_NAME + " TEXT NOT NULL, " + RESOURCE_PATH + " TEXT NOT NULL, "
+                + RESOURCE_DURATION + " INTEGER, " + RESOURCE_SIZE + " TEXT, "
                 + DATA_TYPE + " INTEGER, " + SPAN_START + " INTEGER " +  " )";
         db.execSQL(sql);
         Log.i(TAG, "onCreate: " + sql);
