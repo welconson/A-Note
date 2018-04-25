@@ -5,7 +5,6 @@ import android.content.ContentUris;
 import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
-import android.database.sqlite.SQLiteDatabase;
 import android.net.Uri;
 import android.os.Handler;
 import android.os.Looper;
@@ -16,6 +15,7 @@ import com.tcl.shenwk.aNote.entity.NoteTagEntity;
 import com.tcl.shenwk.aNote.entity.ResourceDataEntity;
 import com.tcl.shenwk.aNote.entity.TagRecordEntity;
 import com.tcl.shenwk.aNote.util.Constants;
+import com.tcl.shenwk.aNote.util.DateUtil;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -44,6 +44,8 @@ public class ANoteDBManager {
     private ANoteDBManager(Context context) {
         this.contentResolver = context.getContentResolver();
         ANoteContentObserver aNoteContentObserver = new ANoteContentObserver(new Handler(Looper.getMainLooper()), TAG, context);
+        // ContentObserver just observes normal uri to our database,
+        // in case update sync field will lead to updateCode increment.
         this.contentResolver.registerContentObserver(Uri.parse(ContentProviderConstants.BASE_URI), true, aNoteContentObserver);
     }
 
@@ -63,7 +65,7 @@ public class ANoteDBManager {
         contentValues.put(NOTE_TITLE, noteEntity.getNoteTitle());
         contentValues.put(NOTE_DIR_NAME, noteEntity.getNoteDirName());
         contentValues.put(CREATE_TIMESTAMP, noteEntity.getCreateTimestamp());
-        contentValues.put(UPDATE_TIMESTAMP, noteEntity.getUpdateTimestamp());
+        contentValues.put(SYNC_MODIFY_TIME, noteEntity.getSyncModifyTime());
         contentValues.put(LOCATION_INFO, noteEntity.getLocationInfo());
         contentValues.put(HAS_ARCHIVED, noteEntity.hasArchived());
         contentValues.put(IS_LABELED_DISCARDED, noteEntity.isLabeledDiscarded());
@@ -85,7 +87,7 @@ public class ANoteDBManager {
         ContentValues contentValues = new ContentValues();
         if((updateFlags & UpdateFlagTable.UPDATE_NOTE_TITLE) != 0 && noteEntity.getNoteTitle() != null)
             contentValues.put(NOTE_TITLE, noteEntity.getNoteTitle());
-        contentValues.put(UPDATE_TIMESTAMP, noteEntity.getUpdateTimestamp());
+        contentValues.put(SYNC_MODIFY_TIME, DateUtil.getInstance().getTime());
         if((updateFlags & UpdateFlagTable.UPDATE_LOCATION_INFO) != 0 && noteEntity.getLocationInfo() != null)
             contentValues.put(LOCATION_INFO, noteEntity.getLocationInfo());
         if((updateFlags & UpdateFlagTable.UPDATE_HAS_ARCHIVED) != 0)
@@ -116,7 +118,7 @@ public class ANoteDBManager {
             noteEntity.setNoteTitle(cursor.getString(cursor.getColumnIndex(NOTE_TITLE)));
             noteEntity.setNoteDirName(cursor.getString(cursor.getColumnIndex(NOTE_DIR_NAME)));
             noteEntity.setCreateTimestamp(cursor.getLong(cursor.getColumnIndex(CREATE_TIMESTAMP)));
-            noteEntity.setUpdateTimestamp(cursor.getLong(cursor.getColumnIndex(UPDATE_TIMESTAMP)));
+            noteEntity.setSyncModifyTime(cursor.getLong(cursor.getColumnIndex(SYNC_MODIFY_TIME)));
             noteEntity.setLocationInfo(cursor.getString(cursor.getColumnIndex(LOCATION_INFO)));
             noteEntity.setHasArchived(cursor.getInt(cursor.getColumnIndex(HAS_ARCHIVED)) == Constants.ARCHIVED);
             noteEntity.setIsLabeledDiscarded(cursor.getInt(cursor.getColumnIndex(IS_LABELED_DISCARDED)) == Constants.LABELED_DISCARD);
@@ -138,7 +140,7 @@ public class ANoteDBManager {
             noteEntity.setNoteTitle(cursor.getString(cursor.getColumnIndex(NOTE_TITLE)));
             noteEntity.setNoteDirName(cursor.getString(cursor.getColumnIndex(NOTE_DIR_NAME)));
             noteEntity.setCreateTimestamp(cursor.getLong(cursor.getColumnIndex(CREATE_TIMESTAMP)));
-            noteEntity.setUpdateTimestamp(cursor.getLong(cursor.getColumnIndex(UPDATE_TIMESTAMP)));
+            noteEntity.setSyncModifyTime(cursor.getLong(cursor.getColumnIndex(SYNC_MODIFY_TIME)));
             noteEntity.setLocationInfo(cursor.getString(cursor.getColumnIndex(LOCATION_INFO)));
             noteEntity.setHasArchived(cursor.getInt(cursor.getColumnIndex(HAS_ARCHIVED)) == Constants.ARCHIVED);
             noteEntity.setIsLabeledDiscarded(cursor.getInt(cursor.getColumnIndex(IS_LABELED_DISCARDED)) == Constants.LABELED_DISCARD);

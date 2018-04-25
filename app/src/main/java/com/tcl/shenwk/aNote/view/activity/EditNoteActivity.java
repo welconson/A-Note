@@ -254,7 +254,7 @@ public class EditNoteActivity extends AppCompatActivity implements MediaPlayer.O
     protected void onDestroy() {
         super.onDestroy();
         if(audioRecorder != null){
-            audioRecorder.stop();
+            audioRecorder.release();
         }
         if(audioPlayManager != null)
             audioPlayManager.release();

@@ -72,8 +72,15 @@ public class AudioRecorder {
             timer.cancel();
             timer = null;
         }
-        mediaRecorder.stop();
         mediaRecorder.reset();
+    }
+
+    public void release(){
+        if(timer != null){
+            timer.cancel();
+            timer = null;
+        }
+        mediaRecorder.release();
     }
 
     public String getFileName() {

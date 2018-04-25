@@ -10,4 +10,5 @@ public interface UrlSource {
     String URL_SYNC_UPDATE = URL_TITLE + "/sync/update";
     String URL_SYNC_FULL_DOWNLOAD = URL_TITLE + "/sync/full_download";
     String URL_SYNC_DOWNLOAD = URL_TITLE + "/sync/download";
+    String URL_SYNC_DELETE = URL_TITLE + "/sync/delete";
 }

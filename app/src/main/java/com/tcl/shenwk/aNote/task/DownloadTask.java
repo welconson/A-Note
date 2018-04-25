@@ -50,6 +50,7 @@ public class DownloadTask {
                     out.close();
 
                     Log.i(TAG, "run: responseCode " + connection.getResponseCode());
+                    Log.i(TAG, "run: storePath " + storePath);
                     int responseCode = connection.getResponseCode();
                     if(responseCode == 403){
                         if(onFinishListener != null){

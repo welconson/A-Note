@@ -10,12 +10,12 @@ import org.json.JSONObject;
 
 import java.util.Map;
 
-public class DownloadInfoRequest extends JsonObjectRequest {
-    private static final String TAG = "DownloadInfoRequest";
+public class CustomJsonRequest extends JsonObjectRequest {
+    private static final String TAG = "CustomJsonRequest";
     public static final String REQUEST_COOKIE = "cookie";
     private Map<String, String> header;
 
-    public DownloadInfoRequest(int method, String url, Map<String, String> header, JSONObject jsonRequest, Response.Listener<JSONObject> listener, Response.ErrorListener errorListener) {
+    public CustomJsonRequest(int method, String url, Map<String, String> header, JSONObject jsonRequest, Response.Listener<JSONObject> listener, Response.ErrorListener errorListener) {
         super(method, url, jsonRequest, listener, errorListener);
         this.header = header;
     }

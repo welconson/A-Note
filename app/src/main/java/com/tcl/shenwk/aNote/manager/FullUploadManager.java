@@ -5,11 +5,13 @@ import android.util.Log;
 
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
+import com.tcl.shenwk.aNote.data.FullUploadDBManager;
 import com.tcl.shenwk.aNote.manager.LoginManager;
 import com.tcl.shenwk.aNote.manager.SyncManager;
 import com.tcl.shenwk.aNote.network.NetworkBase;
 import com.tcl.shenwk.aNote.network.UploadFileRequest;
 import com.tcl.shenwk.aNote.util.Constants;
+import com.tcl.shenwk.aNote.util.DateUtil;
 import com.tcl.shenwk.aNote.util.StringUtil;
 import com.tcl.shenwk.aNote.util.UrlSource;
 
@@ -45,6 +47,7 @@ public class FullUploadManager {
             }
             return;
         }
+        setSyncSettingBeforeUpload(DateUtil.getInstance().getTime());
         Map<String, String> header = new HashMap<>();
         header.put(UploadFileRequest.REQUEST_COOKIE, cookie);
         List<FileItem> fileItems = new ArrayList<>();
@@ -138,5 +141,11 @@ public class FullUploadManager {
                 fullUploadResultListener.onFinished();
             }
         }
+    }
+
+    // before upload database, set sync item field inside local database
+    private void setSyncSettingBeforeUpload(long updateTime){
+        FullUploadDBManager fullUploadDBManager = new FullUploadDBManager(context);
+        fullUploadDBManager.syncItemSetting(updateTime);
     }
 }

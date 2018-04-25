@@ -5,7 +5,6 @@ import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.util.Log;
 
-import com.tcl.shenwk.aNote.manager.LoginManager;
 import com.tcl.shenwk.aNote.util.Constants;
 import com.tcl.shenwk.aNote.util.FileUtil;
 
@@ -31,7 +30,10 @@ public class ANoteDBOpenHelper extends SQLiteOpenHelper {
     public void onCreate(SQLiteDatabase db) {
         String sql = "CREATE TABLE " + NOTE_TABLE_NAME + " ( " + NOTE_ID + " INTEGER PRIMARY KEY AUTOINCREMENT, "
                 + NOTE_TITLE + " TEXT NOT NULL, " + NOTE_DIR_NAME + " TEXT NOT NULL, " + CREATE_TIMESTAMP + " INTEGER, "
-                + UPDATE_TIMESTAMP + " INTEGER, " + LOCATION_INFO + " TEXT, " + HAS_ARCHIVED + " INTEGER, "
+                + LOCATION_INFO + " TEXT, " + HAS_ARCHIVED + " INTEGER, "
+                + SYNC_MODIFY_TIME + " INTEGER DEFAULT " + Constants.SYNC_MODIFY_TIME_BLANK + ", "
+                + SYNC_LAST_UPDATE_TIME + " INTEGER DEFAULT " + Constants.SYNC_LAST_UPDATE_TIME_NEVER + ", "
+                + SYNC_ROW_ID + " INTEGER DEFAULT " + Constants.SYNC_ROW_ID_NO_ID + ", "
                 + IS_LABELED_DISCARDED + " INTEGER " + " )";
         db.execSQL(sql);
         Log.i(TAG, "onCreate: " + sql);

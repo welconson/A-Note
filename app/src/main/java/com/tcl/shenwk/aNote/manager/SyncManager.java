@@ -16,10 +16,12 @@ import com.tcl.shenwk.aNote.R;
 import com.tcl.shenwk.aNote.data.DataProvider;
 import com.tcl.shenwk.aNote.network.BuildSessionRequest;
 import com.tcl.shenwk.aNote.network.CancelSessionRequest;
-import com.tcl.shenwk.aNote.network.DownloadInfoRequest;
+import com.tcl.shenwk.aNote.network.CustomJsonRequest;
 import com.tcl.shenwk.aNote.network.NetworkBase;
 import com.tcl.shenwk.aNote.task.DownloadTask;
 import com.tcl.shenwk.aNote.util.Constants;
+import com.tcl.shenwk.aNote.util.DateUtil;
+import com.tcl.shenwk.aNote.util.FileUtil;
 import com.tcl.shenwk.aNote.util.StringUtil;
 import com.tcl.shenwk.aNote.util.UrlSource;
 
@@ -54,6 +56,7 @@ public class SyncManager {
 
     public static final int SYNC_RESULT_BUILD_SESSION_SUCCESS = 0;
     public static final int SYNC_RESULT_UPLOAD_SESSION_SUCCESS = 1;
+    public static final int SYNC_RESULT_DELETE_SUCCESS = 0;
 
     public static final int SYNC_RESULT_NO_SESSION = 10;
     public static final int SYNC_RESULT_BUILD_SESSION_FAILED = 11;
@@ -138,8 +141,8 @@ public class SyncManager {
             }
             sendBuildRequest(jsonObject, buildTime, new BuildListener() {
                 @Override
-                public void onSuccess(long serverUpdateCode) {
-                    checkSyncInfo(serverUpdateCode);
+                public void onSuccess(long serverUpdateCode, long serverLastUpdateTime) {
+                    checkSyncInfo(serverUpdateCode, serverLastUpdateTime);
                 }
 
                 @Override
@@ -166,8 +169,9 @@ public class SyncManager {
                             Log.i(TAG, "onResponse: build session successfully");
                             cookie = response.getString(BuildSessionRequest.SET_COOKIES);
                             long serverUpdateCode = response.getLong(Constants.JSON_UPDATE_CODE);
+                            long serverLastUpdateTime = response.getLong(Constants.JSON_LAST_UPDATE_TIME);
                             if(buildListener != null)
-                                buildListener.onSuccess(serverUpdateCode);
+                                buildListener.onSuccess(serverUpdateCode, serverLastUpdateTime);
                             break;
                         }
                         case SYNC_RESULT_BUILD_SESSION_FAILED:{
@@ -207,7 +211,7 @@ public class SyncManager {
     // 2.local updateCode is blank, full download from server
     // 3.server updateCode is blank, full upload to server
     // 4.others, increment synchronization, need further analysis with both database.
-    private void checkSyncInfo(long serverUpdateCode){
+    private void checkSyncInfo(long serverUpdateCode, long serverLastUpdateTime){
         // check whether server need a full download or a full upload
         if(localUpdateCode == serverUpdateCode){
             // both ends have no data to complete a full synchronization
@@ -217,7 +221,7 @@ public class SyncManager {
         else if(localUpdateCode == UPDATE_CODE_BLANK){
             // full download from server
             Log.i(TAG, "checkSyncInfo: fullDownload");
-            sendFullDownLoadRequest();
+            sendFullDownLoadRequest(serverUpdateCode);
         }
         else if(serverUpdateCode == UPDATE_CODE_BLANK){
             Log.i(TAG, "checkSyncInfo: fullUpload");
@@ -227,19 +231,48 @@ public class SyncManager {
             Log.i(TAG, "checkSyncInfo: incrementSync");
 //            String databaseUrl = response.getString(Constants.JSON_SERVER_DATABASE_PATH);
 //            Log.i(TAG, "checkSyncInfo: " + Constants.JSON_SERVER_DATABASE_PATH + " " + databaseUrl);
-            incrementSync(serverUpdateCode);
+            incrementSync(serverUpdateCode, serverLastUpdateTime);
         }
     }
 
-    private void incrementSync(long serverUpdateCode) {
-        finishSync(MSG_SYNC_FINISH, true);
+    private void incrementSync(long serverUpdateCode, long serverLastUpdateTime){
+        IncrementSyncManager incrementSyncManager = new IncrementSyncManager(
+                context,
+                cookie,
+                networkBase,
+                new IncrementSyncManager.FinishListener() {
+                    @Override
+                    public void onSuccess(long updateCode) {
+                        JSONObject jsonObject = new JSONObject();
+                        try {
+                            jsonObject.put(Constants.JSON_UPDATE_CODE, updateCode);
+                            jsonObject.put(Constants.JSON_LAST_UPDATE_TIME, DateUtil.getInstance().getTime());
+                        } catch (JSONException e) {
+                            e.printStackTrace();
+                            jsonObject = null;
+                        }
+
+                        updateServerUpdateCode(jsonObject);
+                        finishSync(MSG_SYNC_FINISH, true);
+                    }
+
+                    @Override
+                    public void onError() {
+                        finishSync(MSG_SYNC_ERROR, false);
+                    }
+                },
+                localUpdateCode,
+                serverUpdateCode,
+                serverLastUpdateTime
+        );
+        incrementSyncManager.incrementSync();
     }
 
-    private void sendFullDownLoadRequest() {
+    private void sendFullDownLoadRequest(final long serverUpdateCode) {
         Log.i(TAG, "sendFullDownLoadRequest: ");
         Map<String, String> header = new HashMap<>();
-        header.put(DownloadInfoRequest.REQUEST_COOKIE, cookie);
-        DownloadInfoRequest downloadInfoRequest = new DownloadInfoRequest(
+        header.put(CustomJsonRequest.REQUEST_COOKIE, cookie);
+        CustomJsonRequest customJsonRequest = new CustomJsonRequest(
                 Request.Method.POST,
                 UrlSource.URL_SYNC_FULL_DOWNLOAD,
                 header,
@@ -247,24 +280,24 @@ public class SyncManager {
                 new Response.Listener<JSONObject>() {
                     @Override
                     public void onResponse(JSONObject response) {
-                        Log.i(TAG, "DownloadInfoRequest onResponse: " + response.toString());
+                        Log.i(TAG, "CustomJsonRequest onResponse: " + response.toString());
                         String serverDatabase = null;
                         try {
                             serverDatabase = response.getString(Constants.JSON_SERVER_DATABASE_PATH);
                         } catch (JSONException e) {
                             e.printStackTrace();
                         }
-                        fullDownload(serverDatabase);
+                        fullDownload(serverDatabase, serverUpdateCode);
                     }
                 },
                 new Response.ErrorListener() {
                     @Override
                     public void onErrorResponse(VolleyError error) {
                         finishSync(MSG_SYNC_ERROR, false);
-                        Log.i(TAG, "DownloadInfoRequest onErrorResponse: " + error);
+                        Log.i(TAG, "CustomJsonRequest onErrorResponse: " + error);
                     }
                 });
-        networkBase.addRequest(downloadInfoRequest);
+        networkBase.addRequest(customJsonRequest);
     }
 
     private void fullUpload(){
@@ -275,6 +308,7 @@ public class SyncManager {
                 JSONObject jsonObject = new JSONObject();
                 try {
                     jsonObject.put(Constants.JSON_UPDATE_CODE, localUpdateCode);
+                    jsonObject.put(Constants.JSON_LAST_UPDATE_TIME, DateUtil.getInstance().getTime());
                 } catch (JSONException e) {
                     e.printStackTrace();
                     jsonObject = null;
@@ -327,18 +361,25 @@ public class SyncManager {
     }
 
     // start asynchronous task for full download
-    private void fullDownload(String relativePath){
+    private void fullDownload(String relativePath, final long serverUpdateCode){
         if(relativePath != null) {
             try {
                 new DownloadTask(
                         new URL(UrlSource.URL_SYNC_DOWNLOAD),
                         relativePath,
-                        context.getFilesDir() + File.separator + relativePath,
+                        FileUtil.getUserDirPath(context) + File.separator + relativePath,
                         cookie,
                         new DownloadTask.OnFinishListener() {
                             @Override
                             public void onSuccess() {
                                 Log.i(TAG, "fullDownload download database: done");
+                                synchronized (updateCodeLock) {
+                                    localUpdateCode = serverUpdateCode;
+                                    context.getSharedPreferences(Constants.PREFERENCE_USER_INFO, Context.MODE_PRIVATE)
+                                            .edit()
+                                            .putLong(Constants.PREFERENCE_FIELD_UPDATE_CODE, localUpdateCode)
+                                            .apply();
+                                }
                                 finishSync(MSG_SYNC_FINISH, true);
                             }
 
@@ -409,7 +450,7 @@ public class SyncManager {
             }
             sendBuildRequest(jsonObject, buildTime, new BuildListener() {
                 @Override
-                public void onSuccess(long serverUpdateCode) {
+                public void onSuccess(long serverUpdateCode, long serverLastUpdateTime) {
                     new DownloadTask(
                             url,
                             downloadPath,
@@ -433,10 +474,11 @@ public class SyncManager {
         localUpdateCode = context.getSharedPreferences(Constants.PREFERENCE_USER_INFO, Context.MODE_PRIVATE)
                 .getLong(Constants.PREFERENCE_FIELD_UPDATE_CODE, UPDATE_CODE_BLANK);
         cookie = null;
+        isSynchronizing = false;
     }
 
     private interface BuildListener{
-        void onSuccess(long serverUpdateCode);
+        void onSuccess(long serverUpdateCode, long serverLastUpdateTime);
         void onError();
     }
 }

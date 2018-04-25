@@ -168,7 +168,7 @@ public class AudioPlayManager implements MediaPlayer.OnPreparedListener{
         try {
             SyncManager.getInstance(context).realTimeDownload(
                     new URL(UrlSource.URL_SYNC_DOWNLOAD),
-                    path.substring(path.lastIndexOf(LoginManager.userFolder)),
+                    path.substring(path.lastIndexOf(LoginManager.userFolder) + LoginManager.userFolder.length() + 1),
                     path,
                     new DownloadTask.OnFinishListener() {
                         @Override

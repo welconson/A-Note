@@ -10,13 +10,17 @@ public interface DBFieldsName {
     String USER_TABLE_NAME = "user";
     String USER_ID = "user_id";
 
+    // sync item fields
+    String SYNC_MODIFY_TIME = "modify_time";
+    String SYNC_LAST_UPDATE_TIME = "last_update_time";
+    String SYNC_ROW_ID = "sync_row_id";
+
     // NOTE table fields
     String NOTE_TABLE_NAME = "note";
     String NOTE_ID = "note_id";
     String NOTE_TITLE = "note_title";
     String NOTE_DIR_NAME = "note_content_path";
     String CREATE_TIMESTAMP = "create_timestamp";
-    String UPDATE_TIMESTAMP = "update_timestamp";
     String LOCATION_INFO = "location_info";
     String HAS_ARCHIVED = "has_archived";
     String IS_LABELED_DISCARDED = "is_labeled_discarded";
@@ -44,11 +48,10 @@ public interface DBFieldsName {
     String TAG_RECORD_CREATE_TIMESTAMP = "tag_note_record_create_timestamp";
 
     //SYNC_RECORD table fields
-    String MODIFY_RECORD_ID = "sync_record_id";
-    String MODIFY_RECORD_INITIAL_STATUS = "status";
-    String MODIFY_RECORD_LAST_OPERATION_TYPE = "operation_type";
-    String MODIFY_RECORD_TYPE = "type";
-    String MODIFY_RECORD_ROW_ID = "rowID";
-    String MODIFY_RECORD_PATH = "";
-    String MODIFY_RECORD_TIMESTAMP = "timestamp";
+    String SYNC_OPERATION_RECORD_TABLE_NAME = "syncOperationRecord";
+    String SYNC_OPERATION_RECORD_ID = "syncRecordId";
+    String SYNC_OPERATION_RECORD_EXIST_INITIAL_STATUS = "status";
+    String SYNC_OPERATION_RECORD_LAST_OPERATION_TYPE = "lastOperationType";
+    String SYNC_OPERATION_RECORD_TYPE = "type";
+    String SYNC_OPERATION_RECORD_LOCAL_ROW_ID = "localRowId";
 }

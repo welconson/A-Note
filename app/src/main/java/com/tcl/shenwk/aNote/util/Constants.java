@@ -24,6 +24,9 @@ public interface Constants {
     int NO_RESOURCE_ID = -1;
     int NO_TAG_ID = -1;
     int NO_TAG_RECORD_ID = -1;
+    long SYNC_MODIFY_TIME_BLANK = 0;
+    long SYNC_LAST_UPDATE_TIME_NEVER = -1;
+    long SYNC_ROW_ID_NO_ID = -1;
     //
 
     //Extra name and value start
@@ -40,6 +43,9 @@ public interface Constants {
     //db constants start
     String A_NOTE_DATA_DATABASE_NAME = "a_note_local.db";
     int A_NOTE_DATA_DB_VERSION = 1;
+
+    String SERVER_DATABASE_NAME = "a_note_local.db";
+    String TEMP_DATABASE_NAME = "a_note_server.db";
 
     String SYNC_DATABASE_NAME = "sync.db";
     int SYNC_DATABASE_VERSION = 1;
@@ -86,8 +92,11 @@ public interface Constants {
     String JSON_USER_PASSWORD = "password";
     String JSON_ACCOUNT_CREATE_TIME = "createTime";
     String JSON_UPDATE_CODE = "updateCode";
+    String JSON_LAST_UPDATE_TIME = "lastUpdateTime";
     String JSON_SERVER_DATABASE_PATH = "serverDatabasePath";
     String JSON_DOWNLOAD_PATH = "downloadPath";
+    String JSON_DELETE_DIRS = "dirs";
+    String JSON_DELETE_FILES = "files";
 
     String JSON_REQUEST_RESULT = "result";
 

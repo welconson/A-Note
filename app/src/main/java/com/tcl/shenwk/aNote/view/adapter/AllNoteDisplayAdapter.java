@@ -117,7 +117,7 @@ public class AllNoteDisplayAdapter extends RecyclerView.Adapter {
             try {
                 SyncManager.getInstance(context).realTimeDownload(
                         new URL(UrlSource.URL_SYNC_DOWNLOAD),
-                        LoginManager.userFolder + File.separator + noteEntity.getNoteDirName() + File.separator + Constants.CONTENT_FILE_NAME,
+                        noteEntity.getNoteDirName() + File.separator + Constants.CONTENT_FILE_NAME,
                         FileUtil.getNoteContentPath(context, noteEntity.getNoteDirName()),
                         new DownloadTask.OnFinishListener() {
                             @Override

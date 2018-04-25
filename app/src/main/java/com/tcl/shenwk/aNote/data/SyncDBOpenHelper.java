@@ -3,6 +3,9 @@ package com.tcl.shenwk.aNote.data;
 import android.content.Context;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
+import android.util.Log;
+
+import static com.tcl.shenwk.aNote.data.DBFieldsName.*;
 
 public class SyncDBOpenHelper extends SQLiteOpenHelper {
     private static final String TAG = "SyncDBOpenHelper";
@@ -13,9 +16,15 @@ public class SyncDBOpenHelper extends SQLiteOpenHelper {
 
     @Override
     public void onCreate(SQLiteDatabase db) {
-//        String sql = "create table sync_record (" +
-//                + ")";
-//        db.execSQL(sql);
+        String sql = "CREATE TABLE " + SYNC_OPERATION_RECORD_TABLE_NAME + " ("
+                + SYNC_OPERATION_RECORD_ID + " INTEGER PRIMARY KEY AUTOINCREMENT, "
+                + SYNC_OPERATION_RECORD_EXIST_INITIAL_STATUS + " INTEGER, "
+                + SYNC_OPERATION_RECORD_LAST_OPERATION_TYPE + " INTEGER, "
+                + SYNC_OPERATION_RECORD_LOCAL_ROW_ID + " INTEGER, "
+                + SYNC_OPERATION_RECORD_TYPE + " INTEGER "
+                + ")";
+        Log.i(TAG, "onCreate: " + sql);
+        db.execSQL(sql);
     }
 
     @Override

@@ -15,17 +15,17 @@ public class NoteEntity implements Serializable{
     private String noteTitle;
     private String noteDirName;
     private long createTimestamp;
-    private long updateTimestamp;
+    private long syncModifyTime;
     private String locationInfo;
     private boolean hasArchived;
     private boolean isLabeledDiscarded;
 
-    public NoteEntity(String noteTitle, String noteDirName, long createTimestamp, long updateTimestamp,
+    public NoteEntity(String noteTitle, String noteDirName, long createTimestamp, long syncModifyTime,
                       String locationInfo, boolean hasArchived, boolean isLabeledDiscarded) {
         this.noteTitle = noteTitle;
         this.noteDirName = noteDirName;
         this.createTimestamp = createTimestamp;
-        this.updateTimestamp = updateTimestamp;
+        this.syncModifyTime = syncModifyTime;
         this.locationInfo = locationInfo;
         this.hasArchived = hasArchived;
         this.isLabeledDiscarded = isLabeledDiscarded;
@@ -34,7 +34,7 @@ public class NoteEntity implements Serializable{
     public NoteEntity() {
         noteId = Constants.NO_NOTE_ID;
         createTimestamp = DateUtil.getInstance().getTime();
-        updateTimestamp = DateUtil.getInstance().getTime();
+        syncModifyTime = DateUtil.getInstance().getTime();
         noteTitle = null;
         hasArchived = false;
         isLabeledDiscarded = false;
@@ -72,12 +72,12 @@ public class NoteEntity implements Serializable{
         this.createTimestamp = createTimestamp;
     }
 
-    public long getUpdateTimestamp() {
-        return updateTimestamp;
+    public long getSyncModifyTime() {
+        return syncModifyTime;
     }
 
-    public void setUpdateTimestamp(long updateTimestamp) {
-        this.updateTimestamp = updateTimestamp;
+    public void setSyncModifyTime(long syncModifyTime) {
+        this.syncModifyTime = syncModifyTime;
     }
 
     public String getLocationInfo() {
