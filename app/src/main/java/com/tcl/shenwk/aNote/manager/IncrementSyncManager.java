@@ -96,7 +96,7 @@ public class IncrementSyncManager {
             localDBFile = new File(FileUtil.getUserDirPath(context) + File.separator + Constants.A_NOTE_DATA_DATABASE_NAME);
         }else{
             localDB = new CompareDBManager(context.getDatabasePath(Constants.A_NOTE_DATA_DATABASE_NAME).getAbsolutePath());
-            localDBFile = new File(context.getDatabasePath(Constants.A_NOTE_DATA_DATABASE_NAME).getAbsolutePath());
+            localDBFile = context.getDatabasePath(Constants.A_NOTE_DATA_DATABASE_NAME);
         }
         List<FileItem> uploadFiles = new ArrayList<>();
         int changeSum = 0;
@@ -143,68 +143,68 @@ public class IncrementSyncManager {
                         ;
         Iterator<SyncItemEntity> localIterator = localNoteSyncItems.iterator();
         Iterator<SyncItemEntity> serverIterator = serverNoteSyncItems.iterator();
-        SyncItemEntity localItem = localIterator.next();
-        SyncItemEntity serverItem = serverIterator.next();
-        while(true) {
-            if(localItem.getSyncRowId() == Constants.SYNC_ROW_ID_NO_ID){
-                // server iterator reaches end
-                serverToDelete.add(serverItem);
-                changeSum++;
-                while (serverIterator.hasNext()){
+        SyncItemEntity localItem = localIterator.hasNext() ? localIterator.next() : null;
+        SyncItemEntity serverItem = serverIterator.hasNext() ? serverIterator.next() : null;
+        while (true) {
+            if (localItem != null && localItem.getSyncRowId() == Constants.SYNC_ROW_ID_NO_ID) {
+                // localItem is new one, make server iterator reaches end
+                if(serverItem != null) {
+                    serverToDelete.add(serverItem);
+                    changeSum++;
+                }
+                while (serverIterator.hasNext()) {
                     serverItem = serverIterator.next();
                     serverToDelete.add(serverItem);
                     changeSum++;
                 }
                 break;
-            }else if(localItem.getSyncRowId() < serverItem.getSyncRowId()){
+            } else if (serverItem != null && (localItem == null || localItem.getSyncRowId() < serverItem.getSyncRowId())) {
                 // server item does not match local, maybe has been deleted in local
                 serverToDelete.add(serverItem);
                 changeSum++;
-                if (serverIterator.hasNext()){
+                if (serverIterator.hasNext()) {
                     serverItem = serverIterator.next();
-                }else
+                } else
                     break;
-            }
-            else if(localItem.getSyncRowId() > serverItem.getSyncRowId()){
+            } else if (localItem != null && (serverItem == null || localItem.getSyncRowId() > serverItem.getSyncRowId())) {
                 // local item does not match server, delete local item.
                 localToDelete.add(localItem);
                 changeSum++;
-                if (localIterator.hasNext()){
+                if (localIterator.hasNext()) {
                     localItem = localIterator.next();
-                }else
+                } else
                     break;
-            }
-            else if(localItem.getSyncRowId() == serverItem.getSyncRowId()){
+            } else if (localItem != null && serverItem != null && localItem.getSyncRowId() == serverItem.getSyncRowId()) {
                 // get the same syncRowId on both ends
                 // check which one is up to date.
-                if(localItem.getModifyTime() < localItem.getLastUpdateTime()){
+                if (localItem.getModifyTime() < localItem.getLastUpdateTime()) {
                     // local item without modify
-                    if(localItem.getLastUpdateTime() < serverItem.getLastUpdateTime()){
+                    if (localItem.getLastUpdateTime() < serverItem.getLastUpdateTime()) {
                         // server item is newer, overlay local item
                         serverOverlayLocal.add(serverItem);
                         changeSum++;
-                    }else{
+                    } else {
                         // it is impossible for local lastUpdateTime to exceed server lastUpdateTime
                         // if they are equal, there is nothing to do.
                     }
-                }else {
+                } else {
                     // local item has been modified after last synchronization.
-                    if(localItem.getLastUpdateTime() == serverItem.getLastUpdateTime()){
+                    if (localItem.getLastUpdateTime() == serverItem.getLastUpdateTime()) {
                         // local modification based on server version.
                         localOverlayServer.add(localItem);
                         changeSum++;
-                    }else {
+                    } else {
                         // maybe conflict here
                     }
                 }
                 // get ready for next loop
-                if(localIterator.hasNext()){
+                if (localIterator.hasNext()) {
                     localItem = localIterator.next();
-                }else
+                } else
                     break;
-                if(serverIterator.hasNext()){
+                if (serverIterator.hasNext()) {
                     serverItem = serverIterator.next();
-                }else
+                } else
                     break;
             }
         }
@@ -251,7 +251,7 @@ public class IncrementSyncManager {
     // handle local new note to server, set the sync fields and add note file names to uploadFiles list.
     private void localNewSyncItem(CompareDBManager localDB, SyncItemEntity localItem, Iterator<SyncItemEntity> localIterator, long syncTime, List<FileItem> uploadFiles){
         long maxSyncRowId = localDB.queryMaxSyncRowId();
-        if(localItem.getSyncRowId() == Constants.SYNC_ROW_ID_NO_ID){
+        if(localItem != null && localItem.getSyncRowId() == Constants.SYNC_ROW_ID_NO_ID){
             localItem.setSyncRowId(++maxSyncRowId);
             localItem.setLastUpdateTime(syncTime);
             localDB.setSyncItem(localItem.getItemId(), localItem);

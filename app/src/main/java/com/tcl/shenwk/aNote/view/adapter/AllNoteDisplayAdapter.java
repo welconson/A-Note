@@ -59,7 +59,6 @@ public class AllNoteDisplayAdapter extends RecyclerView.Adapter {
                         break;
                     }
                     case MSG_DOWNLOAD_ERROR:{
-                        notifyItemChanged(msg.arg1);
                         break;
                     }
                 }
