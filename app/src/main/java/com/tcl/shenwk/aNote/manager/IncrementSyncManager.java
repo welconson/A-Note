@@ -116,10 +116,19 @@ public class IncrementSyncManager {
         }
     }
 
+    // remove server database file after increment synchronization
     private void removeServerDB(String serverDBPath) {
         FileUtil.deleteFile(serverDBPath);
     }
 
+    /**
+     * check differences between server database and client database.
+     * @param localDB       local database access manager.
+     * @param serverDB      server database access manager.
+     * @param uploadFiles   local upload files list.
+     * @param deleteDirs    server delete directories list.
+     * @return  differences sum between server database between client.
+     */
     private int checkNoteItems(CompareDBManager localDB, CompareDBManager serverDB, List<FileItem> uploadFiles, JSONArray deleteDirs){
         int changeSum = 0;
         long syncTime = DateUtil.getInstance().getTime();
@@ -136,83 +145,222 @@ public class IncrementSyncManager {
         }
         Log.i(TAG, "checkNoteItems: server : " + log);
         List<SyncItemEntity>
-                localToDelete = new ArrayList<>(),
-                serverToDelete = new ArrayList<>(),
+                // situation 1
                 serverOverlayLocal = new ArrayList<>(),
-                localOverlayServer = new ArrayList<>()
+                // situation 2
+                localOverlayServer = new ArrayList<>(),
+                // situation 3, no data set should be operated
+                // situation 4, contribute to S1 or S2
+                // data set X, situation 5
+                otherClientNewCreate = new ArrayList<>(),
+                // data set Y, situation 6
+                serverToDelete = new ArrayList<>(),
+                // data set M, situation 7
+                localNewCreate = new ArrayList<>(),
+                // data set N, situation 8
+                localToDelete = new ArrayList<>()
                         ;
         Iterator<SyncItemEntity> localIterator = localNoteSyncItems.iterator();
         Iterator<SyncItemEntity> serverIterator = serverNoteSyncItems.iterator();
-        SyncItemEntity localItem = localIterator.hasNext() ? localIterator.next() : null;
-        SyncItemEntity serverItem = serverIterator.hasNext() ? serverIterator.next() : null;
-        while (true) {
-            if (localItem != null && localItem.getSyncRowId() == Constants.SYNC_ROW_ID_NO_ID) {
-                // localItem is new one, make server iterator reaches end
-                if(serverItem != null) {
-                    serverToDelete.add(serverItem);
+        SyncItemEntity localItem = null;//localIterator.hasNext() ? localIterator.next() : null;
+        SyncItemEntity serverItem = null;//serverIterator.hasNext() ? serverIterator.next() : null;
+        while(localIterator.hasNext() || serverIterator.hasNext()){
+            if(localIterator.hasNext() && !serverIterator.hasNext()){
+                // local iterator has items, while server has not.
+                // local iterator items belong to data set C
+                while(localIterator.hasNext()){
+                    localItem = localIterator.next();
+                    if(localItem.getSyncRowId() == Constants.SYNC_ROW_ID_NO_ID){
+                        // data set M, situation 7
+                        localNewCreate.add(localItem);
+                        Log.i(TAG, "checkNoteItems: serverIterator to end situation 7");
+                    }else {
+                        // data set N, situation 8
+                        localToDelete.add(localItem);
+                        Log.i(TAG, "checkNoteItems: serverIterator to end situation 8");
+                    }
                     changeSum++;
                 }
-                while (serverIterator.hasNext()) {
+            }else if(!localIterator.hasNext() && serverIterator.hasNext()){
+                // local iterator has no items, while server has.
+                // server iterator items belong to data set B.
+                while(serverIterator.hasNext()){
                     serverItem = serverIterator.next();
-                    serverToDelete.add(serverItem);
+                    if(isLocalDelete(serverItem.getSyncRowId())){
+                        // data set Y, situation 6
+                        serverToDelete.add(serverItem);
+                        Log.i(TAG, "checkNoteItems: localIterator to end situation 6");
+                    }else{
+                        // date set X, situation 5
+                        otherClientNewCreate.add(serverItem);
+                        Log.i(TAG, "checkNoteItems: localIterator to end situation 5");
+                    }
                     changeSum++;
                 }
-                break;
-            } else if (serverItem != null && (localItem == null || localItem.getSyncRowId() < serverItem.getSyncRowId())) {
-                // server item does not match local, maybe has been deleted in local
-                serverToDelete.add(serverItem);
-                changeSum++;
-                if (serverIterator.hasNext()) {
-                    serverItem = serverIterator.next();
-                } else
-                    break;
-            } else if (localItem != null && (serverItem == null || localItem.getSyncRowId() > serverItem.getSyncRowId())) {
-                // local item does not match server, delete local item.
-                localToDelete.add(localItem);
-                changeSum++;
-                if (localIterator.hasNext()) {
-                    localItem = localIterator.next();
-                } else
-                    break;
-            } else if (localItem != null && serverItem != null && localItem.getSyncRowId() == serverItem.getSyncRowId()) {
-                // get the same syncRowId on both ends
-                // check which one is up to date.
-                if (localItem.getModifyTime() < localItem.getLastUpdateTime()) {
-                    // local item without modify
-                    if (localItem.getLastUpdateTime() < serverItem.getLastUpdateTime()) {
-                        // server item is newer, overlay local item
-                        serverOverlayLocal.add(serverItem);
-                        changeSum++;
-                    } else {
-                        // it is impossible for local lastUpdateTime to exceed server lastUpdateTime
-                        // if they are equal, there is nothing to do.
-                    }
-                } else {
-                    // local item has been modified after last synchronization.
-                    if (localItem.getLastUpdateTime() == serverItem.getLastUpdateTime()) {
-                        // local modification based on server version.
-                        localOverlayServer.add(localItem);
-                        changeSum++;
-                    } else {
-                        // maybe conflict here
-                    }
+            } else while(true){
+                // both iterators have items
+                if(serverItem == null) {
+                    if (serverIterator.hasNext())
+                        serverItem = serverIterator.next();
+                    else break;
                 }
-                // get ready for next loop
-                if (localIterator.hasNext()) {
-                    localItem = localIterator.next();
-                } else
-                    break;
-                if (serverIterator.hasNext()) {
-                    serverItem = serverIterator.next();
-                } else
-                    break;
+                if(localItem == null){
+                    if(localIterator.hasNext())
+                        localItem = localIterator.next();
+                    else break;
+                }
+                long localSyncRowId = localItem.getSyncRowId();
+                long serverSyncRowId = serverItem.getSyncRowId();
+                if(serverItem.getSyncRowId() == localItem.getSyncRowId()){
+                    // data set A1 and data set A2
+                    if (localItem.getModifyTime() < localItem.getLastUpdateTime()) {
+                        // local item without modification
+                        if (localItem.getLastUpdateTime() < serverItem.getLastUpdateTime()) {
+                            // situation 1: server item is newer, overlay local item
+                            Log.i(TAG, "checkNoteItems: situation 1");
+                            serverOverlayLocal.add(serverItem);
+                            changeSum++;
+                        } else {
+                            // situation 3:
+                            // it is impossible for local lastUpdateTime to exceed server lastUpdateTime
+                            // if they are equal, there is nothing to do.
+                            Log.i(TAG, "checkNoteItems: situation 3");
+                        }
+                    } else {
+                        // local item has been modified after last synchronization.
+                        if (localItem.getModifyTime() == serverItem.getModifyTime()) {
+                            // situation 2: local modification based on server version.
+                            localOverlayServer.add(localItem);
+                            changeSum++;
+                            Log.i(TAG, "checkNoteItems: situation 2");
+                        } else {
+                            // situation 4:
+                            // maybe conflict here
+                            Log.i(TAG, "checkNoteItems: situation 4");
+                            if(localItem.getModifyTime() > serverItem.getLastUpdateTime()){
+                                localOverlayServer.add(localItem);
+                                Log.i(TAG, "checkNoteItems: conflict, local overlays server");
+                            }else {
+                                serverOverlayLocal.add(serverItem);
+                                Log.i(TAG, "checkNoteItems: conflict, server overlays local");
+                            }
+                        }
+                    }
+                    // both items are consumed
+                    localItem = null;
+                    serverItem = null;
+                } else if(localSyncRowId > serverSyncRowId){
+                    // data set N, situation 8
+                    localToDelete.add(localItem);
+                    changeSum++;
+                    Log.i(TAG, "checkNoteItems: situation 8");
+                    // localItem is consumed
+                    localItem = null;
+                } else if(localSyncRowId == Constants.SYNC_ROW_ID_NO_ID){
+                    // data set M, situation 7
+                    localNewCreate.add(localItem);
+                    changeSum++;
+                    Log.i(TAG, "checkNoteItems: situation 7");
+                    // localItem is consumed
+                    localItem = null;
+                } else{
+                    // data set B
+                    changeSum++;
+                    if(isLocalDelete(serverItem.getSyncRowId())){
+                        // data set Y, situation 6
+                        serverToDelete.add(serverItem);
+                        Log.i(TAG, "checkNoteItems: situation 6");
+                    }else {
+                        // data set X, situation 5
+                        otherClientNewCreate.add(serverItem);
+                        Log.i(TAG, "checkNoteItems: situation 5");
+                    }
+                    // serverItem is consumed
+                    serverItem = null;
+                }
             }
         }
+//        while (true) {
+//            if (localItem != null && localItem.getSyncRowId() == Constants.SYNC_ROW_ID_NO_ID) {
+//                // localItem is new one, make server iterator reaches end
+//                // data set C:
+//                //      situation 5: client download from server.
+//                //      situation 6: server delete.
+//                if(serverItem != null) {
+//                    serverToDelete.add(serverItem);
+//                    changeSum++;
+//                }
+//                while (serverIterator.hasNext()) {
+//                    serverItem = serverIterator.next();
+//                    serverToDelete.add(serverItem);
+//                    changeSum++;
+//                }
+//                // get local new created items.
+//                localNewCreate.add(localItem);
+//                changeSum++;
+//                while(localIterator.hasNext()){
+//                    localItem = localIterator.next();
+//                    localNewCreate.add(localItem);
+//                    changeSum++;
+//                }
+//                break;
+//            } else if (serverItem != null && (localItem == null || localItem.getSyncRowId() < serverItem.getSyncRowId())) {
+//                // server item does not match local, maybe has been deleted in local
+//                serverToDelete.add(serverItem);
+//                changeSum++;
+//                if (serverIterator.hasNext()) {
+//                    serverItem = serverIterator.next();
+//                } else
+//                    break;
+//            } else if (localItem != null && (serverItem == null || localItem.getSyncRowId() > serverItem.getSyncRowId())) {
+//                // local item does not match server, delete local item.
+//                localToDelete.add(localItem);
+//                changeSum++;
+//                if (localIterator.hasNext()) {
+//                    localItem = localIterator.next();
+//                } else
+//                    break;
+//            } else if (localItem != null && serverItem != null && localItem.getSyncRowId() == serverItem.getSyncRowId()) {
+//                // get the same syncRowId on both ends
+//                // check which one is up to date.
+//                if (localItem.getModifyTime() < localItem.getLastUpdateTime()) {
+//                    // local item without modify
+//                    if (localItem.getLastUpdateTime() < serverItem.getLastUpdateTime()) {
+//                        // situation 1: server item is newer, overlay local item
+//                        serverOverlayLocal.add(serverItem);
+//                        changeSum++;
+//                    } else {
+//                        // situation 3:
+//                        // it is impossible for local lastUpdateTime to exceed server lastUpdateTime
+//                        // if they are equal, there is nothing to do.
+//                    }
+//                } else {
+//                    // local item has been modified after last synchronization.
+//                    if (localItem.getLastUpdateTime() == serverItem.getLastUpdateTime()) {
+//                        // situation 2: local modification based on server version.
+//                        localOverlayServer.add(localItem);
+//                        changeSum++;
+//                    } else {
+//                        // situation 4:
+//                        // maybe conflict here
+//                    }
+//                }
+//                // get ready for next loop
+//                if (localIterator.hasNext()) {
+//                    localItem = localIterator.next();
+//                } else
+//                    break;
+//                if (serverIterator.hasNext()) {
+//                    serverItem = serverIterator.next();
+//                } else
+//                    break;
+//            }
+//        }
         localToDelete(localDB, localToDelete);
-        serverOverlayLocal(localDB, serverDB, serverOverlayLocal);
+        serverOverlayLocal(localDB, serverDB, serverOverlayLocal, syncTime);
         serverToDelete(serverDB, serverToDelete, deleteDirs);
-        localOverlayServer(localOverlayServer, uploadFiles);
-        localNewSyncItem(localDB, localItem, localIterator, syncTime, uploadFiles);
+        localOverlayServer(localOverlayServer, uploadFiles, syncTime);
+        localNewSyncItem(localDB, localNewCreate, syncTime, uploadFiles);
         log = "";
         for(FileItem s : uploadFiles){
             log += s.relativePath + "/" + s.type + " || ";
@@ -223,6 +371,11 @@ public class IncrementSyncManager {
         return changeSum;
     }
 
+    // check whether a server item was deleted in local device.
+    private boolean isLocalDelete(long syncRowId) {
+        return true;
+    }
+
     // handle local note which need to be delete.
     private void localToDelete(CompareDBManager localDB, List<SyncItemEntity> localDelete){
         for(SyncItemEntity syncItemEntity : localDelete){
@@ -231,9 +384,10 @@ public class IncrementSyncManager {
     }
 
     // handle newer note from server, overlay it on local database.
-    private void serverOverlayLocal(CompareDBManager localDB, CompareDBManager serverDB, List<SyncItemEntity> serverOverlayLocal){
+    private void serverOverlayLocal(CompareDBManager localDB, CompareDBManager serverDB, List<SyncItemEntity> serverOverlayLocal, long syncTime){
         for (SyncItemEntity syncItemEntity : serverOverlayLocal) {
             NoteEntity noteEntity = serverDB.querySingleWholeNoteById(syncItemEntity.getItemId());
+            syncItemEntity.setLastUpdateTime(syncTime);
             if(noteEntity != null)
                 localDB.updateWholeNoteById(noteEntity, syncItemEntity);
         }
@@ -249,21 +403,11 @@ public class IncrementSyncManager {
     }
 
     // handle local new note to server, set the sync fields and add note file names to uploadFiles list.
-    private void localNewSyncItem(CompareDBManager localDB, SyncItemEntity localItem, Iterator<SyncItemEntity> localIterator, long syncTime, List<FileItem> uploadFiles){
+    private void localNewSyncItem(CompareDBManager localDB, List<SyncItemEntity> localNewCreate, long syncTime, List<FileItem> uploadFiles){
         long maxSyncRowId = localDB.queryMaxSyncRowId();
-        if(localItem != null && localItem.getSyncRowId() == Constants.SYNC_ROW_ID_NO_ID){
-            localItem.setSyncRowId(++maxSyncRowId);
-            localItem.setLastUpdateTime(syncTime);
-            localDB.setSyncItem(localItem.getItemId(), localItem);
-            NoteEntity noteEntity = ANoteDBManager.getInstance(context).querySingleNoteRecordById(localItem.getItemId());
-            uploadFiles.add(
-                    new FileItem(
-                            new File(FileUtil.getUserDirPath(context) + File.separator + noteEntity.getNoteDirName() + File.separator + Constants.CONTENT_FILE_NAME),
-                            Constants.SYNC_FILE_TYPE_CONTENT,
-                            noteEntity.getNoteDirName()));
-        }
-        while(localIterator.hasNext()){
-            localItem = localIterator.next();
+        SyncItemEntity localItem;
+        for(Iterator<SyncItemEntity> iterator = localNewCreate.iterator(); iterator.hasNext();){
+            localItem = iterator.next();
             localItem.setSyncRowId(++maxSyncRowId);;
             localItem.setLastUpdateTime(syncTime);
             localDB.setSyncItem(localItem.getItemId(), localItem);
@@ -277,7 +421,7 @@ public class IncrementSyncManager {
     }
 
     // handle newer note in local, send local content file to server.
-    private void localOverlayServer(List<SyncItemEntity> localOverlayLocal, List<FileItem> uploadFiles){
+    private void localOverlayServer(List<SyncItemEntity> localOverlayLocal, List<FileItem> uploadFiles, long syncTime){
         for(SyncItemEntity syncItemEntity : localOverlayLocal){
             NoteEntity noteEntity = ANoteDBManager.getInstance(context).querySingleNoteRecordById(syncItemEntity.getItemId());
             uploadFiles.add(
@@ -290,6 +434,10 @@ public class IncrementSyncManager {
 
     // send delete file request after comparision
     private void sendDeleteRequest(JSONArray deleteDirs, JSONArray deleteFiles){
+        if(deleteFiles.length() == 0 && deleteDirs.length() == 0){
+            Log.i(TAG, "sendDeleteRequest: no delete items");
+            return;
+        }
         JSONObject deleteRequestJSON = new JSONObject();
         try {
             Map<String, String> header = new HashMap<>();
@@ -329,6 +477,10 @@ public class IncrementSyncManager {
     }
 
     private void sendUploadRequest(List<FileItem> uploadFiles){
+        if(uploadFiles.size() == 0){
+            Log.i(TAG, "sendUploadRequest: no upload items");
+            return;
+        }
         Map<String, String> header = new HashMap<>();
         header.put(UploadFileRequest.REQUEST_COOKIE, cookie);
         for(FileItem fileItem : uploadFiles){

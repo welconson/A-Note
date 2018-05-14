@@ -27,6 +27,7 @@ public interface Constants {
     long SYNC_MODIFY_TIME_BLANK = 0;
     long SYNC_LAST_UPDATE_TIME_NEVER = -1;
     long SYNC_ROW_ID_NO_ID = -1;
+    long NO_TIME = 0;
     //
 
     //Extra name and value start
@@ -84,6 +85,7 @@ public interface Constants {
     String PREFERENCE_FIELD_LOGIN_STATUS = "login_status";
     String PREFERENCE_FIELD_NEED_FULL_DOWNLOAD = "need_full_download";
     String PREFERENCE_FIELD_UPDATE_CODE = "update_code";
+    String PREFERENCE_FIELD_LAST_MODIFY_TIME = "last_modify_time";
 
     // JSON constants
     String JSON_USER_ID = "userId";

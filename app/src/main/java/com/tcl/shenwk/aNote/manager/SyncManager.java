@@ -424,6 +424,7 @@ public class SyncManager {
             if(context.getSharedPreferences(Constants.PREFERENCE_USER_INFO, Context.MODE_PRIVATE)
                     .edit()
                     .putLong(Constants.PREFERENCE_FIELD_UPDATE_CODE, localUpdateCode)
+                    .putLong(Constants.PREFERENCE_FIELD_LAST_MODIFY_TIME, DateUtil.getInstance().getTime())
                     .commit()) {
                 Log.i(TAG, "increaseUpdateCode: increase local updateCode successfully " + localUpdateCode);
             }else {

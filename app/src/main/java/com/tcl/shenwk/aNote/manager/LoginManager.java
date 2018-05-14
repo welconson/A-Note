@@ -93,9 +93,9 @@ public class LoginManager {
             else FileUtil.createDir(context.getFilesDir() + File.separator + userFolder);
             sharedPreferences.edit()
                     .putLong(Constants.PREFERENCE_FIELD_USER_ID, jsonObject.getLong("userId"))
-                    .putString(Constants.PREFERENCE_FIELD_USER_NAME, jsonObject.isNull("name") ? "" : ((String) jsonObject.get("name")))
+                    .putString(Constants.PREFERENCE_FIELD_USER_NAME, jsonObject.isNull("name") ? "" : jsonObject.getString("name"))
                     .putString(Constants.PREFERENCE_FIELD_USER_EMAIL, userFolder)
-                    .putLong(Constants.PREFERENCE_FIELD_ACCOUNT_CREATE_TIME, jsonObject.isNull("createTime") ? DateUtil.getInstance().getTime() : ((long) jsonObject.get("createTime")))
+                    .putLong(Constants.PREFERENCE_FIELD_ACCOUNT_CREATE_TIME, jsonObject.isNull("createTime") ? DateUtil.getInstance().getTime() : jsonObject.getLong("createTime"))
                     .putBoolean(Constants.PREFERENCE_FIELD_LOGIN_STATUS, true)
                     .apply();
         } catch (JSONException e) {
@@ -119,6 +119,7 @@ public class LoginManager {
                 .edit()
                 .putBoolean(Constants.PREFERENCE_FIELD_LOGIN_STATUS, false)
                 .putLong(Constants.PREFERENCE_FIELD_UPDATE_CODE, SyncManager.UPDATE_CODE_BLANK)
+                .putLong(Constants.PREFERENCE_FIELD_LAST_MODIFY_TIME, Constants.NO_TIME)
                 .apply();
         SyncManager.getInstance(context).reset();
         // close database so the database file can be delete
