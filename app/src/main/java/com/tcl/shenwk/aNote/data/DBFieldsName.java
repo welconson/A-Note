@@ -54,4 +54,9 @@ public interface DBFieldsName {
     String SYNC_OPERATION_RECORD_LAST_OPERATION_TYPE = "lastOperationType";
     String SYNC_OPERATION_RECORD_TYPE = "type";
     String SYNC_OPERATION_RECORD_LOCAL_ROW_ID = "localRowId";
+
+    //DELETE_RECORD table fields
+    String DELETE_RECORD_TABLE_NAME = "deleteRecord";
+    String DELETE_RECORD_ID = "deleteRecordId";
+    String DELETE_RECORD_TYPE = "deleteRecordType";
 }

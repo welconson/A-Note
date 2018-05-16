@@ -119,7 +119,8 @@ public class LoginManager {
                 .edit()
                 .putBoolean(Constants.PREFERENCE_FIELD_LOGIN_STATUS, false)
                 .putLong(Constants.PREFERENCE_FIELD_UPDATE_CODE, SyncManager.UPDATE_CODE_BLANK)
-                .putLong(Constants.PREFERENCE_FIELD_LAST_MODIFY_TIME, Constants.NO_TIME)
+                .putLong(Constants.PREFERENCE_FIELD_LAST_MODIFY_TIME, SyncManager.NO_TIME)
+                .putLong(Constants.PREFERENCE_FIELD_LAST_UPDATE_TIME, SyncManager.NO_TIME)
                 .apply();
         SyncManager.getInstance(context).reset();
         // close database so the database file can be delete

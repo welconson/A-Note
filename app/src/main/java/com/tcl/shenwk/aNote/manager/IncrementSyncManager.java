@@ -8,6 +8,7 @@ import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.tcl.shenwk.aNote.data.ANoteDBManager;
 import com.tcl.shenwk.aNote.data.CompareDBManager;
+import com.tcl.shenwk.aNote.data.SyncDBManger;
 import com.tcl.shenwk.aNote.entity.NoteEntity;
 import com.tcl.shenwk.aNote.entity.SyncItemEntity;
 import com.tcl.shenwk.aNote.model.NoteHandler;
@@ -110,6 +111,7 @@ public class IncrementSyncManager {
         sendUploadRequest(uploadFiles);
 
         removeServerDB(serverDBPath);
+        SyncDBManger.getInstance(context).cleanDeleteRecordTable();
 
         if(finishListener != null){
             finishListener.onSuccess((localUpdateCode > serverUpdateCode ? localUpdateCode : serverUpdateCode) + changeSum);
@@ -186,7 +188,7 @@ public class IncrementSyncManager {
                 // server iterator items belong to data set B.
                 while(serverIterator.hasNext()){
                     serverItem = serverIterator.next();
-                    if(isLocalDelete(serverItem.getSyncRowId())){
+                    if(isLocalDelete(Constants.DELETE_ITEM_TYPE_NOTE, serverItem.getSyncRowId())){
                         // data set Y, situation 6
                         serverToDelete.add(serverItem);
                         Log.i(TAG, "checkNoteItems: localIterator to end situation 6");
@@ -228,7 +230,7 @@ public class IncrementSyncManager {
                         }
                     } else {
                         // local item has been modified after last synchronization.
-                        if (localItem.getModifyTime() == serverItem.getModifyTime()) {
+                        if (localItem.getLastUpdateTime() == serverItem.getLastUpdateTime()) {
                             // situation 2: local modification based on server version.
                             localOverlayServer.add(localItem);
                             changeSum++;
@@ -237,7 +239,7 @@ public class IncrementSyncManager {
                             // situation 4:
                             // maybe conflict here
                             Log.i(TAG, "checkNoteItems: situation 4");
-                            if(localItem.getModifyTime() > serverItem.getLastUpdateTime()){
+                            if(localItem.getModifyTime() > serverItem.getModifyTime()){
                                 localOverlayServer.add(localItem);
                                 Log.i(TAG, "checkNoteItems: conflict, local overlays server");
                             }else {
@@ -266,7 +268,7 @@ public class IncrementSyncManager {
                 } else{
                     // data set B
                     changeSum++;
-                    if(isLocalDelete(serverItem.getSyncRowId())){
+                    if(isLocalDelete(Constants.DELETE_ITEM_TYPE_NOTE, serverItem.getSyncRowId())){
                         // data set Y, situation 6
                         serverToDelete.add(serverItem);
                         Log.i(TAG, "checkNoteItems: situation 6");
@@ -359,8 +361,9 @@ public class IncrementSyncManager {
         localToDelete(localDB, localToDelete);
         serverOverlayLocal(localDB, serverDB, serverOverlayLocal, syncTime);
         serverToDelete(serverDB, serverToDelete, deleteDirs);
-        localOverlayServer(localOverlayServer, uploadFiles, syncTime);
-        localNewSyncItem(localDB, localNewCreate, syncTime, uploadFiles);
+        otherClientNewCreate(serverDB, localDB, otherClientNewCreate);
+        localOverlayServer(localDB, localOverlayServer, uploadFiles, syncTime);
+        localNewSyncItem(localDB, serverDB.queryMaxSyncRowId(), localNewCreate, syncTime, uploadFiles);
         log = "";
         for(FileItem s : uploadFiles){
             log += s.relativePath + "/" + s.type + " || ";
@@ -372,8 +375,8 @@ public class IncrementSyncManager {
     }
 
     // check whether a server item was deleted in local device.
-    private boolean isLocalDelete(long syncRowId) {
-        return true;
+    private boolean isLocalDelete(int deleteItemType, long syncRowId) {
+        return SyncDBManger.getInstance(context).queryDeleteRecordId(deleteItemType, syncRowId) != Constants.SYNC_DELETE_ID_NO_ID;
     }
 
     // handle local note which need to be delete.
@@ -389,6 +392,7 @@ public class IncrementSyncManager {
             NoteEntity noteEntity = serverDB.querySingleWholeNoteById(syncItemEntity.getItemId());
             syncItemEntity.setLastUpdateTime(syncTime);
             if(noteEntity != null)
+                FileUtil.deleteFile(FileUtil.getNoteContentPath(context, noteEntity.getNoteDirName()));
                 localDB.updateWholeNoteById(noteEntity, syncItemEntity);
         }
     }
@@ -396,15 +400,14 @@ public class IncrementSyncManager {
     // handle server note which need to be delete in server, along with a network request.
     private void serverToDelete(CompareDBManager serverDB, List<SyncItemEntity> serverDelete, JSONArray deleteDirs){
         for(SyncItemEntity syncItemEntity : serverDelete){
-            NoteEntity noteEntity = serverDB.querySingleNoteById(syncItemEntity.getItemId());
+            NoteEntity noteEntity = serverDB.querySingleNoteContentPathById(syncItemEntity.getItemId());
             if(noteEntity != null)
                 deleteDirs.put(noteEntity.getNoteDirName());
         }
     }
 
     // handle local new note to server, set the sync fields and add note file names to uploadFiles list.
-    private void localNewSyncItem(CompareDBManager localDB, List<SyncItemEntity> localNewCreate, long syncTime, List<FileItem> uploadFiles){
-        long maxSyncRowId = localDB.queryMaxSyncRowId();
+    private void localNewSyncItem(CompareDBManager localDB, long maxSyncRowId, List<SyncItemEntity> localNewCreate, long syncTime, List<FileItem> uploadFiles){
         SyncItemEntity localItem;
         for(Iterator<SyncItemEntity> iterator = localNewCreate.iterator(); iterator.hasNext();){
             localItem = iterator.next();
@@ -421,14 +424,23 @@ public class IncrementSyncManager {
     }
 
     // handle newer note in local, send local content file to server.
-    private void localOverlayServer(List<SyncItemEntity> localOverlayLocal, List<FileItem> uploadFiles, long syncTime){
+    private void localOverlayServer(CompareDBManager localDB, List<SyncItemEntity> localOverlayLocal, List<FileItem> uploadFiles, long syncTime){
         for(SyncItemEntity syncItemEntity : localOverlayLocal){
             NoteEntity noteEntity = ANoteDBManager.getInstance(context).querySingleNoteRecordById(syncItemEntity.getItemId());
+            localDB.updateSyncItemLastUpdateTime(CompareDBManager.TABLE_CODE_NOTE, syncItemEntity.getSyncRowId(), syncTime);
             uploadFiles.add(
                     new FileItem(
                             new File(FileUtil.getUserDirPath(context) + File.separator + noteEntity.getNoteDirName() + File.separator + Constants.CONTENT_FILE_NAME),
                             Constants.SYNC_FILE_TYPE_CONTENT,
                             noteEntity.getNoteDirName()));
+        }
+    }
+
+    // handle new note from other client which has been stored in server, store these items in local database.
+    private void otherClientNewCreate(CompareDBManager serverDB, CompareDBManager localDB, List<SyncItemEntity> otherClientNewCreate){
+        for(SyncItemEntity syncItemEntity : otherClientNewCreate) {
+            NoteEntity noteEntity = serverDB.querySingleWholeNoteById(syncItemEntity.getItemId());
+            localDB.insertSingleWholeNoteById(noteEntity, syncItemEntity);
         }
     }
 

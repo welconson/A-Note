@@ -43,8 +43,11 @@ public class SyncManager {
     private static final String TAG = "SyncManager";
     private static SyncManager mInstance;
     public static final long UPDATE_CODE_BLANK = 0;
+    public static final long NO_TIME = -1;
 
     private long localUpdateCode;
+    private long localLastModifyTime;
+    private long localLastUpdateTime;
 
     private Context context;
     private NetworkBase networkBase;
@@ -99,8 +102,10 @@ public class SyncManager {
                 }
             }
         };
-        localUpdateCode = context.getSharedPreferences(Constants.PREFERENCE_USER_INFO, Context.MODE_PRIVATE)
-                .getLong(Constants.PREFERENCE_FIELD_UPDATE_CODE, UPDATE_CODE_BLANK);
+        SharedPreferences sharedPreferences =context.getSharedPreferences(Constants.PREFERENCE_USER_INFO, Context.MODE_PRIVATE);
+        localUpdateCode = sharedPreferences.getLong(Constants.PREFERENCE_FIELD_UPDATE_CODE, UPDATE_CODE_BLANK);
+        localLastModifyTime = sharedPreferences.getLong(Constants.PREFERENCE_FIELD_LAST_MODIFY_TIME, NO_TIME);
+        localLastUpdateTime = sharedPreferences.getLong(Constants.PREFERENCE_FIELD_LAST_UPDATE_TIME, NO_TIME);
     }
 
     public static SyncManager getInstance(Context context) {
@@ -212,27 +217,48 @@ public class SyncManager {
     // 3.server updateCode is blank, full upload to server
     // 4.others, increment synchronization, need further analysis with both database.
     private void checkSyncInfo(long serverUpdateCode, long serverLastUpdateTime){
-        // check whether server need a full download or a full upload
-        if(localUpdateCode == serverUpdateCode){
-            // both ends have no data to complete a full synchronization
-            Log.i(TAG, "checkSyncInfo: updateCode matched, nothing to do");
+        if(serverUpdateCode == UPDATE_CODE_BLANK){
+            if(localLastModifyTime == NO_TIME){
+                // nothing in local need to synchronize
+                Log.i(TAG, "checkSyncInfo: server never synchronized before, and this time there is nothing");
+                finishSync(MSG_SYNC_FINISH, false);
+            }else {
+                // proceed first synchronization with server
+                Log.i(TAG, "checkSyncInfo: server gets first synchronization");
+                fullSyncToServer();
+            }
+        }else if(localUpdateCode == UPDATE_CODE_BLANK){
+            // local just signed in
+            Log.i(TAG, "checkSyncInfo: client gets full synchronization ");
+            sendFullDownLoadRequest(serverLastUpdateTime, serverUpdateCode);
+        }else if(serverLastUpdateTime == localLastUpdateTime && localLastModifyTime < localLastUpdateTime){
+            Log.i(TAG, "checkSyncInfo: version mathched and there is nothing new in local");
             finishSync(MSG_SYNC_FINISH, false);
-        }
-        else if(localUpdateCode == UPDATE_CODE_BLANK){
-            // full download from server
-            Log.i(TAG, "checkSyncInfo: fullDownload");
-            sendFullDownLoadRequest(serverUpdateCode);
-        }
-        else if(serverUpdateCode == UPDATE_CODE_BLANK){
-            Log.i(TAG, "checkSyncInfo: fullUpload");
-            fullUpload();
         }else {
-            // get server database url, and to check increment update items.
-            Log.i(TAG, "checkSyncInfo: incrementSync");
-//            String databaseUrl = response.getString(Constants.JSON_SERVER_DATABASE_PATH);
-//            Log.i(TAG, "checkSyncInfo: " + Constants.JSON_SERVER_DATABASE_PATH + " " + databaseUrl);
             incrementSync(serverUpdateCode, serverLastUpdateTime);
         }
+
+//        // check whether server need a full download or a full upload
+//        if(localUpdateCode == serverUpdateCode){
+//            // both ends have no data to complete a full synchronization
+//            Log.i(TAG, "checkSyncInfo: updateCode matched, nothing to do");
+//            finishSync(MSG_SYNC_FINISH, false);
+//        }
+//        else if(localUpdateCode == UPDATE_CODE_BLANK){
+//            // full download from server
+//            Log.i(TAG, "checkSyncInfo: fullSyncFromServer");
+//            sendFullDownLoadRequest(serverLastUpdateTime, serverUpdateCode);
+//        }
+//        else if(serverUpdateCode == UPDATE_CODE_BLANK){
+//            Log.i(TAG, "checkSyncInfo: fullSyncToServer");
+//            fullSyncToServer();
+//        }else {
+//            // get server database url, and to check increment update items.
+//            Log.i(TAG, "checkSyncInfo: incrementSync");
+////            String databaseUrl = response.getString(Constants.JSON_SERVER_DATABASE_PATH);
+////            Log.i(TAG, "checkSyncInfo: " + Constants.JSON_SERVER_DATABASE_PATH + " " + databaseUrl);
+//            incrementSync(serverUpdateCode, serverLastUpdateTime);
+//        }
     }
 
     private void incrementSync(long serverUpdateCode, long serverLastUpdateTime){
@@ -244,16 +270,17 @@ public class SyncManager {
                     @Override
                     public void onSuccess(long updateCode) {
                         JSONObject jsonObject = new JSONObject();
+                        long syncTime = DateUtil.getInstance().getTime();
                         try {
                             jsonObject.put(Constants.JSON_UPDATE_CODE, updateCode);
-                            jsonObject.put(Constants.JSON_LAST_UPDATE_TIME, DateUtil.getInstance().getTime());
+                            jsonObject.put(Constants.JSON_LAST_UPDATE_TIME, syncTime);
                         } catch (JSONException e) {
                             e.printStackTrace();
                             jsonObject = null;
                         }
 
                         updateServerUpdateCode(jsonObject);
-                        finishSync(MSG_SYNC_FINISH, true);
+                        postIncrementSync(syncTime, updateCode);
                     }
 
                     @Override
@@ -268,7 +295,7 @@ public class SyncManager {
         incrementSyncManager.incrementSync();
     }
 
-    private void sendFullDownLoadRequest(final long serverUpdateCode) {
+    private void sendFullDownLoadRequest(final long syncTime, final long serverUpdateCode) {
         Log.i(TAG, "sendFullDownLoadRequest: ");
         Map<String, String> header = new HashMap<>();
         header.put(CustomJsonRequest.REQUEST_COOKIE, cookie);
@@ -287,7 +314,7 @@ public class SyncManager {
                         } catch (JSONException e) {
                             e.printStackTrace();
                         }
-                        fullDownload(serverDatabase, serverUpdateCode);
+                        fullSyncFromServer(serverDatabase, syncTime, serverUpdateCode);
                     }
                 },
                 new Response.ErrorListener() {
@@ -300,27 +327,28 @@ public class SyncManager {
         networkBase.addRequest(customJsonRequest);
     }
 
-    private void fullUpload(){
-        Log.i(TAG, "fullUpload: starting");
+    private void fullSyncToServer(){
+        Log.i(TAG, "fullSyncToServer: starting");
         new FullUploadManager(context, cookie, new FullUploadManager.FullUploadResultListener() {
             @Override
             public void onFinished() {
                 JSONObject jsonObject = new JSONObject();
+                long syncTime = DateUtil.getInstance().getTime();
                 try {
                     jsonObject.put(Constants.JSON_UPDATE_CODE, localUpdateCode);
-                    jsonObject.put(Constants.JSON_LAST_UPDATE_TIME, DateUtil.getInstance().getTime());
+                    jsonObject.put(Constants.JSON_LAST_UPDATE_TIME, syncTime);
                 } catch (JSONException e) {
                     e.printStackTrace();
                     jsonObject = null;
                 }
 
                 updateServerUpdateCode(jsonObject);
-                finishSync(MSG_SYNC_FINISH, true);
+                postFullSyncToServer(syncTime, localUpdateCode);
             }
 
             @Override
             public void onError(String err) {
-                Log.i(TAG, "fullUpload onError: " + err);
+                Log.i(TAG, "fullSyncToServer onError: " + err);
                 finishSync(MSG_SYNC_ERROR, false);
             }
         }).start();
@@ -349,7 +377,7 @@ public class SyncManager {
         networkBase.addRequest(request);
     }
 
-    //
+    // finish synchronization with a Toast and send refresh UI broadcast.
     private void finishSync(int finishMsg, boolean hasLocalDataModified){
         handler.sendMessage(handler.obtainMessage(finishMsg));
         if(hasLocalDataModified) {
@@ -360,8 +388,48 @@ public class SyncManager {
         }
     }
 
+    // after increment synchronization, update synchronization info.
+    private void postIncrementSync(long syncTime, long updateCode){
+        synchronized (updateCodeLock){
+            localLastUpdateTime = syncTime;
+            localUpdateCode = updateCode;
+            context.getSharedPreferences(Constants.PREFERENCE_USER_INFO, Context.MODE_PRIVATE)
+                    .edit()
+                    .putLong(Constants.PREFERENCE_FIELD_LAST_UPDATE_TIME, syncTime)
+                    .putLong(Constants.PREFERENCE_FIELD_UPDATE_CODE, localUpdateCode)
+                    .apply();
+        }
+        finishSync(MSG_SYNC_FINISH, true);
+    }
+
+    // after full synchronization from server, update local info.
+    private void postFullSyncFromServer(long syncTime, long updateCode){
+        synchronized (updateCodeLock) {
+            localUpdateCode = updateCode;
+            localLastUpdateTime = syncTime;
+            context.getSharedPreferences(Constants.PREFERENCE_USER_INFO, Context.MODE_PRIVATE)
+                    .edit()
+                    .putLong(Constants.PREFERENCE_FIELD_LAST_UPDATE_TIME, syncTime)
+                    .putLong(Constants.PREFERENCE_FIELD_UPDATE_CODE, localUpdateCode)
+                    .apply();
+        }
+        finishSync(MSG_SYNC_FINISH, true);
+    }
+
+    // after full synchronization to server, update synchronization info.
+    private void postFullSyncToServer(long syncTime, long updateCode){
+        synchronized (updateCodeLock){
+            localLastUpdateTime = syncTime;
+            context.getSharedPreferences(Constants.PREFERENCE_USER_INFO, Context.MODE_PRIVATE)
+                    .edit()
+                    .putLong(Constants.PREFERENCE_FIELD_LAST_UPDATE_TIME, syncTime)
+                    .apply();
+        }
+        finishSync(MSG_SYNC_FINISH, true);
+    }
+
     // start asynchronous task for full download
-    private void fullDownload(String relativePath, final long serverUpdateCode){
+    private void fullSyncFromServer(String relativePath, final long syncTime, final long serverUpdateCode){
         if(relativePath != null) {
             try {
                 new DownloadTask(
@@ -372,20 +440,13 @@ public class SyncManager {
                         new DownloadTask.OnFinishListener() {
                             @Override
                             public void onSuccess() {
-                                Log.i(TAG, "fullDownload download database: done");
-                                synchronized (updateCodeLock) {
-                                    localUpdateCode = serverUpdateCode;
-                                    context.getSharedPreferences(Constants.PREFERENCE_USER_INFO, Context.MODE_PRIVATE)
-                                            .edit()
-                                            .putLong(Constants.PREFERENCE_FIELD_UPDATE_CODE, localUpdateCode)
-                                            .apply();
-                                }
-                                finishSync(MSG_SYNC_FINISH, true);
+                                Log.i(TAG, "fullSyncFromServer download database: done");
+                                postFullSyncFromServer(syncTime, serverUpdateCode);
                             }
 
                             @Override
                             public void onError(String err) {
-                                Log.i(TAG, "fullDownload download database: download error");
+                                Log.i(TAG, "fullSyncFromServer download database: download error");
                                 finishSync(MSG_SYNC_ERROR, false);
                             }
                         }
@@ -421,10 +482,11 @@ public class SyncManager {
     public void increaseUpdateCode(){
         synchronized (updateCodeLock){
             localUpdateCode++;
+            localLastModifyTime = DateUtil.getInstance().getTime();
             if(context.getSharedPreferences(Constants.PREFERENCE_USER_INFO, Context.MODE_PRIVATE)
                     .edit()
                     .putLong(Constants.PREFERENCE_FIELD_UPDATE_CODE, localUpdateCode)
-                    .putLong(Constants.PREFERENCE_FIELD_LAST_MODIFY_TIME, DateUtil.getInstance().getTime())
+                    .putLong(Constants.PREFERENCE_FIELD_LAST_MODIFY_TIME, localLastModifyTime)
                     .commit()) {
                 Log.i(TAG, "increaseUpdateCode: increase local updateCode successfully " + localUpdateCode);
             }else {
@@ -472,8 +534,10 @@ public class SyncManager {
 
     // when login, reset user's synchronization data.
     public void reset(){
-        localUpdateCode = context.getSharedPreferences(Constants.PREFERENCE_USER_INFO, Context.MODE_PRIVATE)
-                .getLong(Constants.PREFERENCE_FIELD_UPDATE_CODE, UPDATE_CODE_BLANK);
+        SharedPreferences sharedPreferences = context.getSharedPreferences(Constants.PREFERENCE_USER_INFO, Context.MODE_PRIVATE);
+        localUpdateCode = sharedPreferences.getLong(Constants.PREFERENCE_FIELD_UPDATE_CODE, UPDATE_CODE_BLANK);
+        localLastUpdateTime = sharedPreferences.getLong(Constants.PREFERENCE_FIELD_LAST_UPDATE_TIME, NO_TIME);
+        localLastModifyTime = sharedPreferences.getLong(Constants.PREFERENCE_FIELD_LAST_MODIFY_TIME, NO_TIME);
         cookie = null;
         isSynchronizing = false;
     }

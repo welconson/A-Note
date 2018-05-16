@@ -7,6 +7,7 @@ import android.util.Log;
 
 import com.tcl.shenwk.aNote.data.ANoteDBManager;
 import com.tcl.shenwk.aNote.data.DataProvider;
+import com.tcl.shenwk.aNote.data.SyncDBManger;
 import com.tcl.shenwk.aNote.entity.NoteEntity;
 import com.tcl.shenwk.aNote.entity.ResourceDataEntity;
 import com.tcl.shenwk.aNote.entity.TagRecordEntity;
@@ -137,6 +138,7 @@ public class NoteHandler {
     }
 
     public static void deleteNote(Context context, NoteEntity noteEntity){
+        SyncDBManger.getInstance(context).checkDeleteRecord(context, noteEntity.getNoteId(), Constants.DELETE_ITEM_TYPE_NOTE);
         ANoteDBManager.getInstance(context).deleteNoteRecord(noteEntity.getNoteId());
         ANoteDBManager.getInstance(context).deleteTagRecordByNoteId(noteEntity.getNoteId());
         ANoteDBManager.getInstance(context).deleteResourceDataByNoteId(noteEntity.getNoteId());

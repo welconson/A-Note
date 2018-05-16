@@ -27,6 +27,7 @@ public interface Constants {
     long SYNC_MODIFY_TIME_BLANK = 0;
     long SYNC_LAST_UPDATE_TIME_NEVER = -1;
     long SYNC_ROW_ID_NO_ID = -1;
+    long SYNC_DELETE_ID_NO_ID = -1;
     long NO_TIME = 0;
     //
 
@@ -86,6 +87,7 @@ public interface Constants {
     String PREFERENCE_FIELD_NEED_FULL_DOWNLOAD = "need_full_download";
     String PREFERENCE_FIELD_UPDATE_CODE = "update_code";
     String PREFERENCE_FIELD_LAST_MODIFY_TIME = "last_modify_time";
+    String PREFERENCE_FIELD_LAST_UPDATE_TIME = "last_update_time";
 
     // JSON constants
     String JSON_USER_ID = "userId";
@@ -108,4 +110,10 @@ public interface Constants {
 
     //broadcast action
     String BROADCAST_ACTION_SYNC_MODIFIED = "com.tcl.shenwk.aNote.SYNC_FINISHED";
+
+    //deleteItemType
+    int DELETE_ITEM_TYPE_NOTE = 1;
+    int DELETE_ITEM_TYPE_RESOURCE = 2;
+    int DELETE_ITEM_TYPE_TAG = 3;
+    int DELETE_ITEM_TYPE_TAG_RECORD = 4;
 }

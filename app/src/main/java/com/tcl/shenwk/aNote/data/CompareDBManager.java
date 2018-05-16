@@ -14,6 +14,11 @@ import java.util.List;
 
 public class CompareDBManager {
     private static final String TAG = "CompareDBManager";
+    public static final int TABLE_CODE_NOTE = 1;
+    public static final int TABLE_CODE_RESOURCE = 2;
+    public static final int TABLE_CODE_TAG = 3;
+    public static final int TABLE_CODE_TAG_RECORD = 4;
+
     private DBOpenHelper dbOpenHelper;
 
     public CompareDBManager(String dbPath) {
@@ -80,7 +85,7 @@ public class CompareDBManager {
         dbOpenHelper.close();
     }
 
-    public NoteEntity querySingleNoteById(long noteId) {
+    public NoteEntity querySingleNoteContentPathById(long noteId) {
         NoteEntity noteEntity = null;
         SQLiteDatabase database = dbOpenHelper.getDatabase();
         if(database != null){
@@ -157,6 +162,33 @@ public class CompareDBManager {
             contentValues.put(DBFieldsName.SYNC_LAST_UPDATE_TIME, syncItemEntity.getLastUpdateTime());
             String whereClause = DBFieldsName.SYNC_ROW_ID + "=" + syncItemEntity.getSyncRowId();
             database.update(DBFieldsName.NOTE_TABLE_NAME, contentValues, whereClause, null);
+        }
+    }
+
+    // when local syncItem is newer than server, lastUpdateTime should be update.
+    public void updateSyncItemLastUpdateTime(int tableCode, long syncRowId, long lastUpdateTime){
+        SQLiteDatabase database = dbOpenHelper.getDatabase();
+        String table;
+        switch (tableCode){
+            case TABLE_CODE_NOTE:
+                table = DBFieldsName.NOTE_TABLE_NAME;
+                break;
+            case TABLE_CODE_RESOURCE:
+                table = DBFieldsName.RESOURCE_TABLE_NAME;
+                break;
+            case TABLE_CODE_TAG:
+                table = DBFieldsName.TAG_TABLE_NAME;
+                break;
+            case TABLE_CODE_TAG_RECORD:
+                table = DBFieldsName.TAG_RECORD_TABLE_NAME;
+                break;
+            default: table = null;
+        }
+        if(database != null){
+            ContentValues contentValues = new ContentValues();
+            contentValues.put(DBFieldsName.SYNC_LAST_UPDATE_TIME, lastUpdateTime);
+            String whereClause = DBFieldsName.SYNC_ROW_ID + "=" + syncRowId;
+            database.update(table, contentValues, whereClause, null);
         }
     }
 }

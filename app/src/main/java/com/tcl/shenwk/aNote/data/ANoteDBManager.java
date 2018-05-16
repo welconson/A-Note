@@ -28,7 +28,7 @@ import static com.tcl.shenwk.aNote.data.DBFieldsName.*;
  */
 
 public class ANoteDBManager {
-    private static String TAG = "ANoteDBManager";
+    private static final String TAG = "ANoteDBManager";
     private static ANoteDBManager mInstance = null;
     public interface UpdateFlagTable{
         int UPDATE_NOTE_TITLE = 1;

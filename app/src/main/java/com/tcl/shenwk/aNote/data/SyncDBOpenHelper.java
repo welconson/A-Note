@@ -25,6 +25,11 @@ public class SyncDBOpenHelper extends SQLiteOpenHelper {
                 + ")";
         Log.i(TAG, "onCreate: " + sql);
         db.execSQL(sql);
+
+        sql = "CREATE TABLE " + DELETE_RECORD_TABLE_NAME + "(" + DELETE_RECORD_ID + " INTEGER PRIMARY KEY AUTOINCREMENT, "
+                + DELETE_RECORD_TYPE + " INTEGER, " + SYNC_ROW_ID + " INTEGER" + ")";
+        Log.i(TAG, "onCreate: " + sql);
+        db.execSQL(sql);
     }
 
     @Override
