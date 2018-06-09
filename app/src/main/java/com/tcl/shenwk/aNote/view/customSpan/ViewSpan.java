@@ -36,6 +36,7 @@ public abstract class ViewSpan extends DynamicDrawableSpan implements View.OnTou
         this.mResourceDataEntity = resourceDataEntity;
         this.filePath = FileUtil.getResourcePath(view.getContext(), mResourceDataEntity.getResourceRelativePath());
         measure();
+         mView.layout(0,0, mView.getMeasuredWidth(), mView.getMeasuredHeight());
     }
 
     ViewSpan(View view, Uri uri, ResourceDataEntity resourceDataEntity) {
@@ -46,6 +47,7 @@ public abstract class ViewSpan extends DynamicDrawableSpan implements View.OnTou
         this.mResourceDataEntity.setDataType(getResourceDataType());
         this.mResourceDataEntity.setSize(FileUtil.getFileSize(view.getContext(), uri));
         measure();
+        mView.layout(0,0, mView.getMeasuredWidth(), mView.getMeasuredHeight());
     }
 
     @Override
@@ -78,7 +80,6 @@ public abstract class ViewSpan extends DynamicDrawableSpan implements View.OnTou
         mCurrentX = x;
         mCurrentY = transY;
         canvas.translate(x, transY);
-        mView.layout(0,0, mView.getMeasuredWidth(), mView.getMeasuredHeight());
         mView.draw(canvas);
         canvas.restore();
     }
